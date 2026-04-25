@@ -27,7 +27,7 @@ export default function AboutPage() {
       {/* Navbar */}
       <header className="sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
         <div className="flex items-center gap-6">
-          <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -my-4 drop-shadow-md cursor-pointer" /></Link>
+          <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-16 -mb-4 drop-shadow-md cursor-pointer" /></Link>
           <div className="hidden sm:block">
             <LanguageSelector />
           </div>
@@ -37,6 +37,7 @@ export default function AboutPage() {
           <Link href="/conference" className="hover:text-brand-purple transition-all">{t('nav.conference')}</Link>
           <Link href="/events" className="hover:text-brand-purple transition-all">{t('nav.events')}</Link>
           <Link href="/about" className="text-brand-purple border-b-2 border-brand-purple pb-1">{t('nav.about')}</Link>
+          <Link href="/contact" className="hover:text-brand-purple transition-all">{t('nav.contact')}</Link>
         </nav>
         <Link href="/contact" className="px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">{t('nav.contact')}</Link>
       </header>
@@ -54,12 +55,12 @@ export default function AboutPage() {
       </section>
 
       {/* Massive Brand Identity Section */}
-      <section className="py-32 px-6 bg-slate-50 relative overflow-hidden">
+      <section className="pt-4 pb-32 px-6 bg-slate-50 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-purple/5 rounded-full blur-[120px] pointer-events-none" />
         
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex flex-col items-center text-center lg:text-left">
-            <div className="mb-20 transform hover:scale-105 transition-transform duration-700">
+            <div className="mb-20 -mt-40 transform hover:scale-105 transition-transform duration-700">
               <img 
                 src="/logo.png" 
                 alt="PassionFruits Massive Logo" 

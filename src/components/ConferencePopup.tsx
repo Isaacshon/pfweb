@@ -3,7 +3,11 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-export const ConferencePopup = () => {
+interface ConferencePopupProps {
+  trigger?: boolean
+}
+
+export const ConferencePopup = ({ trigger }: ConferencePopupProps) => {
   const [isVisible, setIsVisible] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
 
@@ -11,12 +15,17 @@ export const ConferencePopup = () => {
     // Check if user has opted out for the day
     const lastClosed = localStorage.getItem('conference_popup_closed')
     const today = new Date().toDateString()
-    
-    if (lastClosed !== today) {
-      const timer = setTimeout(() => setIsVisible(true), 5000)
+    if (lastClosed === today) return
+
+    // If trigger is provided and true, show immediately
+    if (trigger) {
+      setIsVisible(true)
+    } else if (trigger === undefined) {
+      // Fallback: use timer if no trigger is controlled by parent
+      const timer = setTimeout(() => setIsVisible(true), 2800)
       return () => clearTimeout(timer)
     }
-  }, [])
+  }, [trigger])
 
   const handleClose = () => {
     setIsClosing(true)

@@ -61,6 +61,21 @@ const translations = {
       beliefsTitle: 'What We Believe',
       foundation: 'Foundation',
       missionTitle: 'Passion for Jesus, Culture for the World'
+    },
+    contactPage: {
+      title: 'Get in Touch',
+      subtitle: 'Visit our creative hub in Toronto. We\'d love to hear from you.',
+      addressTitle: 'Our Location',
+      address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
+      emailTitle: 'Email Us',
+      email: 'passionfruits.ministry@gmail.com',
+      instaTitle: 'Follow Us',
+      instaHandle: '@passionfruits_ministry',
+      formTitle: 'Send a Message',
+      namePlaceholder: 'Your Name',
+      emailPlaceholder: 'Email Address',
+      messagePlaceholder: 'How can we help?',
+      sendBtn: 'Send Message'
     }
   },
   ko: {
@@ -113,6 +128,21 @@ const translations = {
       beliefsTitle: '우리의 믿음',
       foundation: '기초',
       missionTitle: '예수를 향한 열정, 세상을 향한 문화'
+    },
+    contactPage: {
+      title: '문의하기',
+      subtitle: '토론토의 크리에이티브 허브를 방문해 보세요. 여러분의 이야기를 듣고 싶습니다.',
+      addressTitle: '찾아오시는 길',
+      address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
+      emailTitle: '이메일 문의',
+      email: 'passionfruits.ministry@gmail.com',
+      instaTitle: '인스타그램',
+      instaHandle: '@passionfruits_ministry',
+      formTitle: '메시지 보내기',
+      namePlaceholder: '성함',
+      emailPlaceholder: '이메일 주소',
+      messagePlaceholder: '무엇을 도와드릴까요?',
+      sendBtn: '메시지 전송'
     }
   },
   zh: {
@@ -165,6 +195,21 @@ const translations = {
       beliefsTitle: '我们的信仰',
       foundation: '基础',
       missionTitle: '为耶稣而热，为世界而文'
+    },
+    contactPage: {
+      title: '联系我们',
+      subtitle: '欢迎访问我们在多伦多的创意中心。我们期待收到您的消息。',
+      addressTitle: '我们的位置',
+      address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
+      emailTitle: '发送邮件',
+      email: 'passionfruits.ministry@gmail.com',
+      instaTitle: '关注我们',
+      instaHandle: '@passionfruits_ministry',
+      formTitle: '发送消息',
+      namePlaceholder: '您的姓名',
+      emailPlaceholder: '电子邮件',
+      messagePlaceholder: '我们能帮您什么？',
+      sendBtn: '发送消息'
     }
   },
   es: {
@@ -217,6 +262,21 @@ const translations = {
       beliefsTitle: 'Lo Que Creemos',
       foundation: 'Fundación',
       missionTitle: 'Pasión por Jesús, Cultura para el Mundo'
+    },
+    contactPage: {
+      title: 'Ponte en Contacto',
+      subtitle: 'Visita nuestro centro creativo en Toronto. Nos encantaría saber de ti.',
+      addressTitle: 'Nuestra Ubicación',
+      address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
+      emailTitle: 'Envíanos un Correo',
+      email: 'passionfruits.ministry@gmail.com',
+      instaTitle: 'Síguenos',
+      instaHandle: '@passionfruits_ministry',
+      formTitle: 'Enviar un Mensaje',
+      namePlaceholder: 'Tu Nombre',
+      emailPlaceholder: 'Correo Electrónico',
+      messagePlaceholder: '¿Cómo podemos ayudarte?',
+      sendBtn: 'Enviar Mensaje'
     }
   }
 }

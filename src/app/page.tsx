@@ -25,10 +25,19 @@ export default function Home() {
   ]
 
   useEffect(() => {
+    const introPlayed = sessionStorage.getItem('introPlayed')
+    if (introPlayed) {
+      setPhase(2)
+      return
+    }
+
     // 2초 후 축소 시작
     const t1 = setTimeout(() => setPhase(1), 2000)
     // 축소 시작 직후 콘텐츠 등장 (0.8초 후)
-    const t2 = setTimeout(() => setPhase(2), 2800)
+    const t2 = setTimeout(() => {
+      setPhase(2)
+      sessionStorage.setItem('introPlayed', 'true')
+    }, 2800)
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [])
 
@@ -36,7 +45,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      <ConferencePopup />
+      <ConferencePopup trigger={landed} />
 
       {/* ========== INTRO OVERLAY ========== */}
       {phase < 2 && (
@@ -72,7 +81,7 @@ export default function Home() {
       >
         <div className="flex items-center gap-6">
           <Link href="/">
-            <img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -my-4 drop-shadow-md cursor-pointer" />
+            <img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-16 -mb-4 drop-shadow-md cursor-pointer" />
           </Link>
           <div className="hidden sm:block">
             <LanguageSelector />
@@ -83,6 +92,7 @@ export default function Home() {
           <Link href="/conference" className="hover:text-brand-purple transition-all">{t('nav.conference')}</Link>
           <Link href="/events" className="hover:text-brand-purple transition-all">{t('nav.events')}</Link>
           <Link href="/about" className="hover:text-brand-purple transition-all">{t('nav.about')}</Link>
+          <Link href="/contact" className="hover:text-brand-purple transition-all">{t('nav.contact')}</Link>
         </nav>
         <Link href="/contact" className="px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">
           {t('nav.join')}
