@@ -3,42 +3,39 @@
 import React from 'react'
 
 const steps = [
-  { icon: 'waving_hand', title: 'Welcome', desc: 'New Here?' },
-  { icon: 'info', title: 'About', desc: 'Our Movement' },
-  { icon: 'lightbulb', title: 'Vision', desc: 'Our Dream' },
-  { icon: 'add_task', title: 'Join Us', desc: 'Get Involved' },
+  { icon: 'auto_awesome', title: 'Worship', desc: 'Encounter Jesus' },
+  { icon: 'palette', title: 'Creativity', desc: 'The Gospel Arts' },
+  { icon: 'public', title: 'Missions', desc: 'Global Impact' },
+  { icon: 'star', title: 'Influence', desc: 'Kingdom Culture' },
 ]
 
 export const StepGuide = () => {
   return (
-    <div className="bg-white py-20 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-12">
-          <span className="text-brand-purple font-bold text-sm tracking-widest uppercase mb-2 block">New Here?</span>
-          <h2 className="text-3xl md:text-4xl font-black text-slate-900">New to PassionFruits?</h2>
+    <div className="bg-white py-32 px-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-20">
+          <span className="text-brand-purple font-black text-sm tracking-widest uppercase mb-4 block">Our Path</span>
+          <h2 className="text-4xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter">PassionFruits Journey</h2>
         </div>
         
-        <div className="relative flex flex-col md:flex-row justify-between items-center gap-8">
-          {/* Connecting Line */}
-          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-slate-100 -translate-y-1/2 hidden md:block z-0"></div>
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {steps.map((step, index) => (
-            <div key={index} className="relative z-10 flex flex-col items-center text-center group">
-              <div className="w-20 h-20 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 group-hover:border-brand-purple group-hover:bg-brand-purple/5 transition-all duration-300">
-                <span className="material-symbols-outlined text-slate-400 group-hover:text-brand-purple text-3xl">
+            <div key={index} className="flex flex-col items-center text-center group">
+              <div className="relative w-28 h-28 flex items-center justify-center mb-6">
+                {/* Decorative Circle */}
+                <div className="absolute inset-0 bg-slate-50 border border-slate-100 rounded-full group-hover:border-brand-purple group-hover:bg-brand-purple/5 transition-all duration-500 group-hover:scale-110" />
+                <span className="material-symbols-outlined relative z-10 text-slate-400 group-hover:text-brand-purple text-5xl transition-all duration-300">
                   {step.icon}
                 </span>
+                {/* Step Number Badge */}
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-brand-dark text-white rounded-full flex items-center justify-center text-xs font-black border-4 border-white shadow-md">
+                  {index + 1}
+                </div>
               </div>
-              <h4 className="font-black text-slate-800 mb-1">{step.title}</h4>
-              <p className="text-xs text-slate-400 font-medium">{step.desc || step.subLabel}</p>
+              <h4 className="text-xl font-black text-brand-dark mb-1 uppercase tracking-tight group-hover:text-brand-purple transition-colors">{step.title}</h4>
+              <p className="text-slate-400 font-bold text-[10px] tracking-widest uppercase">{step.desc}</p>
             </div>
           ))}
-        </div>
-        
-        <div className="text-center mt-12">
-          <button className="px-10 py-3 border-2 border-brand-purple text-brand-purple rounded-full font-bold hover:bg-brand-purple hover:text-white transition-all">
-            More Information
-          </button>
         </div>
       </div>
     </div>

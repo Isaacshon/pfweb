@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-yellow: #f8c848;
-  --color-brand-purple: #894577;
-  --color-brand-purple-dark: #6b355d;
+  --color-brand-purple: #9b71af;
+  --color-brand-purple-deep: #6a3d81;
+  --color-brand-yellow: #fcf5a2;
+  --color-brand-dark: #1a1a1a;
+  --color-brand-ink: #2e232e;
+  --color-brand-green: #7eb07e;
   
-  --color-surface-dark: #0f172a;
-  --color-on-surface-dark: #f8fafc;
-  
-  --font-display: "Be Vietnam Pro", sans-serif;
-  --font-body: "Be Vietnam Pro", sans-serif;
+  --font-display: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-body: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
@@ -17,29 +17,29 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 font-body antialiased;
+    @apply bg-white text-brand-dark font-body antialiased;
+    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  * {
+    font-family: inherit;
   }
 }
 
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-family: "Material Symbols Outlined" !important;
+  font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-slate-100;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-brand-purple/30 rounded-full hover:bg-brand-purple/50 transition-colors;
+/* Vignette & Effects */
+.vignette-overlay {
+  background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.8) 100%);
 }
 
-/* Reference-style Glow */
-.glow-yellow {
-  box-shadow: 0 0 20px rgba(248, 200, 72, 0.2);
+.edge-fade-bottom {
+  background: linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 20%);
 }
-.glow-purple {
-  box-shadow: 0 0 20px rgba(137, 69, 119, 0.2);
+
+.text-shadow-strong {
+  text-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
