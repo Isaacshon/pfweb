@@ -111,9 +111,9 @@ export default function ConferencePage() {
       <section className="relative bg-brand-dark text-white py-20 md:py-32 px-5 md:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#9a78b4]/30 to-brand-dark" />
         <div className="relative z-10 max-w-5xl mx-auto text-center">
-          <span className="text-[#fffbbd] text-[10px] md:text-xs font-black tracking-[0.4em] md:tracking-[0.5em] uppercase mb-4 md:mb-6 block">{content.heroDate}</span>
+          <span className="text-[#fffbbd] text-[10px] md:text-xs font-black tracking-[0.4em] md:tracking-[0.5em] uppercase mb-4 md:mb-6 block break-keep">{content.heroDate}</span>
           <h1 className={`
-            text-3xl sm:text-4xl md:text-8xl font-black uppercase tracking-tighter mb-6 md:mb-8
+            text-3xl sm:text-4xl md:text-8xl font-black uppercase tracking-tighter mb-6 md:mb-8 break-keep
             ${(language === 'ko' || language === 'zh') ? 'leading-[1.3] md:leading-[1.2]' : 'leading-[1.1] md:leading-none'}
           `}>
             {(() => {
@@ -134,10 +134,10 @@ export default function ConferencePage() {
               );
             })()}
           </h1>
-          <p className="text-base md:text-xl text-white/80 font-bold max-w-3xl mx-auto mb-4 md:mb-6 leading-relaxed">
+          <p className="text-base md:text-xl text-white/80 font-bold max-w-3xl mx-auto mb-4 md:mb-6 leading-relaxed break-keep">
             {content.heroSubtitle}
           </p>
-          <p className="text-xs md:text-sm text-white/60 max-w-2xl mx-auto mb-10 md:mb-12 leading-relaxed px-4">
+          <p className="text-xs md:text-sm text-white/60 max-w-2xl mx-auto mb-10 md:mb-12 leading-relaxed px-4 break-keep">
             {content.verse}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center w-full sm:w-auto px-4 sm:px-0">

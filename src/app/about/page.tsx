@@ -96,7 +96,7 @@ export default function AboutPage() {
         <div className="relative z-10 max-w-5xl mx-auto text-center">
           <span className="text-[#fffbbd] text-xs font-black tracking-[0.5em] uppercase mb-6 block">Since 2023</span>
           <h1 className="text-4xl md:text-8xl font-black uppercase tracking-tighter mb-8 leading-none">"{t('hero.influence')}"</h1>
-          <p className="text-lg text-white/70 font-bold max-w-3xl mx-auto leading-relaxed italic">
+          <p className="text-lg text-white/70 font-bold max-w-3xl mx-auto leading-relaxed italic break-keep">
             PassionFruits is a vibrant youth cultural mission movement dedicated to spreading the love of Jesus Christ through the creative language of culture.
           </p>
         </div>
@@ -126,7 +126,7 @@ export default function AboutPage() {
                     <span key={i} className={i === 0 ? "block" : "text-brand-purple block"}>{part}{i === 0 && content.massiveTitle.includes(',') && ','}</span>
                   ))}
                 </h2>
-                <p className="text-slate-500 font-bold text-base md:text-lg leading-relaxed">
+                <p className="text-slate-500 font-bold text-base md:text-lg leading-relaxed break-keep">
                   {content.massiveDesc}
                 </p>
               </div>
@@ -135,14 +135,14 @@ export default function AboutPage() {
                 <div className="space-y-12">
                   <div>
                     <h4 className="text-brand-purple font-black text-xs uppercase tracking-[0.3em] mb-4">{content.creativeCall}</h4>
-                    <p className="text-slate-600 font-medium text-lg leading-relaxed italic">
+                    <p className="text-slate-600 font-medium text-lg leading-relaxed italic break-keep">
                       {content.creativeQuote}
                     </p>
                   </div>
                   <div className="h-px bg-slate-200 w-24" />
                   <div>
                     <h4 className="text-brand-purple font-black text-xs uppercase tracking-[0.3em] mb-4">{t('about.commitment')}</h4>
-                    <p className="text-slate-600 font-medium text-lg leading-relaxed">
+                    <p className="text-slate-600 font-medium text-lg leading-relaxed break-keep">
                       {t('about.commitmentDesc')}
                     </p>
                   </div>

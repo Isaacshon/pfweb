@@ -187,7 +187,7 @@ export default function Home() {
 
           <p className={`
             text-white text-base md:text-2xl max-w-2xl mx-auto font-bold leading-relaxed mb-10 md:mb-16 drop-shadow-lg px-4
-            transition-all duration-[600ms] delay-[200ms]
+            transition-all duration-[600ms] delay-[200ms] break-keep
             ${landed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
           `}>
             {heroSubtitle}
@@ -213,7 +213,7 @@ export default function Home() {
         <IconMenu />
 
         <section className="bg-slate-50 py-16 md:py-24 border-y border-slate-100">
-          <div className="max-w-7xl mx-auto px-6 mb-12 md:mb-16 text-center">
+          <div className="max-w-7xl mx-auto px-6 mb-12 md:mb-16 text-center break-keep">
             <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block">{confLatestUpdate}</span>
             <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter">{confMainTitle}</h2>
           </div>
@@ -224,7 +224,7 @@ export default function Home() {
 
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="flex justify-between items-end mb-12">
+            <div className="flex justify-between items-end mb-12 break-keep">
               <div>
                 <span className="text-brand-purple font-black text-sm tracking-widest uppercase mb-2 block">Moments</span>
                 <h2 className="text-4xl font-black text-brand-dark uppercase tracking-tighter">Passion in Action</h2>
