@@ -22,11 +22,9 @@ export default function AdminDashboard() {
   // Original Values for Reset/Initial
   const defaultPageContent = {
     home: {
-      heroTitle: 'PASSION FRUITS',
-      heroSubtitle: 'Leading a youth culture that is as trendy as it is transformative. Join the movement of changemakers.',
-      confLatestUpdate: 'Latest Update',
       heroTitle: 'PassionFruits Ministry',
       heroSubtitle: 'Retro Roots, Future Vision.',
+      confLatestUpdate: 'Latest Update',
       journeyTitle: 'PASSIONFRUITS JOURNEY',
       journeySubtitle: 'OUR PATH',
       journeyItems: [
