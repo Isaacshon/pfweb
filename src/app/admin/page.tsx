@@ -530,35 +530,68 @@ export default function AdminDashboard() {
           <div className="space-y-8">
             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
               <div className="flex justify-between items-center mb-8">
-                <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight">Add to Gallery</h3>
-                {isUploading && <span className="text-brand-purple font-black text-xs uppercase animate-pulse">Uploading...</span>}
+                <div>
+                  <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight">Gallery Management</h3>
+                  <p className="text-slate-400 text-xs font-bold mt-1 uppercase tracking-widest">Upload your moments to the cloud</p>
+                </div>
+                {isUploading && (
+                  <div className="flex items-center gap-3 px-4 py-2 bg-brand-purple/10 rounded-xl">
+                    <div className="w-4 h-4 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
+                    <span className="text-brand-purple font-black text-[10px] uppercase tracking-widest">Uploading to Storage...</span>
+                  </div>
+                )}
               </div>
+              
               <label className={`
-                flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:border-brand-purple hover:bg-slate-50 transition-all
-                ${isUploading ? 'opacity-50 pointer-events-none' : ''}
+                relative flex flex-col items-center justify-center w-full h-64 border-4 border-dashed rounded-[2.5rem] cursor-pointer transition-all duration-500
+                ${isUploading ? 'border-slate-100 bg-slate-50 pointer-events-none' : 'border-slate-100 hover:border-brand-purple hover:bg-brand-purple/5 bg-slate-50/50'}
               `}>
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <span className="material-symbols-outlined text-3xl text-slate-400 mb-2">upload_file</span>
-                  <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Click to upload image</p>
+                  <div className={`
+                    w-20 h-20 rounded-3xl bg-white shadow-xl flex items-center justify-center mb-6 transition-transform duration-500
+                    ${isUploading ? 'scale-90 opacity-50' : 'group-hover:scale-110 group-hover:rotate-3'}
+                  `}>
+                    <span className="material-symbols-outlined text-4xl text-brand-purple">add_photo_alternate</span>
+                  </div>
+                  <p className="text-sm font-black text-brand-dark uppercase tracking-[0.2em] mb-2">Drop images here or click</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Support: JPG, PNG, WEBP (Max 5MB)</p>
                 </div>
                 <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" disabled={isUploading} />
+                
+                {isUploading && (
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] rounded-[2.5rem] flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                      <p className="text-xs font-black text-brand-purple uppercase tracking-widest">Processing...</p>
+                    </div>
+                  </div>
+                )}
               </label>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
               {gallery.map((item) => (
-                <div key={item.id} className="group relative aspect-square bg-slate-100 rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
-                  <img src={item.url} alt={item.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div key={item.id} className="group relative aspect-[4/5] bg-slate-100 rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500">
+                  <img src={item.url} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-8">
+                    <p className="text-white font-black text-[10px] uppercase tracking-widest mb-4 truncate">{item.title || 'Untitled'}</p>
                     <button 
                       onClick={() => handleDeleteImage(item.id, item.url)}
-                      className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-red-500 shadow-xl hover:scale-110 transition-transform"
+                      className="w-full py-4 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-2xl flex items-center justify-center gap-2 hover:bg-red-500 hover:border-red-500 transition-all duration-300 font-black text-[10px] uppercase tracking-widest"
                     >
-                      <span className="material-symbols-outlined">delete</span>
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                      Remove Image
                     </button>
                   </div>
                 </div>
               ))}
+              
+              {gallery.length === 0 && !isUploading && (
+                <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-dashed border-slate-200">
+                  <span className="material-symbols-outlined text-4xl text-slate-200 mb-4">image_not_supported</span>
+                  <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">No images in gallery yet</p>
+                </div>
+              )}
             </div>
           </div>
         )}
