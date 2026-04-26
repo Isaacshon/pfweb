@@ -106,7 +106,17 @@ export default function AdminDashboard() {
       const aboutImg = settingsData.find(s => s.key === 'about_image')?.value
       const settings = settingsData.find(s => s.key === 'admin_settings')?.value
 
-      if (content) setPageContent(content)
+      if (content) {
+        setPageContent({
+          ...defaultPageContent,
+          ...content,
+          home: { ...defaultPageContent.home, ...content.home },
+          about: { ...defaultPageContent.about, ...content.about },
+          conference: { ...defaultPageContent.conference, ...content.conference },
+          events: { ...defaultPageContent.events, ...(content.events || {}) },
+          contact: { ...defaultPageContent.contact, ...content.contact }
+        })
+      }
       if (address) setMapAddress(address)
       if (video) setHeroVideoUrl(video)
       if (aboutImg) setAboutImageUrl(aboutImg)
