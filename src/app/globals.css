@@ -1,18 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-purple: #9b71af;
-  --color-brand-purple-deep: #6a3d81;
-  --color-brand-yellow: #fcf5a2;
-  --color-brand-dark: #1a1a1a;
-  --color-brand-ink: #2e232e;
-  --color-brand-green: #7eb07e;
+  --color-brand-purple: #6d28d9;
+  --color-brand-purple-light: #ebddff;
+  --color-brand-yellow: #fdd404;
+  --color-brand-dark: #121c2a;
+  --color-brand-surface: #f8f9ff;
   
-  --font-display: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-body: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-plus-jakarta: "Plus Jakarta Sans", sans-serif;
+  --font-space-grotesk: "Space Grotesk", sans-serif;
+  --font-display: "Plus Jakarta Sans", "Pretendard", sans-serif;
+  --font-body: "Plus Jakarta Sans", "Pretendard", sans-serif;
 
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
 }
 
 @layer base {
