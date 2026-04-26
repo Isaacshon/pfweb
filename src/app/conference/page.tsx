@@ -4,38 +4,29 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import { supabase } from '@/lib/supabase'
 
 export default function ConferencePage() {
   const { t, language } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [content, setContent] = useState({
-    heroDate: 'August 20-22, 2026',
-    heroTitle: t('hero.title'),
-    heroSubtitle: 'JUDGES: Conquest to Conquer',
-    verse: '"But you are a chosen people, a royal priesthood, a holy nation, God\'s special possession, that you may declare the praises of him who called you out of darkness into his wonderful light." — 1 Peter 2:9'
-  })
+  const [content, setContent] = useState<any>(null)
 
   useEffect(() => {
-    const savedContent = localStorage.getItem('pf_page_content')
-    if (savedContent) {
-      const parsed = JSON.parse(savedContent)
-      if (parsed.conference) {
-        setContent({
-          heroDate: parsed.conference.heroDate || 'August 20-22, 2026',
-          heroTitle: parsed.conference.heroTitle || t('hero.title'),
-          heroSubtitle: parsed.conference.heroSubtitle || 'JUDGES: Conquest to Conquer',
-          verse: parsed.conference.verse || '"But you are a chosen people, a royal priesthood, a holy nation, God\'s special possession, that you may declare the praises of him who called you out of darkness into his wonderful light." — 1 Peter 2:9'
-        })
-      }
-    } else {
-      setContent({
-        heroDate: 'August 20-22, 2026',
-        heroTitle: t('hero.title'),
-        heroSubtitle: 'JUDGES: Conquest to Conquer',
-        verse: '"But you are a chosen people, a royal priesthood, a holy nation, God\'s special possession, that you may declare the praises of him who called you out of darkness into his wonderful light." — 1 Peter 2:9'
-      })
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    const { data } = await supabase.from('site_settings').select('*')
+    if (data) {
+      const pageContent = data.find(s => s.key === 'page_content')?.value
+      if (pageContent && pageContent.conference) setContent(pageContent.conference)
     }
-  }, [t])
+  }
+
+  const heroDate = content?.heroDate || 'August 20-22, 2026'
+  const heroTitle = content?.heroTitle || t('hero.title')
+  const heroSubtitle = content?.heroSubtitle || 'JUDGES: Conquest to Conquer'
+  const verse = content?.verse || t('conference.verse')
   const speakers = [
     { name: 'Guest Speaker 1', role: 'To be announced' },
     { name: 'Guest Speaker 2', role: 'To be announced' },
@@ -111,13 +102,13 @@ export default function ConferencePage() {
       <section className="relative bg-brand-dark text-white py-20 md:py-32 px-5 md:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#9a78b4]/30 to-brand-dark" />
         <div className="relative z-10 max-w-5xl mx-auto text-center">
-          <span className="text-[#fffbbd] text-[10px] md:text-xs font-black tracking-[0.4em] md:tracking-[0.5em] uppercase mb-4 md:mb-6 block break-keep">{content.heroDate}</span>
+          <span className="text-[#fffbbd] text-[10px] md:text-xs font-black tracking-[0.4em] md:tracking-[0.5em] uppercase mb-4 md:mb-6 block break-keep">{heroDate}</span>
           <h1 className={`
             text-3xl sm:text-4xl md:text-8xl font-black uppercase tracking-tighter mb-6 md:mb-8 break-keep
             ${(language === 'ko' || language === 'zh') ? 'leading-[1.3] md:leading-[1.2]' : 'leading-[1.1] md:leading-none'}
           `}>
             {(() => {
-              const title = content.heroTitle;
+              const title = heroTitle;
               const parts = title.split(' ');
               const word1 = parts[0] || '';
               const word2 = parts.slice(1).join(' ') || '';
@@ -135,13 +126,13 @@ export default function ConferencePage() {
             })()}
           </h1>
           <p className="text-base md:text-xl text-white/80 font-bold max-w-3xl mx-auto mb-4 md:mb-6 leading-relaxed break-keep">
-            {content.heroSubtitle}
+            {heroSubtitle}
           </p>
           <p className="text-xs md:text-sm text-white/60 max-w-2xl mx-auto mb-10 md:mb-12 leading-relaxed px-4 break-keep">
-            {content.verse}
+            {verse}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center w-full sm:w-auto px-4 sm:px-0">
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSdlEsG6d901eyZ-IxnVTqaxuNV4qz1RkuDxhPEW6Jn-Ybl2cg/viewform?usp=header" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-[#fffbbd] text-brand-dark rounded-full font-black text-base md:text-lg uppercase hover:scale-105 transition-transform text-center">
+            <a href={content?.registrationLink || "#"} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-[#fffbbd] text-brand-dark rounded-full font-black text-base md:text-lg uppercase hover:scale-105 transition-transform text-center">
               Register Now (Free)
             </a>
           </div>

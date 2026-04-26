@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import { supabase } from '@/lib/supabase'
 
 export default function Contact() {
   const { t } = useLanguage()
@@ -12,32 +13,24 @@ export default function Contact() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [messageContent, setMessageContent] = useState('')
-  const [content, setContent] = useState({
-    heroTitle: t('nav.contact'),
-    infoTitle: "Let's Build the Kingdom Together",
-    infoDesc: "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you."
-  })
-
   useEffect(() => {
     setIsLoaded(true)
-    const savedContent = localStorage.getItem('pf_page_content')
-    if (savedContent) {
-      const parsed = JSON.parse(savedContent)
-      if (parsed.contact) {
-        setContent({
-          heroTitle: parsed.contact.heroTitle || t('nav.contact'),
-          infoTitle: parsed.contact.infoTitle || "Let's Build the Kingdom Together",
-          infoDesc: parsed.contact.infoDesc || "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you."
-        })
-      }
-    } else {
-      setContent({
-        heroTitle: t('nav.contact'),
-        infoTitle: "Let's Build the Kingdom Together",
-        infoDesc: "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you."
-      })
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    const { data } = await supabase.from('site_settings').select('*')
+    if (data) {
+      const pageContent = data.find(s => s.key === 'page_content')?.value
+      if (pageContent && pageContent.contact) setContent(pageContent.contact)
     }
-  }, [t])
+  }
+
+  const heroTitle = content?.heroTitle || t('nav.contact')
+  const infoTitle = content?.infoTitle || "Let's Build the Kingdom Together"
+  const infoDesc = content?.infoDesc || "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you."
+  const emailDetail = content?.emailDetail || 'passionfruits_ministry@naver.com'
+  const addressDetail = content?.addressDetail || 'Toronto, Ontario, Canada'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -122,7 +115,7 @@ export default function Contact() {
             transition-all duration-700 delay-500
             ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}
           `}>
-            {content.heroTitle}
+            {heroTitle}
           </h1>
         </div>
       </section>
@@ -139,10 +132,10 @@ export default function Contact() {
             <div>
               <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block">Get In Touch</span>
               <h2 className="text-4xl md:text-6xl font-black text-brand-dark uppercase tracking-tighter mb-8 leading-tight">
-                {content.infoTitle}
+                {infoTitle}
               </h2>
               <p className="text-slate-500 font-bold text-base md:text-lg leading-relaxed max-w-md">
-                {content.infoDesc}
+                {infoDesc}
               </p>
             </div>
 
@@ -152,8 +145,8 @@ export default function Contact() {
                   <span className="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">mail</span>
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Email Us</h4>
-                  <p className="text-lg md:text-xl font-black text-brand-dark">passionfruits_ministry@naver.com</p>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{content?.emailTitle || 'Email Us'}</h4>
+                  <p className="text-lg md:text-xl font-black text-brand-dark">{emailDetail}</p>
                 </div>
               </div>
 

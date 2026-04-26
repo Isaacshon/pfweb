@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import { supabase } from '@/lib/supabase'
 
 const events = [
   { title: 'PF Youth Camp 2025', date: 'Mar 8, 2025', category: 'Worship', image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=600' },
@@ -20,13 +21,27 @@ export default function EventsPage() {
   const { t } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [boardPosts, setBoardPosts] = useState<any[]>([])
+  const [content, setContent] = useState<any>(null)
 
   useEffect(() => {
-    const savedPosts = localStorage.getItem('pf_posts')
-    if (savedPosts) {
-      setBoardPosts(JSON.parse(savedPosts))
-    }
+    fetchData()
   }, [])
+
+  const fetchData = async () => {
+    // 1. Fetch Posts
+    const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false })
+    if (postsData) setBoardPosts(postsData)
+
+    // 2. Fetch Page Settings
+    const { data: settingsData } = await supabase.from('site_settings').select('*')
+    if (settingsData) {
+      const pageContent = settingsData.find(s => s.key === 'page_content')?.value
+      if (pageContent && pageContent.events) setContent(pageContent.events)
+    }
+  }
+
+  const heroTitle = content?.heroTitle || 'Events & Updates'
+  const heroSubtitle = content?.heroSubtitle || 'Latest happenings and important notices from our ministry hub.'
 
   return (
     <div className="flex flex-col min-h-screen bg-white selection:bg-brand-purple selection:text-white">
@@ -71,8 +86,8 @@ export default function EventsPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#9a78b4]/20 to-brand-dark" />
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <span className="text-[#fffbbd] text-xs font-black tracking-[0.5em] uppercase mb-6 block">Kingdom News</span>
-          <h1 className="text-4xl md:text-8xl font-black uppercase tracking-tighter mb-8 leading-none">Events & Updates</h1>
-          <p className="text-base md:text-xl text-white/70 font-bold max-w-2xl mx-auto">Latest happenings and important notices from our ministry hub.</p>
+          <h1 className="text-4xl md:text-8xl font-black uppercase tracking-tighter mb-8 leading-none">{heroTitle}</h1>
+          <p className="text-base md:text-xl text-white/70 font-bold max-w-2xl mx-auto">{heroSubtitle}</p>
         </div>
       </section>
 

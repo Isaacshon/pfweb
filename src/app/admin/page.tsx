@@ -39,16 +39,25 @@ export default function AdminDashboard() {
       heroSubtitle: 'JUDGES: Conquest to Conquer',
       verse: '"But you are a chosen people, a royal priesthood, a holy nation, God\'s special possession, that you may declare the praises of him who called you out of darkness into his wonderful light." — 1 Peter 2:9'
     },
+    events: {
+      heroTitle: 'Events & Updates',
+      heroSubtitle: 'Latest happenings and important notices from our ministry hub.'
+    },
     contact: {
       heroTitle: 'Contact',
       infoTitle: "Let's Build the Kingdom Together",
-      infoDesc: "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you."
+      infoDesc: "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you.",
+      addressTitle: "Toronto Office",
+      addressDetail: "Toronto, Ontario, Canada",
+      emailTitle: "General Inquiries",
+      emailDetail: "passionfruits.ministry@gmail.com"
     }
   }
 
   const [pageContent, setPageContent] = useState(defaultPageContent)
   const [mapAddress, setMapAddress] = useState('Toronto, Ontario, Canada')
   const [heroVideoUrl, setHeroVideoUrl] = useState('/hero-video.mp4')
+  const [aboutImageUrl, setAboutImageUrl] = useState('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80')
 
   // --- Form States ---
   const [newPost, setNewPost] = useState({ title: '', content: '' })
@@ -60,35 +69,27 @@ export default function AdminDashboard() {
   }, [])
 
   const fetchInitialData = async () => {
-    // Load Gallery from Supabase
-    const { data: galleryData, error: galleryError } = await supabase
-      .from('gallery')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
+    const { data: galleryData } = await supabase.from('gallery').select('*').order('created_at', { ascending: false })
     if (galleryData) setGallery(galleryData)
 
-    // Load from LocalStorage (Temporarily keeping others in LS)
+    const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false })
+    if (postsData) setPosts(postsData)
+
     // Load Site Settings from Supabase
-    const { data: settingsData } = await supabase
-      .from('site_settings')
-      .select('*')
-    
+    const { data: settingsData } = await supabase.from('site_settings').select('*')
     if (settingsData) {
       const content = settingsData.find(s => s.key === 'page_content')?.value
       const address = settingsData.find(s => s.key === 'map_address')?.value
       const video = settingsData.find(s => s.key === 'hero_video')?.value
+      const aboutImg = settingsData.find(s => s.key === 'about_image')?.value
       const settings = settingsData.find(s => s.key === 'admin_settings')?.value
 
       if (content) setPageContent(content)
       if (address) setMapAddress(address)
       if (video) setHeroVideoUrl(video)
+      if (aboutImg) setAboutImageUrl(aboutImg)
       if (settings) setSiteSettings(settings)
     }
-
-    // Fallback to LocalStorage for backward compatibility
-    const savedPosts = localStorage.getItem('pf_posts')
-    if (savedPosts) setPosts(JSON.parse(savedPosts))
   }
 
   // --- Actions ---
@@ -100,6 +101,7 @@ export default function AdminDashboard() {
         supabase.from('site_settings').upsert({ key: 'page_content', value: pageContent }),
         supabase.from('site_settings').upsert({ key: 'map_address', value: mapAddress }),
         supabase.from('site_settings').upsert({ key: 'hero_video', value: heroVideoUrl }),
+        supabase.from('site_settings').upsert({ key: 'about_image', value: aboutImageUrl }),
         supabase.from('site_settings').upsert({ key: 'admin_settings', value: siteSettings })
       ])
       alert('All changes saved to Supabase and published!')
@@ -119,25 +121,33 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleAddPost = (e: React.FormEvent) => {
+  const handleAddPost = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newPost.title || !newPost.content) return
-    const post = {
-      id: Date.now(),
-      ...newPost,
-      date: new Date().toISOString().split('T')[0],
-      author: siteSettings.adminName
-    }
-    const updated = [post, ...posts]
-    setPosts(updated)
-    localStorage.setItem('pf_posts', JSON.stringify(updated))
-    setNewPost({ title: '', content: '' })
+
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .insert([{ 
+          title: newPost.title, 
+          content: newPost.content, 
+          author: siteSettings.adminName || 'PF Leader', 
+          date: new Date().toISOString().split('T')[0] 
+        }])
+        .select()
+      
+      if (error) throw error
+      if (data) setPosts([data[0], ...posts])
+      setNewPost({ title: '', content: '' })
+    } catch (err: any) { alert(err.message) }
   }
 
-  const handleDeletePost = (id: number) => {
-    const updated = posts.filter(p => p.id !== id)
-    setPosts(updated)
-    localStorage.setItem('pf_posts', JSON.stringify(updated))
+  const handleDeletePost = async (id: any) => {
+    if (window.confirm('Delete this post?')) {
+      const { error } = await supabase.from('posts').delete().eq('id', id)
+      if (error) alert(error.message)
+      else setPosts(posts.filter(p => p.id !== id))
+    }
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -401,25 +411,17 @@ export default function AdminDashboard() {
                 )}
 
                 {activePage === 'about' && (
-                  <div className="space-y-8">
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Massive Title</label>
-                      <input 
-                        type="text"
-                        value={pageContent.about.massiveTitle}
-                        onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, massiveTitle: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Massive Description</label>
-                      <textarea 
-                        value={pageContent.about.massiveDesc}
-                        onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, massiveDesc: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-32"
-                      />
-                    </div>
+                  <div className="space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Massive Title</label>
+                        <input 
+                          type="text"
+                          value={pageContent.about.massiveTitle}
+                          onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, massiveTitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
                       <div className="space-y-4">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Creative Call Label</label>
                         <input 
@@ -429,21 +431,62 @@ export default function AdminDashboard() {
                           className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
                         />
                       </div>
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Creative Quote</label>
-                        <input 
-                          type="text"
-                          value={pageContent.about.creativeQuote}
-                          onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, creativeQuote: e.target.value}})}
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                      <div className="space-y-4 md:col-span-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Massive Description</label>
+                        <textarea 
+                          value={pageContent.about.massiveDesc}
+                          onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, massiveDesc: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-32"
                         />
                       </div>
+                    </div>
+
+                    <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+                      <div className="flex justify-between items-center mb-6">
+                        <div>
+                          <h4 className="font-black text-brand-dark uppercase text-sm">About Section Image</h4>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Featured vision photo</p>
+                        </div>
+                        <label className="px-6 py-3 bg-brand-purple text-white rounded-xl font-black text-[10px] uppercase tracking-widest cursor-pointer hover:scale-105 transition-transform">
+                          Upload Photo
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*" 
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+                              setIsUploading(true)
+                              try {
+                                const { data, error } = await supabase.storage.from('gallery').upload(`about/${Date.now()}-${file.name}`, file)
+                                if (error) throw error
+                                const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
+                                setAboutImageUrl(publicUrl)
+                              } catch (err: any) { alert(err.message) }
+                              finally { setIsUploading(false) }
+                            }}
+                          />
+                        </label>
+                      </div>
+                      <div className="aspect-[16/9] rounded-2xl overflow-hidden shadow-lg border-4 border-white">
+                        <img src={aboutImageUrl} alt="About preview" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Creative Quote</label>
+                      <input 
+                        type="text"
+                        value={pageContent.about.creativeQuote}
+                        onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, creativeQuote: e.target.value}})}
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                      />
                     </div>
                   </div>
                 )}
 
                 {activePage === 'conference' && (
-                  <div className="space-y-8">
+                  <div className="space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Date</label>
@@ -481,28 +524,59 @@ export default function AdminDashboard() {
                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-24"
                       />
                     </div>
+                    <div className="p-8 bg-brand-purple/5 rounded-[2rem] border border-brand-purple/10">
+                      <h4 className="text-brand-purple font-black text-xs uppercase tracking-widest mb-2">More Content Coming Soon</h4>
+                      <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Speakers and Schedule management will be integrated in the next update.</p>
+                    </div>
+                  </div>
+                )}
+
+                {activePage === 'events' && (
+                  <div className="space-y-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Title</label>
+                        <input 
+                          type="text"
+                          value={pageContent.events.heroTitle}
+                          onChange={(e) => setPageContent({...pageContent, events: {...pageContent.events, heroTitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
+                        <input 
+                          type="text"
+                          value={pageContent.events.heroSubtitle}
+                          onChange={(e) => setPageContent({...pageContent, events: {...pageContent.events, heroSubtitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {activePage === 'contact' && (
                   <div className="space-y-8">
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Title</label>
-                      <input 
-                        type="text"
-                        value={pageContent.contact.heroTitle}
-                        onChange={(e) => setPageContent({...pageContent, contact: {...pageContent.contact, heroTitle: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Info Header Title</label>
-                      <input 
-                        type="text"
-                        value={pageContent.contact.infoTitle}
-                        onChange={(e) => setPageContent({...pageContent, contact: {...pageContent.contact, infoTitle: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Title</label>
+                        <input 
+                          type="text"
+                          value={pageContent.contact.heroTitle}
+                          onChange={(e) => setPageContent({...pageContent, contact: {...pageContent.contact, heroTitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Info Header Title</label>
+                        <input 
+                          type="text"
+                          value={pageContent.contact.infoTitle}
+                          onChange={(e) => setPageContent({...pageContent, contact: {...pageContent.contact, infoTitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
                     </div>
                     <div className="space-y-4">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Info Description</label>
@@ -511,6 +585,45 @@ export default function AdminDashboard() {
                         onChange={(e) => setPageContent({...pageContent, contact: {...pageContent.contact, infoDesc: e.target.value}})}
                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-32"
                       />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-brand-purple uppercase tracking-widest ml-1">Address Label</label>
+                        <input 
+                          type="text"
+                          value={pageContent.contact.addressTitle}
+                          onChange={(e) => setPageContent({...pageContent, contact: {...pageContent.contact, addressTitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-brand-purple uppercase tracking-widest ml-1">Address Details</label>
+                        <input 
+                          type="text"
+                          value={pageContent.contact.addressDetail}
+                          onChange={(e) => setPageContent({...pageContent, contact: {...pageContent.contact, addressDetail: e.target.value}})}
+                          className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-brand-purple uppercase tracking-widest ml-1">Email Label</label>
+                        <input 
+                          type="text"
+                          value={pageContent.contact.emailTitle}
+                          onChange={(e) => setPageContent({...pageContent, contact: {...pageContent.contact, emailTitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-brand-purple uppercase tracking-widest ml-1">Email Address</label>
+                        <input 
+                          type="text"
+                          value={pageContent.contact.emailDetail}
+                          onChange={(e) => setPageContent({...pageContent, contact: {...pageContent.contact, emailDetail: e.target.value}})}
+                          className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

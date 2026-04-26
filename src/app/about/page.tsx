@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import { supabase } from '@/lib/supabase'
 
 const beliefs = (t: any) => [
   { icon: 'menu_book', title: 'The Bible — Our Compass', desc: 'We believe the Holy Bible is the infallible Word of God — our final authority and the ultimate guidebook for faith and life.' },
@@ -23,34 +24,29 @@ const ministries = (t: any) => [
 export default function AboutPage() {
   const { t } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [content, setContent] = useState({
-    massiveTitle: t('about.massiveTitle'),
-    massiveDesc: t('about.massiveDesc'),
-    creativeCall: t('about.creativeCall'),
-    creativeQuote: t('about.creativeQuote')
-  })
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [content, setContent] = useState<any>(null)
+  const [aboutImage, setAboutImage] = useState('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80')
 
   useEffect(() => {
-    const savedContent = localStorage.getItem('pf_page_content')
-    if (savedContent) {
-      const parsed = JSON.parse(savedContent)
-      if (parsed.about) {
-        setContent({
-          massiveTitle: parsed.about.massiveTitle || t('about.massiveTitle'),
-          massiveDesc: parsed.about.massiveDesc || t('about.massiveDesc'),
-          creativeCall: parsed.about.creativeCall || t('about.creativeCall'),
-          creativeQuote: parsed.about.creativeQuote || t('about.creativeQuote')
-        })
-      }
-    } else {
-      setContent({
-        massiveTitle: t('about.massiveTitle'),
-        massiveDesc: t('about.massiveDesc'),
-        creativeCall: t('about.creativeCall'),
-        creativeQuote: t('about.creativeQuote')
-      })
+    setIsLoaded(true)
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    const { data } = await supabase.from('site_settings').select('*')
+    if (data) {
+      const pageContent = data.find(s => s.key === 'page_content')?.value
+      const aboutImg = data.find(s => s.key === 'about_image')?.value
+      if (pageContent && pageContent.about) setContent(pageContent.about)
+      if (aboutImg) setAboutImage(aboutImg)
     }
-  }, [t])
+  }
+
+  const massiveTitle = content?.massiveTitle || t('about.massiveTitle')
+  const massiveDesc = content?.massiveDesc || t('about.massiveDesc')
+  const creativeCall = content?.creativeCall || t('about.creativeCall')
+  const creativeQuote = content?.creativeQuote || t('about.creativeQuote')
 
   return (
     <div className="flex flex-col min-h-screen bg-white selection:bg-brand-purple selection:text-white">
@@ -108,12 +104,17 @@ export default function AboutPage() {
         
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex flex-col items-center text-center lg:text-left">
-            <div className="mb-12 md:mb-20 mt-12 md:-mt-40 transform hover:scale-105 transition-transform duration-700">
+            <div className={`
+              relative w-full max-w-[800px] h-[400px] md:h-[600px] rounded-[3rem] overflow-hidden shadow-2xl mb-12 md:mb-20 mt-12 md:-mt-40
+              transition-all duration-1000 delay-500
+              ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}
+            `}>
               <img 
-                src="/logo.png" 
-                alt="PassionFruits Massive Logo" 
-                className="w-full max-w-[400px] md:max-w-[600px] h-auto drop-shadow-[0_25px_50px_rgba(0,0,0,0.1)] md:drop-shadow-[0_35px_60px_rgba(0,0,0,0.15)] animate-in zoom-in-95 fade-in duration-1000"
+                src={aboutImage} 
+                alt="PassionFruits Vision"
+                className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/40 to-transparent" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
@@ -122,7 +123,7 @@ export default function AboutPage() {
                   <span className="material-symbols-outlined text-3xl md:text-4xl">auto_awesome</span>
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter mb-6 md:mb-8 leading-tight break-keep">
-                  {content.massiveTitle.split(',').map((part: string, i: number) => {
+                  {massiveTitle.split(',').map((part: string, i: number) => {
                     const trimmed = part.trim();
                     if (!trimmed) return null;
                     const firstChar = trimmed[0];
@@ -133,22 +134,22 @@ export default function AboutPage() {
                           {firstChar}
                         </span>
                         <span>{rest}</span>
-                        {i === 0 && content.massiveTitle.includes(',') && ','}
+                        {i === 0 && massiveTitle.includes(',') && ','}
                       </span>
                     );
                   })}
                 </h2>
                 <p className="text-slate-500 font-bold text-base md:text-lg leading-relaxed break-keep">
-                  {content.massiveDesc}
+                  {massiveDesc}
                 </p>
               </div>
 
               <div className="pt-8 lg:pt-16 text-left">
                 <div className="space-y-12">
                   <div>
-                    <h4 className="text-brand-purple font-black text-xs uppercase tracking-[0.3em] mb-4">{content.creativeCall}</h4>
+                    <h4 className="text-brand-purple font-black text-xs uppercase tracking-[0.3em] mb-4">{creativeCall}</h4>
                     <p className="text-slate-600 font-medium text-lg leading-relaxed italic break-keep">
-                      {content.creativeQuote}
+                      {creativeQuote}
                     </p>
                   </div>
                   <div className="h-px bg-slate-200 w-24" />
@@ -223,7 +224,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Mobile Menu Overlay - Moved outside header for proper visibility */}
+      {/* Mobile Menu Overlay */}
       <div className={`
         fixed inset-0 bg-white z-[99999] flex flex-col transition-all duration-500 ease-in-out
         ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}
