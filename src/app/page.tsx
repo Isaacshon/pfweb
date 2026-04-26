@@ -11,6 +11,7 @@ import { ConferencePopup } from '@/components/ConferencePopup'
 
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import { supabase } from '@/lib/supabase'
 
 export default function Home() {
   const { t, language } = useLanguage()
@@ -29,8 +30,29 @@ export default function Home() {
     { src: "https://images.unsplash.com/photo-1540575861501-7ad05823c95b?auto=format&fit=crop&q=80&w=800", alt: "Event 4" },
   ]
 
+  const [gallery, setGallery] = useState<any[]>(galleryImages)
+
+  const fetchGallery = async () => {
+    const { data, error } = await supabase
+      .from('gallery')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(8)
+    
+    if (data && data.length > 0) {
+      // Map Supabase fields to Slider fields
+      const mapped = data.map((item: any) => ({
+        src: item.url,
+        alt: item.title || 'Gallery Image'
+      }))
+      setGallery(mapped)
+    }
+  }
+
   useEffect(() => {
     // Sync with Admin Settings
+    fetchGallery()
+
     const savedContent = localStorage.getItem('pf_page_content')
     if (savedContent) {
       const content = JSON.parse(savedContent)
@@ -231,7 +253,7 @@ export default function Home() {
               </div>
               <Link href="/events" className="text-brand-purple font-black text-xs uppercase tracking-widest border-b-2 border-brand-purple pb-1">Full Gallery</Link>
             </div>
-            <GallerySlider images={galleryImages} />
+            <GallerySlider images={gallery} />
           </div>
         </section>
 

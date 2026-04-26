@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -12,7 +13,8 @@ export default function AdminDashboard() {
 
   // --- Real State (Functional) ---
   const [posts, setPosts] = useState<any[]>([])
-  const [gallery, setGallery] = useState<string[]>([])
+  const [gallery, setGallery] = useState<any[]>([])
+  const [isUploading, setIsUploading] = useState(false)
   const [siteSettings, setSiteSettings] = useState({
     adminName: 'PF Leader'
   })
@@ -52,10 +54,20 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setIsLoaded(true)
+    fetchInitialData()
+  }, [])
+
+  const fetchInitialData = async () => {
+    // Load Gallery from Supabase
+    const { data: galleryData, error: galleryError } = await supabase
+      .from('gallery')
+      .select('*')
+      .order('created_at', { ascending: false })
     
-    // Load from LocalStorage
+    if (galleryData) setGallery(galleryData)
+
+    // Load from LocalStorage (Temporarily keeping others in LS)
     const savedPosts = localStorage.getItem('pf_posts')
-    const savedGallery = localStorage.getItem('pf_gallery')
     const savedSettings = localStorage.getItem('pf_settings')
     const savedContent = localStorage.getItem('pf_page_content')
 
@@ -64,15 +76,9 @@ export default function AdminDashboard() {
       { id: 1, title: 'Welcome to PF 2026', content: 'Our new season is starting!', date: '2026-04-26', author: 'PF Leader' }
     ])
 
-    if (savedGallery) setGallery(JSON.parse(savedGallery))
-    else setGallery([
-      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=800'
-    ])
-
     if (savedSettings) setSiteSettings(JSON.parse(savedSettings))
     if (savedContent) setPageContent(JSON.parse(savedContent))
-  }, [])
+  }
 
   // --- Actions ---
   const handleSaveContent = (e: React.FormEvent) => {
@@ -111,19 +117,69 @@ export default function AdminDashboard() {
     localStorage.setItem('pf_posts', JSON.stringify(updated))
   }
 
-  const handleAddImage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newImageUrl) return
-    const updated = [newImageUrl, ...gallery]
-    setGallery(updated)
-    localStorage.setItem('pf_gallery', JSON.stringify(updated))
-    setNewImageUrl('')
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      // 1. Upload to Storage
+      const { error: uploadError } = await supabase.storage
+        .from('gallery')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('gallery')
+        .getPublicUrl(filePath)
+
+      // 3. Save to Database
+      const { data: insertedData, error: dbError } = await supabase
+        .from('gallery')
+        .insert([{ url: publicUrl, title: file.name }])
+        .select()
+
+      if (dbError) throw dbError
+      
+      if (insertedData) {
+        setGallery([insertedData[0], ...gallery])
+      }
+      alert('Image uploaded successfully!')
+    } catch (error: any) {
+      alert('Error uploading image: ' + error.message)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
-  const handleDeleteImage = (index: number) => {
-    const updated = gallery.filter((_, i) => i !== index)
-    setGallery(updated)
-    localStorage.setItem('pf_gallery', JSON.stringify(updated))
+  const handleDeleteImage = async (id: string, url: string) => {
+    if (!window.confirm('Are you sure you want to delete this image?')) return
+
+    try {
+      // 1. Delete from Database
+      const { error: dbError } = await supabase
+        .from('gallery')
+        .delete()
+        .eq('id', id)
+
+      if (dbError) throw dbError
+
+      // 2. Delete from Storage (Optional but recommended)
+      const fileName = url.split('/').pop()
+      if (fileName) {
+        await supabase.storage.from('gallery').remove([fileName])
+      }
+
+      setGallery(gallery.filter(item => item.id !== id))
+    } catch (error: any) {
+      alert('Error deleting image: ' + error.message)
+    }
   }
 
   const menuItems = [
@@ -473,29 +529,30 @@ export default function AdminDashboard() {
         {activeTab === 'gallery' && (
           <div className="space-y-8">
             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-              <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight mb-8">Add to Gallery</h3>
-              <form onSubmit={handleAddImage} className="flex gap-4">
-                <input 
-                  type="text" 
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  placeholder="Enter Image URL" 
-                  className="flex-1 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple transition-all font-bold"
-                />
-                <button type="submit" className="px-8 py-4 bg-brand-purple text-white rounded-2xl font-black text-xs uppercase tracking-widest">
-                  Add URL
-                </button>
-              </form>
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight">Add to Gallery</h3>
+                {isUploading && <span className="text-brand-purple font-black text-xs uppercase animate-pulse">Uploading...</span>}
+              </div>
+              <label className={`
+                flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer hover:border-brand-purple hover:bg-slate-50 transition-all
+                ${isUploading ? 'opacity-50 pointer-events-none' : ''}
+              `}>
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <span className="material-symbols-outlined text-3xl text-slate-400 mb-2">upload_file</span>
+                  <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Click to upload image</p>
+                </div>
+                <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" disabled={isUploading} />
+              </label>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {gallery.map((url, i) => (
-                <div key={i} className="group relative aspect-square bg-slate-100 rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
-                  <img src={url} alt="" className="w-full h-full object-cover" />
+              {gallery.map((item) => (
+                <div key={item.id} className="group relative aspect-square bg-slate-100 rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
+                  <img src={item.url} alt={item.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button 
-                      onClick={() => handleDeleteImage(i)}
-                      className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-red-500 shadow-xl"
+                      onClick={() => handleDeleteImage(item.id, item.url)}
+                      className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-red-500 shadow-xl hover:scale-110 transition-transform"
                     >
                       <span className="material-symbols-outlined">delete</span>
                     </button>
