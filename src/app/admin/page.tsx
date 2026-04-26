@@ -242,6 +242,7 @@ export default function AdminDashboard() {
   const pages = [
     { id: 'home', label: 'Home Page' },
     { id: 'about', label: 'About Page' },
+    { id: 'events', label: 'Events Page' },
     { id: 'conference', label: 'Conference' },
     { id: 'contact', label: 'Contact' },
   ]
@@ -603,6 +604,31 @@ export default function AdminDashboard() {
                         >
                           + Add Belief
                         </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activePage === 'events' && (
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Title</label>
+                        <input 
+                          type="text"
+                          value={pageContent.events.heroTitle}
+                          onChange={(e) => setPageContent({...pageContent, events: {...pageContent.events, heroTitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
+                        <input 
+                          type="text"
+                          value={pageContent.events.heroSubtitle}
+                          onChange={(e) => setPageContent({...pageContent, events: {...pageContent.events, heroSubtitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
                       </div>
                     </div>
                   </div>
