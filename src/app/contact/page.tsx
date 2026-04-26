@@ -13,6 +13,8 @@ export default function Contact() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [messageContent, setMessageContent] = useState('')
+  const [content, setContent] = useState<any>(null)
+  
   useEffect(() => {
     setIsLoaded(true)
     fetchSettings()
