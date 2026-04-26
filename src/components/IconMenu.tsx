@@ -17,7 +17,7 @@ export const IconMenu = () => {
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 py-20 px-4 max-w-7xl mx-auto">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8 py-12 md:py-20 px-4 max-w-7xl mx-auto">
       {menuItems.map((item, index) => (
         <Link
           key={index}
@@ -25,7 +25,7 @@ export const IconMenu = () => {
           className="flex flex-col items-center group transition-all"
         >
           <div className="w-20 h-20 bg-white border border-slate-100 rounded-[1.5rem] flex items-center justify-center mb-4 shadow-sm group-hover:shadow-md group-hover:border-brand-purple transition-all">
-            <span className="material-symbols-outlined text-slate-400 group-hover:text-brand-purple text-3xl">
+            <span className="material-symbols-outlined text-brand-purple/70 group-hover:text-brand-purple text-3xl">
               {item.icon}
             </span>
           </div>

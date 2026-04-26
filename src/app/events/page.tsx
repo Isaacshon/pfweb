@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
@@ -17,16 +18,28 @@ const events = [
 
 export default function EventsPage() {
   const { t } = useLanguage()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [boardPosts, setBoardPosts] = useState<any[]>([])
+
+  useEffect(() => {
+    const savedPosts = localStorage.getItem('pf_posts')
+    if (savedPosts) {
+      setBoardPosts(JSON.parse(savedPosts))
+    }
+  }, [])
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-white selection:bg-brand-purple selection:text-white">
       {/* Navbar */}
-      <header className="sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
+      <header className="sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6 bg-white md:bg-white/95 md:backdrop-blur-md border-b border-slate-100 shadow-sm">
         <div className="flex items-center gap-6">
-          <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-6 -mb-4 drop-shadow-md cursor-pointer" /></Link>
-          <div className="hidden sm:block">
+          <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-14 md:h-28 w-auto mt-0 md:-mt-6 -mb-4 drop-shadow-md cursor-pointer" /></Link>
+          <div className="hidden md:block">
             <LanguageSelector />
           </div>
         </div>
+
+        {/* Desktop Nav */}
         <nav className="hidden lg:flex gap-12 text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
           <Link href="/" className="hover:text-brand-purple transition-all">{t('nav.home')}</Link>
           <Link href="/conference" className="hover:text-brand-purple transition-all">{t('nav.conference')}</Link>
@@ -34,36 +47,133 @@ export default function EventsPage() {
           <Link href="/about" className="hover:text-brand-purple transition-all">{t('nav.about')}</Link>
           <Link href="/contact" className="hover:text-brand-purple transition-all">{t('nav.contact')}</Link>
         </nav>
-        <Link href="/contact" className="px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">{t('nav.join')}</Link>
+
+        <div className="flex items-center gap-4">
+          <Link href="/contact" className="hidden sm:block px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">
+            {t('nav.join')}
+          </Link>
+          
+          {/* Hamburger Button */}
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="lg:hidden w-12 h-12 flex flex-col items-center justify-center gap-1.5 z-[110]"
+          >
+            <span className={`w-6 h-0.5 bg-brand-dark transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+            <span className={`w-6 h-0.5 bg-brand-dark transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
+            <span className={`w-6 h-0.5 bg-brand-dark transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          </button>
+        </div>
+
       </header>
 
       {/* Hero */}
-      <section className="py-24 px-6 bg-slate-50 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto text-center">
-          <span className="text-brand-purple font-black text-sm tracking-widest uppercase mb-4 block">Archive</span>
-          <h1 className="text-6xl md:text-8xl font-black text-brand-dark uppercase tracking-tighter">Events</h1>
+      <section className="bg-brand-dark text-white py-20 md:py-32 px-5 md:px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#9a78b4]/20 to-brand-dark" />
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <span className="text-[#fffbbd] text-xs font-black tracking-[0.5em] uppercase mb-6 block">Kingdom News</span>
+          <h1 className="text-4xl md:text-8xl font-black uppercase tracking-tighter mb-8 leading-none">Events & Updates</h1>
+          <p className="text-base md:text-xl text-white/70 font-bold max-w-2xl mx-auto">Latest happenings and important notices from our ministry hub.</p>
         </div>
       </section>
 
+      {/* Notice Board Section */}
+      {boardPosts.length > 0 && (
+        <section className="py-16 md:py-24 px-5 md:px-6 bg-slate-50 border-b border-slate-100">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-4 mb-12">
+              <span className="w-12 h-12 bg-brand-purple rounded-2xl flex items-center justify-center text-white">
+                <span className="material-symbols-outlined">campaign</span>
+              </span>
+              <h2 className="text-2xl md:text-4xl font-black text-brand-dark uppercase tracking-tighter">Notice Board</h2>
+            </div>
+            <div className="space-y-4">
+              {boardPosts.map((post, i) => (
+                <div key={i} className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight">{post.title}</h3>
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{post.date}</span>
+                  </div>
+                  <p className="text-slate-500 font-medium leading-relaxed">{post.content}</p>
+                  <div className="mt-6 pt-6 border-t border-slate-50 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-brand-purple/10 rounded-lg flex items-center justify-center text-brand-purple">
+                      <span className="material-symbols-outlined text-xs">person</span>
+                    </div>
+                    <span className="text-[10px] font-black text-brand-purple uppercase tracking-widest">{post.author}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Events Grid */}
-      <section className="py-24 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="py-16 md:py-32 px-5 md:px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {events.map((event, i) => (
             <div key={i} className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all">
               <div className="aspect-[4/3] overflow-hidden">
                 <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
-              <div className="p-8">
+              <div className="p-6 md:p-8">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="px-4 py-1 bg-brand-purple/10 text-brand-purple rounded-full text-[10px] font-black uppercase tracking-widest">{event.category}</span>
-                  <span className="text-slate-400 text-xs font-bold">{event.date}</span>
+                  <span className="text-slate-400 text-[10px] md:text-xs font-bold">{event.date}</span>
                 </div>
-                <h3 className="font-black text-xl text-brand-dark group-hover:text-brand-purple transition-colors">{event.title}</h3>
+                <h3 className="font-black text-lg md:text-xl text-brand-dark group-hover:text-brand-purple transition-colors">{event.title}</h3>
               </div>
             </div>
           ))}
         </div>
       </section>
+
+      {/* Mobile Menu Overlay - Moved outside header for proper visibility */}
+      <div className={`
+        fixed inset-0 bg-white z-[99999] flex flex-col transition-all duration-500 ease-in-out
+        ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}
+      `}>
+        <div className="flex justify-between items-center p-8 border-b border-slate-100">
+          <Link href="/" onClick={() => setIsMenuOpen(false)}>
+            <img src="/logo.png" alt="PassionFruits" className="h-10 w-auto" />
+          </Link>
+          <button 
+            onClick={() => setIsMenuOpen(false)}
+            className="w-12 h-12 flex items-center justify-center bg-slate-50 rounded-2xl shadow-sm"
+          >
+            <span className="material-symbols-outlined text-brand-dark text-3xl">close</span>
+          </button>
+        </div>
+        
+        <div className="flex-1 flex flex-col justify-center items-center gap-8 p-12 overflow-y-auto">
+          <div className="mb-8 scale-110">
+            <LanguageSelector />
+          </div>
+          <Link href="/" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.home')}
+          </Link>
+          <Link href="/conference" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.conference')}
+          </Link>
+          <Link href="/events" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-purple">
+            {t('nav.events')}
+          </Link>
+          <Link href="/about" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.about')}
+          </Link>
+          <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.contact')}
+          </Link>
+          
+          <div className="mt-12 flex flex-col gap-4 w-full max-w-xs">
+            <Link href="/conference" onClick={() => setIsMenuOpen(false)} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-sm uppercase tracking-widest text-center shadow-lg">
+              {t('nav.join')}
+            </Link>
+            <Link href="/about" onClick={() => setIsMenuOpen(false)} className="w-full py-5 bg-slate-100 text-brand-dark rounded-2xl font-black text-sm uppercase tracking-widest text-center">
+              Our Vision
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

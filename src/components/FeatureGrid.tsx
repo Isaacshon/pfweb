@@ -7,7 +7,7 @@ export const FeatureGrid = () => {
   return (
     <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Big Feature */}
-      <div className="lg:col-span-8 group relative h-[500px] overflow-hidden rounded-[2.5rem] bg-brand-dark shadow-2xl">
+      <div className="lg:col-span-8 group relative h-[400px] md:h-[500px] overflow-hidden rounded-[2.5rem] bg-brand-dark shadow-2xl">
         <video
           autoPlay loop muted playsInline
           className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-[2s]"
@@ -15,9 +15,9 @@ export const FeatureGrid = () => {
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        <div className="absolute bottom-12 left-12 right-12">
+        <div className="absolute bottom-8 left-8 right-8 md:bottom-12 md:left-12 md:right-12">
           <span className="text-[#fffbbd] font-black text-xs tracking-widest uppercase mb-4 block">Major Event</span>
-          <h3 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter mb-6 leading-none">
+          <h3 className="text-3xl md:text-6xl font-black text-white uppercase tracking-tighter mb-6 leading-none">
             Kingdom Influence:<br/><span className="text-[#9a78b4]">Conf 2026</span>
           </h3>
           <Link href="/conference" className="inline-block px-10 py-4 bg-white text-brand-dark rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">

@@ -89,7 +89,7 @@ const translations = {
     },
     hero: {
       influence: '킹덤 인플루언스',
-      title: '패션프룻',
+      title: '패션 프루츠',
       subtitle: '트렌디하면서도 변화를 이끄는 청년 문화를 선도합니다. 세상을 바꾸는 체인지메이커들의 움직임에 동참하세요.',
       getStarted: '시작하기',
       vision: '우리의 비전'
@@ -156,7 +156,7 @@ const translations = {
     },
     hero: {
       influence: '神国影响力',
-      title: '热情果实',
+      title: '热情 果实',
       subtitle: '引领既时尚又具有变革力的青年文化。加入变革者的行列。',
       getStarted: '开始体验',
       vision: '我们的愿景'

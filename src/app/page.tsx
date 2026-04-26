@@ -13,9 +13,14 @@ import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 
 export default function Home() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   // phase 0 = fullscreen intro, phase 1 = shrinking, phase 2 = landed
   const [phase, setPhase] = useState(0)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [heroTitle, setHeroTitle] = useState(t('hero.title'))
+  const [heroSubtitle, setHeroSubtitle] = useState(t('hero.subtitle'))
+  const [confLatestUpdate, setConfLatestUpdate] = useState('Latest Update')
+  const [confMainTitle, setConfMainTitle] = useState('Conference & Events')
 
   const galleryImages = [
     { src: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=800", alt: "Event 1" },
@@ -25,6 +30,22 @@ export default function Home() {
   ]
 
   useEffect(() => {
+    // Sync with Admin Settings
+    const savedContent = localStorage.getItem('pf_page_content')
+    if (savedContent) {
+      const content = JSON.parse(savedContent)
+      if (content.home) {
+        setHeroTitle(content.home.heroTitle || t('hero.title'))
+        setHeroSubtitle(content.home.heroSubtitle || t('hero.subtitle'))
+        setConfLatestUpdate(content.home.confLatestUpdate || 'Latest Update')
+        setConfMainTitle(content.home.confMainTitle || 'Conference & Events')
+      }
+    } else {
+      // No overrides, use translations
+      setHeroTitle(t('hero.title'))
+      setHeroSubtitle(t('hero.subtitle'))
+    }
+
     const introPlayed = sessionStorage.getItem('introPlayed')
     if (introPlayed) {
       setPhase(2)
@@ -39,7 +60,7 @@ export default function Home() {
       sessionStorage.setItem('introPlayed', 'true')
     }, 2800)
     return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [])
+  }, [t])
 
   const landed = phase >= 2
 
@@ -74,19 +95,21 @@ export default function Home() {
       <header
         className={`
           sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6
-          bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm
+          bg-white md:bg-white/95 md:backdrop-blur-md border-b border-slate-100 shadow-sm
           transition-all duration-[800ms] ease-out
           ${landed ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}
         `}
       >
         <div className="flex items-center gap-6">
           <Link href="/">
-            <img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-6 -mb-4 drop-shadow-md cursor-pointer" />
+            <img src="/logo.png" alt="PassionFruits" className="h-14 md:h-28 w-auto mt-0 md:-mt-6 -mb-4 drop-shadow-md cursor-pointer" />
           </Link>
-          <div className="hidden sm:block">
+          <div className="hidden md:block">
             <LanguageSelector />
           </div>
         </div>
+
+        {/* Desktop Nav */}
         <nav className="hidden lg:flex gap-12 text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
           <Link href="/" className="text-brand-purple border-b-2 border-brand-purple pb-1">{t('nav.home')}</Link>
           <Link href="/conference" className="hover:text-brand-purple transition-all">{t('nav.conference')}</Link>
@@ -94,9 +117,23 @@ export default function Home() {
           <Link href="/about" className="hover:text-brand-purple transition-all">{t('nav.about')}</Link>
           <Link href="/contact" className="hover:text-brand-purple transition-all">{t('nav.contact')}</Link>
         </nav>
-        <Link href="/contact" className="px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">
-          {t('nav.join')}
-        </Link>
+
+        <div className="flex items-center gap-4">
+          <Link href="/contact" className="hidden sm:block px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">
+            {t('nav.join')}
+          </Link>
+          
+          {/* Hamburger Button */}
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="lg:hidden w-12 h-12 flex flex-col items-center justify-center gap-1.5 z-[110]"
+          >
+            <span className={`w-6 h-0.5 bg-brand-dark transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+            <span className={`w-6 h-0.5 bg-brand-dark transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
+            <span className={`w-6 h-0.5 bg-brand-dark transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          </button>
+        </div>
+
       </header>
 
       {/* ========== HERO SECTION ========== */}
@@ -123,37 +160,48 @@ export default function Home() {
           </div>
 
           <h1 className={`
-            text-7xl md:text-[11rem] font-black leading-[0.8] tracking-tighter mb-10 uppercase
+            text-4xl sm:text-6xl md:text-[10rem] lg:text-[11rem] font-black tracking-tighter mb-6 md:mb-10 uppercase
             drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)]
             transition-all duration-[800ms] delay-[100ms]
+            ${(language === 'ko' || language === 'zh') ? 'leading-[1.2] md:leading-[1.1]' : 'leading-[0.9] md:leading-[0.8]'}
             ${landed ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
           `}>
-            {t('hero.title').split(' ').map((word: string, i: number) => (
-              <React.Fragment key={i}>
-                <span className={i === 0 ? "text-[#9a78b4]" : "text-[#fffbbd]"}>{word[0]}</span>
-                <span className="text-white">{word.slice(1)}</span>
-                {i === 0 && <br/>}
-              </React.Fragment>
-            ))}
+            {(() => {
+              const title = heroTitle;
+              const parts = title.split(' ');
+              const word1 = parts[0] || '';
+              const word2 = parts.slice(1).join(' ') || '';
+              return (
+                <>
+                  <span className="text-brand-purple">{word1[0]}</span>
+                  <span className="text-white">{word1.slice(1)}</span>
+                  <br />
+                  <span className="md:ml-8">
+                    <span className="text-brand-yellow">{word2[0]}</span>
+                    <span className="text-white">{word2.slice(1)}</span>
+                  </span>
+                </>
+              );
+            })()}
           </h1>
 
           <p className={`
-            text-white text-xl md:text-2xl max-w-3xl font-bold leading-relaxed mb-16 drop-shadow-lg
+            text-white text-base md:text-2xl max-w-2xl mx-auto font-bold leading-relaxed mb-10 md:mb-16 drop-shadow-lg px-4
             transition-all duration-[600ms] delay-[200ms]
             ${landed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
           `}>
-            {t('hero.subtitle')}
+            {heroSubtitle}
           </p>
 
           <div className={`
-            flex flex-col sm:flex-row gap-8
+            flex flex-col sm:flex-row gap-4 md:gap-8 w-full sm:w-auto px-5 sm:px-0 justify-center
             transition-all duration-[600ms] delay-[300ms]
             ${landed ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
           `}>
-            <Link href="/conference" className="px-16 py-6 bg-[#fffbbd] text-brand-dark rounded-full font-black text-lg uppercase shadow-[0_10px_30px_rgba(255,251,189,0.3)] hover:scale-105 transition-transform active:scale-95 text-center">
+            <Link href="/conference" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-[#fffbbd] text-brand-dark rounded-full font-black text-base md:text-lg uppercase shadow-[0_10px_30px_rgba(255,251,189,0.3)] hover:scale-105 transition-transform active:scale-95 text-center">
               {t('hero.getStarted')}
             </Link>
-            <Link href="/about" className="px-16 py-6 bg-white/10 backdrop-blur-md text-white border border-white/30 rounded-full font-black text-lg uppercase hover:bg-white/20 transition-all text-center">
+            <Link href="/about" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-white/10 backdrop-blur-md text-white border border-white/30 rounded-full font-black text-base md:text-lg uppercase hover:bg-white/20 transition-all text-center">
               {t('hero.vision')}
             </Link>
           </div>
@@ -164,10 +212,10 @@ export default function Home() {
       <div className={`transition-all duration-[800ms] delay-[400ms] ${landed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
         <IconMenu />
 
-        <section className="bg-slate-50 py-24 border-y border-slate-100">
-          <div className="max-w-7xl mx-auto px-6 mb-16 text-center">
-            <span className="text-brand-purple font-black text-sm tracking-widest uppercase mb-4 block">Latest Update</span>
-            <h2 className="text-5xl font-black text-brand-dark uppercase tracking-tighter">Conference & Events</h2>
+        <section className="bg-slate-50 py-16 md:py-24 border-y border-slate-100">
+          <div className="max-w-7xl mx-auto px-6 mb-12 md:mb-16 text-center">
+            <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block">{confLatestUpdate}</span>
+            <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter">{confMainTitle}</h2>
           </div>
           <FeatureGrid />
         </section>
@@ -256,6 +304,54 @@ export default function Home() {
             © 2026 PassionFruits Ministry. Retro Roots, Future Vision.
           </div>
         </footer>
+      </div>
+
+      {/* Mobile Menu Overlay - Moved outside header for proper visibility */}
+      <div className={`
+        fixed inset-0 bg-white z-[99999] flex flex-col transition-all duration-500 ease-in-out
+        ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}
+      `}>
+        <div className="flex justify-between items-center p-8 border-b border-slate-100">
+          <Link href="/" onClick={() => setIsMenuOpen(false)}>
+            <img src="/logo.png" alt="PassionFruits" className="h-10 w-auto" />
+          </Link>
+          <button 
+            onClick={() => setIsMenuOpen(false)}
+            className="w-12 h-12 flex items-center justify-center bg-slate-50 rounded-2xl shadow-sm"
+          >
+            <span className="material-symbols-outlined text-brand-dark text-3xl">close</span>
+          </button>
+        </div>
+        
+        <div className="flex-1 flex flex-col justify-center items-center gap-8 p-12 overflow-y-auto">
+          <div className="mb-8 scale-110">
+            <LanguageSelector />
+          </div>
+          <Link href="/" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-purple">
+            {t('nav.home')}
+          </Link>
+          <Link href="/conference" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.conference')}
+          </Link>
+          <Link href="/events" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.events')}
+          </Link>
+          <Link href="/about" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.about')}
+          </Link>
+          <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.contact')}
+          </Link>
+          
+          <div className="mt-12 flex flex-col gap-4 w-full max-w-xs">
+            <Link href="/conference" onClick={() => setIsMenuOpen(false)} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-sm uppercase tracking-widest text-center shadow-lg">
+              {t('nav.join')}
+            </Link>
+            <Link href="/about" onClick={() => setIsMenuOpen(false)} className="w-full py-5 bg-slate-100 text-brand-dark rounded-2xl font-black text-sm uppercase tracking-widest text-center">
+              Our Vision
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )

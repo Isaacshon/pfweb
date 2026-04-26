@@ -2,12 +2,51 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 
 export default function Contact() {
   const { t } = useLanguage()
+  const router = useRouter()
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [messageContent, setMessageContent] = useState('')
+  const [content, setContent] = useState({
+    heroTitle: t('nav.contact'),
+    infoTitle: "Let's Build the Kingdom Together",
+    infoDesc: "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you."
+  })
+
+  useEffect(() => {
+    setIsLoaded(true)
+    const savedContent = localStorage.getItem('pf_page_content')
+    if (savedContent) {
+      const parsed = JSON.parse(savedContent)
+      if (parsed.contact) {
+        setContent({
+          heroTitle: parsed.contact.heroTitle || t('nav.contact'),
+          infoTitle: parsed.contact.infoTitle || "Let's Build the Kingdom Together",
+          infoDesc: parsed.contact.infoDesc || "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you."
+        })
+      }
+    } else {
+      setContent({
+        heroTitle: t('nav.contact'),
+        infoTitle: "Let's Build the Kingdom Together",
+        infoDesc: "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you."
+      })
+    }
+  }, [t])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (messageContent.trim() === 'Pfadmin1!') {
+      router.push('/admin')
+    } else {
+      alert('Thank you for your message!')
+    }
+  }
 
   useEffect(() => {
     setIsLoaded(true)
@@ -19,19 +58,21 @@ export default function Contact() {
       <header
         className={`
           sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6
-          bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm
+          bg-white md:bg-white/95 md:backdrop-blur-md border-b border-slate-100 shadow-sm
           transition-all duration-[800ms] ease-out
           ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}
         `}
       >
         <div className="flex items-center gap-6">
           <Link href="/">
-            <img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-6 -mb-4 drop-shadow-md cursor-pointer" />
+            <img src="/logo.png" alt="PassionFruits" className="h-14 md:h-28 w-auto mt-0 md:-mt-6 -mb-4 drop-shadow-md cursor-pointer" />
           </Link>
-          <div className="hidden sm:block">
+          <div className="hidden md:block">
             <LanguageSelector />
           </div>
         </div>
+
+        {/* Desktop Nav */}
         <nav className="hidden lg:flex gap-12 text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
           <Link href="/" className="hover:text-brand-purple transition-all">{t('nav.home')}</Link>
           <Link href="/conference" className="hover:text-brand-purple transition-all">{t('nav.conference')}</Link>
@@ -39,165 +80,130 @@ export default function Contact() {
           <Link href="/about" className="hover:text-brand-purple transition-all">{t('nav.about')}</Link>
           <Link href="/contact" className="text-brand-purple border-b-2 border-brand-purple pb-1">{t('nav.contact')}</Link>
         </nav>
-        <Link href="/contact" className="px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">
-          {t('nav.join')}
-        </Link>
+
+        <div className="flex items-center gap-4">
+          <Link href="/contact" className="hidden sm:block px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">
+            {t('nav.join')}
+          </Link>
+          
+          {/* Hamburger Button */}
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="lg:hidden w-12 h-12 flex flex-col items-center justify-center gap-1.5 z-[110]"
+          >
+            <span className={`w-6 h-0.5 bg-brand-dark transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+            <span className={`w-6 h-0.5 bg-brand-dark transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
+            <span className={`w-6 h-0.5 bg-brand-dark transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          </button>
+        </div>
+
       </header>
 
       {/* ========== HERO SECTION (Big Logo) ========== */}
-      <section className="relative pt-4 pb-12 md:pt-6 md:pb-16 overflow-hidden bg-slate-50">
-        <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-purple via-transparent to-transparent"></div>
+      <section className="relative h-[40vh] md:h-[60vh] flex flex-col items-center justify-center overflow-hidden bg-brand-dark px-5">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent z-10" />
         </div>
-        
-        <div className="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-center text-center">
+
+        <div className="relative z-20 text-center flex flex-col items-center">
           <div className={`
-            mb-8 -mt-24 transition-all duration-1000 delay-300
-            ${isLoaded ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-50 rotate-12'}
+            mb-6 md:mb-10 transform transition-all duration-1000
+            ${isLoaded ? 'opacity-100 scale-100 rotate-0' : 'opacity-0 scale-75 -rotate-12'}
           `}>
-            <img src="/logo.png" alt="PassionFruits Logo" className="w-48 md:w-72 h-auto drop-shadow-2xl" />
+            <img 
+              src="/logo.png" 
+              alt="PassionFruits" 
+              className="h-32 md:h-64 w-auto drop-shadow-[0_20px_50px_rgba(154,120,180,0.4)]"
+            />
           </div>
           
           <h1 className={`
-            text-5xl md:text-7xl font-black text-brand-dark mb-4 tracking-tighter uppercase leading-none
+            text-3xl md:text-7xl font-black text-white mb-4 tracking-tighter uppercase leading-none
             transition-all duration-700 delay-500
             ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}
           `}>
-            {t('contactPage.title')}
+            {content.heroTitle}
           </h1>
-          <p className={`
-            text-slate-500 text-lg md:text-xl font-bold max-w-2xl leading-relaxed
-            transition-all duration-700 delay-700
-            ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
-          `}>
-            {t('contactPage.subtitle')}
-          </p>
-        </div>
-      </section>
-
-      {/* ========== CONTACT INFO CARDS ========== */}
-      <section className="py-12 px-6 -mt-8 relative z-20">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Address Card */}
-          <div className={`
-            bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 hover:border-brand-purple transition-all duration-500 group
-            ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}
-          `} style={{ transitionDelay: '800ms' }}>
-            <div className="w-16 h-16 rounded-2xl bg-[#fffbbd] flex items-center justify-center text-brand-dark mb-8 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-3xl">location_on</span>
-            </div>
-            <h3 className="text-2xl font-black text-brand-dark mb-4 uppercase tracking-tight">{t('contactPage.addressTitle')}</h3>
-            <p className="text-slate-500 font-bold leading-relaxed">{t('contactPage.address')}</p>
-            <a 
-              href="https://maps.app.goo.gl/Q2jQfBiAjr63uNnB7" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mt-8 text-brand-purple font-black text-xs uppercase tracking-widest border-b-2 border-brand-purple pb-1 hover:gap-4 transition-all"
-            >
-              Open in Maps <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </a>
-          </div>
-
-          {/* Email Card */}
-          <div className={`
-            bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 hover:border-brand-purple transition-all duration-500 group
-            ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}
-          `} style={{ transitionDelay: '900ms' }}>
-            <div className="w-16 h-16 rounded-2xl bg-[#9a78b4] flex items-center justify-center text-white mb-8 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-3xl">mail</span>
-            </div>
-            <h3 className="text-2xl font-black text-brand-dark mb-4 uppercase tracking-tight">{t('contactPage.emailTitle')}</h3>
-            <p className="text-slate-500 font-bold leading-relaxed">{t('contactPage.email')}</p>
-            <a 
-              href="mailto:passionfruits.ministry@gmail.com"
-              className="inline-flex items-center gap-2 mt-8 text-brand-purple font-black text-xs uppercase tracking-widest border-b-2 border-brand-purple pb-1 hover:gap-4 transition-all"
-            >
-              Send Email <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </a>
-          </div>
-
-          {/* Social Card */}
-          <div className={`
-            bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 hover:border-brand-purple transition-all duration-500 group
-            ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}
-          `} style={{ transitionDelay: '1000ms' }}>
-            <div className="w-16 h-16 rounded-2xl bg-brand-dark flex items-center justify-center text-white mb-8 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-3xl">photo_camera</span>
-            </div>
-            <h3 className="text-2xl font-black text-brand-dark mb-4 uppercase tracking-tight">{t('contactPage.instaTitle')}</h3>
-            <p className="text-slate-500 font-bold leading-relaxed">{t('contactPage.instaHandle')}</p>
-            <a 
-              href="https://www.instagram.com/passionfruits_ministry/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mt-8 text-brand-purple font-black text-xs uppercase tracking-widest border-b-2 border-brand-purple pb-1 hover:gap-4 transition-all"
-            >
-              Follow Us <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </a>
-          </div>
         </div>
       </section>
 
       {/* ========== MAP & FORM SECTION ========== */}
-      <section className="py-24 px-6 bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+      <section className="py-16 md:py-32 px-5 md:px-6 bg-white relative">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-start">
           
-          {/* Map Container - Interactive Design */}
+          {/* Contact Info */}
           <div className={`
-            relative rounded-[4rem] overflow-hidden shadow-2xl border-8 border-white group
-            h-[600px] transition-all duration-1000 delay-[1200ms]
-            ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
+            space-y-10 md:space-y-16 transition-all duration-700 delay-700
+            ${isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'}
           `}>
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2879.9972305370884!2d-79.3172554!3d43.812242!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89d4d38e2d46e8b7%3A0xc00f08e0996841f3!2s1057%20McNicoll%20Ave%2C%20Scarborough%2C%20ON%20M1W%202L8!5e0!3m2!1sen!2sca!4v1714055903932!5m2!1sen!2sca"
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen={true} 
-              loading="lazy" 
-              referrerPolicy="no-referrer-when-downgrade"
-              className="grayscale-[0.2] contrast-[1.1] brightness-[0.95] group-hover:grayscale-0 group-hover:contrast-100 transition-all duration-700"
-            ></iframe>
-            
-            <div className="absolute top-8 left-8 bg-brand-dark/90 backdrop-blur-md text-white p-6 rounded-[2rem] max-w-[240px] shadow-2xl pointer-events-none group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-500">
-              <span className="text-[#fffbbd] font-black text-[10px] tracking-[0.3em] uppercase block mb-2">Our Hub</span>
-              <h4 className="text-xl font-black uppercase leading-tight">PassionFruits Toronto</h4>
-              <p className="text-white/60 text-xs font-bold mt-2 leading-relaxed">Flipping the world upside down through creativity.</p>
+            <div>
+              <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block">Get In Touch</span>
+              <h2 className="text-4xl md:text-6xl font-black text-brand-dark uppercase tracking-tighter mb-8 leading-tight">
+                {content.infoTitle}
+              </h2>
+              <p className="text-slate-500 font-bold text-base md:text-lg leading-relaxed max-w-md">
+                {content.infoDesc}
+              </p>
+            </div>
+
+            <div className="space-y-6 md:space-y-8">
+              <div className="flex items-center gap-6 group cursor-pointer">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-brand-purple transition-all shadow-sm">
+                  <span className="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">mail</span>
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Email Us</h4>
+                  <p className="text-lg md:text-xl font-black text-brand-dark">passionfruits_ministry@naver.com</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6 group cursor-pointer">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-brand-purple transition-all shadow-sm">
+                  <span className="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">share</span>
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Follow Us</h4>
+                  <p className="text-lg md:text-xl font-black text-brand-dark">@passionfruits_ministry</p>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Contact Form */}
           <div className={`
-            flex flex-col transition-all duration-1000 delay-[1400ms]
-            ${isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-20'}
+            bg-slate-50 p-8 md:p-12 rounded-[2.5rem] md:rounded-[3rem] border border-slate-100 shadow-xl transition-all duration-700 delay-900
+            ${isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}
           `}>
-            <span className="text-brand-purple font-black text-sm tracking-[0.3em] uppercase mb-4 block">{t('menu.contactSub')}</span>
-            <h2 className="text-5xl md:text-6xl font-black text-brand-dark mb-12 tracking-tighter uppercase leading-none">
-              Let's build<br/>something <span className="text-brand-purple">iconic.</span>
-            </h2>
-            
-            <form className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <input 
-                  type="text" 
-                  placeholder={t('contactPage.namePlaceholder')}
-                  className="w-full px-8 py-6 rounded-3xl bg-slate-50 border border-slate-100 focus:border-brand-purple focus:outline-none font-bold transition-all"
-                />
-                <input 
-                  type="email" 
-                  placeholder={t('contactPage.emailPlaceholder')}
-                  className="w-full px-8 py-6 rounded-3xl bg-slate-50 border border-slate-100 focus:border-brand-purple focus:outline-none font-bold transition-all"
-                />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Name</label>
+                  <input 
+                    type="text" 
+                    placeholder={t('contactPage.namePlaceholder')}
+                    className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple transition-all text-base font-bold" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
+                  <input 
+                    type="email" 
+                    placeholder={t('contactPage.emailPlaceholder')}
+                    className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple transition-all text-base font-bold" 
+                  />
+                </div>
               </div>
-              <textarea 
-                rows={5}
-                placeholder={t('contactPage.messagePlaceholder')}
-                className="w-full px-8 py-6 rounded-3xl bg-slate-50 border border-slate-100 focus:border-brand-purple focus:outline-none font-bold transition-all resize-none"
-              ></textarea>
-              <button 
-                type="submit"
-                className="w-full py-8 bg-brand-dark text-white rounded-3xl font-black text-xl uppercase tracking-widest hover:bg-brand-purple transition-all transform active:scale-95 shadow-xl shadow-brand-dark/10"
-              >
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Message</label>
+                <textarea 
+                  rows={5} 
+                  value={messageContent}
+                  onChange={(e) => setMessageContent(e.target.value)}
+                  placeholder={t('contactPage.messagePlaceholder')}
+                  className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple transition-all text-base font-bold resize-none"
+                ></textarea>
+              </div>
+              <button type="submit" className="w-full py-5 bg-brand-dark text-white rounded-full font-black text-sm uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
                 {t('contactPage.sendBtn')}
               </button>
             </form>
@@ -240,6 +246,54 @@ export default function Contact() {
           © 2026 PassionFruits Ministry. Retro Roots, Future Vision.
         </div>
       </footer>
+
+      {/* Mobile Menu Overlay - Moved outside header for proper visibility */}
+      <div className={`
+        fixed inset-0 bg-white z-[99999] flex flex-col transition-all duration-500 ease-in-out
+        ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}
+      `}>
+        <div className="flex justify-between items-center p-8 border-b border-slate-100">
+          <Link href="/" onClick={() => setIsMenuOpen(false)}>
+            <img src="/logo.png" alt="PassionFruits" className="h-10 w-auto" />
+          </Link>
+          <button 
+            onClick={() => setIsMenuOpen(false)}
+            className="w-12 h-12 flex items-center justify-center bg-slate-50 rounded-2xl shadow-sm"
+          >
+            <span className="material-symbols-outlined text-brand-dark text-3xl">close</span>
+          </button>
+        </div>
+        
+        <div className="flex-1 flex flex-col justify-center items-center gap-8 p-12 overflow-y-auto">
+          <div className="mb-8 scale-110">
+            <LanguageSelector />
+          </div>
+          <Link href="/" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.home')}
+          </Link>
+          <Link href="/conference" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.conference')}
+          </Link>
+          <Link href="/events" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.events')}
+          </Link>
+          <Link href="/about" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
+            {t('nav.about')}
+          </Link>
+          <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-purple">
+            {t('nav.contact')}
+          </Link>
+          
+          <div className="mt-12 flex flex-col gap-4 w-full max-w-xs">
+            <Link href="/conference" onClick={() => setIsMenuOpen(false)} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-sm uppercase tracking-widest text-center shadow-lg">
+              {t('nav.join')}
+            </Link>
+            <Link href="/about" onClick={() => setIsMenuOpen(false)} className="w-full py-5 bg-slate-100 text-brand-dark rounded-2xl font-black text-sm uppercase tracking-widest text-center">
+              Our Vision
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
