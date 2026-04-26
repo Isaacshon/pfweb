@@ -24,6 +24,7 @@ export default function Home() {
   const [confMainTitle, setConfMainTitle] = useState('Conference & Events')
   const [mapAddress, setMapAddress] = useState('Toronto, Ontario, Canada')
   const [heroVideoUrl, setHeroVideoUrl] = useState('/hero-video.mp4')
+  const [pageContent, setPageContent] = useState<any>(null)
 
   const galleryImages = [
     { src: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=800", alt: "Event 1" },
@@ -63,6 +64,7 @@ export default function Home() {
         const video = settingsData.find(s => s.key === 'hero_video')?.value
 
         if (content && content.home) {
+          setPageContent(content)
           setHeroTitle(content.home.heroTitle || t('hero.title'))
           setHeroSubtitle(content.home.heroSubtitle || t('hero.subtitle'))
           setConfLatestUpdate(content.home.confLatestUpdate || 'Latest Update')
@@ -249,9 +251,9 @@ export default function Home() {
         </section>
 
         <StepGuide 
-          items={settings?.home?.journeyItems} 
-          title={settings?.home?.journeyTitle} 
-          subtitle={settings?.home?.journeySubtitle} 
+          items={pageContent?.home?.journeyItems} 
+          title={pageContent?.home?.journeyTitle} 
+          subtitle={pageContent?.home?.journeySubtitle} 
         />
 
         <section className="py-24 bg-white">
