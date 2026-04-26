@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 import { LanguageProvider } from "@/context/LanguageContext";
+import { DynamicFavicon } from "@/components/DynamicFavicon";
 
 export default function RootLayout({
   children,
@@ -27,6 +28,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
+        <DynamicFavicon />
       </head>
       <body className="min-h-full flex flex-col">
         <LanguageProvider>

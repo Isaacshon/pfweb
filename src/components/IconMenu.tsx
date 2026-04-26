@@ -4,10 +4,10 @@ import React from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 
-export const IconMenu = () => {
+export const IconMenu = ({ items }: { items?: any[] }) => {
   const { t } = useLanguage()
 
-  const menuItems = [
+  const defaultItems = [
     { icon: 'event', label: t('menu.conf'), subLabel: t('menu.confSub'), href: '/conference' },
     { icon: 'campaign', label: t('menu.events'), subLabel: t('menu.eventsSub'), href: '/events' },
     { icon: 'groups', label: t('menu.about'), subLabel: t('menu.aboutSub'), href: '/about' },
@@ -15,6 +15,8 @@ export const IconMenu = () => {
     { icon: 'mail', label: t('menu.contact'), subLabel: t('menu.contactSub'), href: '/contact' },
     { icon: 'favorite', label: t('menu.support'), subLabel: t('menu.supportSub'), href: '/contact' },
   ]
+
+  const menuItems = items || defaultItems
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8 py-12 md:py-20 px-4 max-w-7xl mx-auto">
@@ -24,10 +26,14 @@ export const IconMenu = () => {
           href={item.href}
           className="flex flex-col items-center group transition-all"
         >
-          <div className="w-20 h-20 bg-white border border-slate-100 rounded-[1.5rem] flex items-center justify-center mb-4 shadow-sm group-hover:shadow-md group-hover:border-brand-purple transition-all">
-            <span className="material-symbols-outlined text-brand-purple/70 group-hover:text-brand-purple text-3xl">
-              {item.icon}
-            </span>
+          <div className="w-20 h-20 bg-white border border-slate-100 rounded-[1.5rem] flex items-center justify-center mb-4 shadow-sm group-hover:shadow-md group-hover:border-brand-purple transition-all overflow-hidden">
+            {item.iconUrl ? (
+              <img src={item.iconUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={item.label} />
+            ) : (
+              <span className="material-symbols-outlined text-brand-purple/70 group-hover:text-brand-purple text-3xl">
+                {item.icon}
+              </span>
+            )}
           </div>
           <span className="text-sm font-bold text-slate-800 tracking-tight text-center">{item.label}</span>
           <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider text-center">{item.subLabel}</span>

@@ -240,7 +240,7 @@ export default function Home() {
 
       {/* ========== MAIN CONTENT ========== */}
       <div className={`transition-all duration-[800ms] delay-[400ms] ${landed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}>
-        <IconMenu />
+        <IconMenu items={pageContent?.home?.menuItems} />
 
         <section className="bg-slate-50 py-16 md:py-24 border-y border-slate-100">
           <div className="max-w-7xl mx-auto px-6 mb-12 md:mb-16 text-center break-keep">

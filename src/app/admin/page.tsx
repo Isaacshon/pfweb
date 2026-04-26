@@ -16,7 +16,8 @@ export default function AdminDashboard() {
   const [gallery, setGallery] = useState<any[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [siteSettings, setSiteSettings] = useState({
-    adminName: 'PF Leader'
+    adminName: 'PF Leader',
+    faviconUrl: ''
   })
 
   // Original Values for Reset/Initial
@@ -32,6 +33,14 @@ export default function AdminDashboard() {
         { icon: 'palette', title: 'CREATIVITY', desc: 'THE GOSPEL ARTS', iconUrl: '' },
         { icon: 'public', title: 'MISSIONS', desc: 'GLOBAL IMPACT', iconUrl: '' },
         { icon: 'star', title: 'INFLUENCE', desc: 'KINGDOM CULTURE', iconUrl: '' }
+      ],
+      menuItems: [
+        { icon: 'event', label: 'Conference', subLabel: '2026 Conf', iconUrl: '' },
+        { icon: 'campaign', label: 'Events', subLabel: 'Kingdom News', iconUrl: '' },
+        { icon: 'groups', label: 'About', subLabel: 'Our Story', iconUrl: '' },
+        { icon: 'visibility', label: 'Vision', subLabel: 'Our Vision', iconUrl: '' },
+        { icon: 'mail', label: 'Contact', subLabel: 'Get in Touch', iconUrl: '' },
+        { icon: 'favorite', label: 'Support', subLabel: 'Sponsorship', iconUrl: '' }
       ]
     },
     about: {
@@ -401,6 +410,65 @@ export default function AdminDashboard() {
                             }}
                           />
                         </label>
+                      </div>
+                    </div>
+
+                    <div className="pt-10 border-t border-slate-100">
+                      <h4 className="text-brand-purple font-black text-xs uppercase tracking-widest mb-8">Quick Menu Icons</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {pageContent.home.menuItems?.map((item: any, idx: number) => (
+                          <div key={idx} className="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative group">
+                            <div className="flex flex-col gap-4">
+                              <div className="w-20 h-20 bg-white rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm relative group mx-auto">
+                                {item.iconUrl ? (
+                                  <img src={item.iconUrl} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="material-symbols-outlined text-2xl text-brand-purple">{item.icon}</span>
+                                )}
+                                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                                  <span className="material-symbols-outlined text-white text-sm">upload</span>
+                                  <input 
+                                    type="file" className="hidden" accept="image/*"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0]
+                                      if (!file) return
+                                      setIsUploading(true)
+                                      try {
+                                        const { data, error } = await supabase.storage.from('gallery').upload(`menu/${Date.now()}-${file.name}`, file)
+                                        if (error) throw error
+                                        const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
+                                        const items = [...pageContent.home.menuItems];
+                                        items[idx].iconUrl = publicUrl;
+                                        setPageContent({...pageContent, home: {...pageContent.home, menuItems: items}});
+                                      } catch (err: any) { alert(err.message) }
+                                      finally { setIsUploading(false) }
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                              <div className="space-y-2">
+                                <input 
+                                  type="text" value={item.label}
+                                  onChange={(e) => {
+                                    const items = [...pageContent.home.menuItems];
+                                    items[idx].label = e.target.value;
+                                    setPageContent({...pageContent, home: {...pageContent.home, menuItems: items}});
+                                  }}
+                                  className="w-full px-4 py-2 bg-white border border-slate-100 rounded-xl focus:outline-none focus:border-brand-purple font-black text-xs uppercase text-center"
+                                />
+                                <input 
+                                  type="text" value={item.subLabel}
+                                  onChange={(e) => {
+                                    const items = [...pageContent.home.menuItems];
+                                    items[idx].subLabel = e.target.value;
+                                    setPageContent({...pageContent, home: {...pageContent.home, menuItems: items}});
+                                  }}
+                                  className="w-full px-4 py-2 bg-white border border-slate-100 rounded-xl focus:outline-none focus:border-brand-purple font-bold text-[9px] uppercase tracking-widest text-slate-400 text-center"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -1016,22 +1084,54 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Settings Tab */}
         {activeTab === 'settings' && (
-          <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-            <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight mb-8">Admin Settings</h3>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                <div>
-                  <h4 className="font-black text-brand-dark uppercase text-sm">Admin Display Name</h4>
-                  <p className="text-xs text-slate-400 font-bold mt-1">Currently: {siteSettings.adminName}</p>
+          <div className="space-y-10">
+            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
+              <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight mb-8">Site Branding</h3>
+              <div className="space-y-8">
+                <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h4 className="font-black text-brand-dark uppercase text-sm">Favicon (Tab Icon)</h4>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Recommended: 64x64 PNG or ICO</p>
+                    </div>
+                    <label className="px-6 py-3 bg-brand-purple text-white rounded-xl font-black text-[10px] uppercase tracking-widest cursor-pointer hover:scale-105 transition-transform">
+                      Upload Icon
+                      <input 
+                        type="file" className="hidden" accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          setIsUploading(true)
+                          try {
+                            const { data, error } = await supabase.storage.from('gallery').upload(`branding/favicon-${Date.now()}`, file)
+                            if (error) throw error
+                            const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
+                            setSiteSettings({...siteSettings, faviconUrl: publicUrl})
+                          } catch (err: any) { alert(err.message) }
+                          finally { setIsUploading(false) }
+                        }}
+                      />
+                    </label>
+                  </div>
+                  {siteSettings.faviconUrl && (
+                    <div className="w-16 h-16 bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
+                      <img src={siteSettings.faviconUrl} className="w-full h-full object-contain" alt="Favicon preview" />
+                    </div>
+                  )}
                 </div>
-                <input 
-                  type="text"
-                  value={siteSettings.adminName}
-                  onChange={(e) => setSiteSettings({...siteSettings, adminName: e.target.value})}
-                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-brand-purple font-bold text-sm"
-                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Admin Display Name</label>
+                    <input 
+                      type="text" 
+                      value={siteSettings.adminName}
+                      onChange={(e) => setSiteSettings({...siteSettings, adminName: e.target.value})}
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple transition-all font-bold"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
