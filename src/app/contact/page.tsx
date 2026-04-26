@@ -26,7 +26,7 @@ export default function Contact() {
       >
         <div className="flex items-center gap-6">
           <Link href="/">
-            <img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-16 -mb-4 drop-shadow-md cursor-pointer" />
+            <img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-6 -mb-4 drop-shadow-md cursor-pointer" />
           </Link>
           <div className="hidden sm:block">
             <LanguageSelector />

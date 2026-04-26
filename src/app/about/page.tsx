@@ -27,7 +27,7 @@ export default function AboutPage() {
       {/* Navbar */}
       <header className="sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
         <div className="flex items-center gap-6">
-          <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-16 -mb-4 drop-shadow-md cursor-pointer" /></Link>
+          <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-6 -mb-4 drop-shadow-md cursor-pointer" /></Link>
           <div className="hidden sm:block">
             <LanguageSelector />
           </div>

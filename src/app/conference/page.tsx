@@ -1,6 +1,11 @@
+'use client'
+
 import Link from 'next/link'
+import { useLanguage } from '@/context/LanguageContext'
+import { LanguageSelector } from '@/components/LanguageSelector'
 
 export default function ConferencePage() {
+  const { t } = useLanguage()
   const speakers = [
     { name: 'Guest Speaker 1', role: 'To be announced' },
     { name: 'Guest Speaker 2', role: 'To be announced' },
@@ -38,15 +43,20 @@ export default function ConferencePage() {
     <div className="min-h-screen bg-white">
       {/* Navbar */}
       <header className="sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
-        <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-16 -mb-4 drop-shadow-md cursor-pointer" /></Link>
+        <div className="flex items-center gap-6">
+          <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-20 md:h-28 w-auto -mt-6 -mb-4 drop-shadow-md cursor-pointer" /></Link>
+          <div className="hidden sm:block">
+            <LanguageSelector />
+          </div>
+        </div>
         <nav className="hidden lg:flex gap-12 text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
-          <Link href="/" className="hover:text-brand-purple transition-all">Home</Link>
-          <Link href="/conference" className="text-brand-purple border-b-2 border-brand-purple pb-1">Conference</Link>
-          <Link href="/events" className="hover:text-brand-purple transition-all">Events</Link>
-          <Link href="/about" className="hover:text-brand-purple transition-all">About</Link>
-          <Link href="/contact" className="hover:text-brand-purple transition-all">Contact</Link>
+          <Link href="/" className="hover:text-brand-purple transition-all">{t('nav.home')}</Link>
+          <Link href="/conference" className="text-brand-purple border-b-2 border-brand-purple pb-1">{t('nav.conference')}</Link>
+          <Link href="/events" className="hover:text-brand-purple transition-all">{t('nav.events')}</Link>
+          <Link href="/about" className="hover:text-brand-purple transition-all">{t('nav.about')}</Link>
+          <Link href="/contact" className="hover:text-brand-purple transition-all">{t('nav.contact')}</Link>
         </nav>
-        <Link href="/contact" className="px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">Contact</Link>
+        <Link href="/contact" className="px-10 py-3 bg-brand-purple text-white rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-md">{t('nav.join')}</Link>
       </header>
 
       {/* Hero */}
