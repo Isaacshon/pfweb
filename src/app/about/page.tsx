@@ -186,8 +186,12 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {(content?.ministries || ministries(t)).map((m: any, i: number) => (
               <div key={i} className="bg-white rounded-3xl p-8 md:p-10 border border-slate-100 shadow-sm hover:shadow-lg transition-shadow">
-                <div className="w-14 md:w-16 h-14 md:h-16 bg-[#fffbbd] rounded-2xl flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-brand-dark text-2xl md:text-3xl">{m.icon}</span>
+                <div className="w-14 md:w-16 h-14 md:h-16 bg-[#fffbbd] rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
+                  {m.iconUrl ? (
+                    <img src={m.iconUrl} className="w-full h-full object-cover" alt={m.title} />
+                  ) : (
+                    <span className="material-symbols-outlined text-brand-dark text-2xl md:text-3xl">{m.icon}</span>
+                  )}
                 </div>
                 <h3 className="font-black text-xl text-brand-dark mb-3">{m.title}</h3>
                 <p className="text-slate-500 font-medium leading-relaxed text-sm">{m.desc}</p>
@@ -205,7 +209,11 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {(content?.beliefs || beliefs(t)).map((b: any, i: number) => (
               <div key={i} className="p-6 md:p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:border-brand-purple transition-colors">
-                <span className="material-symbols-outlined text-brand-purple text-2xl md:text-3xl mb-4 block">{b.icon}</span>
+                {b.iconUrl ? (
+                  <img src={b.iconUrl} className="w-10 h-10 object-contain mb-4" alt={b.title} />
+                ) : (
+                  <span className="material-symbols-outlined text-brand-purple text-2xl md:text-3xl mb-4 block">{b.icon}</span>
+                )}
                 <h3 className="font-black text-lg text-brand-dark mb-3">{b.title}</h3>
                 <p className="text-slate-500 font-medium leading-relaxed text-sm">{b.desc}</p>
               </div>

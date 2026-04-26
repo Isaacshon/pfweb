@@ -32,9 +32,13 @@ export const StepGuide = ({
               <div className="relative w-28 h-28 flex items-center justify-center mb-6">
                 {/* Decorative Circle */}
                 <div className="absolute inset-0 bg-slate-50 border border-slate-100 rounded-full group-hover:border-brand-purple group-hover:bg-brand-purple/5 transition-all duration-500 group-hover:scale-110" />
-                <span className="material-symbols-outlined relative z-10 text-slate-400 group-hover:text-brand-purple text-5xl transition-all duration-300">
-                  {step.icon}
-                </span>
+                {step.iconUrl ? (
+                  <img src={step.iconUrl} className="relative z-10 w-16 h-16 object-contain group-hover:scale-110 transition-transform duration-500" alt={step.title} />
+                ) : (
+                  <span className="material-symbols-outlined relative z-10 text-slate-400 group-hover:text-brand-purple text-5xl transition-all duration-300">
+                    {step.icon}
+                  </span>
+                )}
                 {/* Step Number Badge */}
                 <div className="absolute -top-2 -right-2 w-8 h-8 bg-brand-dark text-white rounded-full flex items-center justify-center text-xs font-black border-4 border-white shadow-md">
                   {index + 1}

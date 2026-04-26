@@ -420,9 +420,41 @@ export default function AdminDashboard() {
                             >
                               <span className="material-symbols-outlined text-sm">delete</span>
                             </button>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                               <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Icon (Material Name)</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Icon Image</label>
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm flex items-center justify-center">
+                                    {item.iconUrl ? (
+                                      <img src={item.iconUrl} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <span className="material-symbols-outlined text-slate-300">{item.icon}</span>
+                                    )}
+                                  </div>
+                                  <label className="px-3 py-2 bg-slate-200 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest cursor-pointer hover:bg-slate-300 transition-colors">
+                                    Upload
+                                    <input 
+                                      type="file" className="hidden" accept="image/*"
+                                      onChange={async (e) => {
+                                        const file = e.target.files?.[0]
+                                        if (!file) return
+                                        setIsUploading(true)
+                                        try {
+                                          const { data, error } = await supabase.storage.from('gallery').upload(`icons/${Date.now()}-${file.name}`, file)
+                                          if (error) throw error
+                                          const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
+                                          const items = [...pageContent.home.journeyItems];
+                                          items[idx].iconUrl = publicUrl;
+                                          setPageContent({...pageContent, home: {...pageContent.home, journeyItems: items}});
+                                        } catch (err: any) { alert(err.message) }
+                                        finally { setIsUploading(false) }
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Icon Name (Text)</label>
                                 <input 
                                   type="text"
                                   value={item.icon}
@@ -448,7 +480,7 @@ export default function AdminDashboard() {
                                 />
                               </div>
                               <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Subtitle/Desc</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Desc</label>
                                 <input 
                                   type="text"
                                   value={item.desc}
@@ -568,9 +600,38 @@ export default function AdminDashboard() {
                               <span className="material-symbols-outlined text-xs">delete</span>
                             </button>
                             <div className="space-y-4">
+                              <div className="flex items-center gap-4 mb-2">
+                                <div className="w-12 h-12 bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm flex items-center justify-center">
+                                  {item.iconUrl ? (
+                                    <img src={item.iconUrl} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="material-symbols-outlined text-slate-300">{item.icon}</span>
+                                  )}
+                                </div>
+                                <label className="px-3 py-2 bg-slate-200 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest cursor-pointer hover:bg-slate-300 transition-colors">
+                                  Icon Image
+                                  <input 
+                                    type="file" className="hidden" accept="image/*"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0]
+                                      if (!file) return
+                                      setIsUploading(true)
+                                      try {
+                                        const { data, error } = await supabase.storage.from('gallery').upload(`icons/${Date.now()}-${file.name}`, file)
+                                        if (error) throw error
+                                        const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
+                                        const items = [...pageContent.about.beliefs];
+                                        items[idx].iconUrl = publicUrl;
+                                        setPageContent({...pageContent, about: {...pageContent.about, beliefs: items}});
+                                      } catch (err: any) { alert(err.message) }
+                                      finally { setIsUploading(false) }
+                                    }}
+                                  />
+                                </label>
+                              </div>
                               <input 
                                 type="text"
-                                placeholder="Icon Name"
+                                placeholder="Default Icon Name"
                                 value={item.icon}
                                 onChange={(e) => {
                                   const items = [...pageContent.about.beliefs];
