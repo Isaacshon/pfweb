@@ -25,19 +25,45 @@ export default function AdminDashboard() {
       heroTitle: 'PASSION FRUITS',
       heroSubtitle: 'Leading a youth culture that is as trendy as it is transformative. Join the movement of changemakers.',
       confLatestUpdate: 'Latest Update',
-      confMainTitle: 'Conference & Events'
+      heroTitle: 'PassionFruits Ministry',
+      heroSubtitle: 'Retro Roots, Future Vision.',
+      journeyTitle: 'PASSIONFRUITS JOURNEY',
+      journeySubtitle: 'OUR PATH',
+      journeyItems: [
+        { icon: 'flare', title: 'WORSHIP', desc: 'ENCOUNTER JESUS' },
+        { icon: 'palette', title: 'CREATIVITY', desc: 'THE GOSPEL ARTS' },
+        { icon: 'public', title: 'MISSIONS', desc: 'GLOBAL IMPACT' },
+        { icon: 'star', title: 'INFLUENCE', desc: 'KINGDOM CULTURE' }
+      ]
     },
     about: {
-      massiveTitle: 'We are Creators, not just followers.',
-      massiveDesc: 'We break away from rigid traditions to create a space where young people’s creative talents and raw passion become a bridge for the Gospel. We lead a youth culture that is as trendy as it is transformative.',
-      creativeCall: 'The Creative Call',
-      creativeQuote: '"Art and culture are the most powerful languages we have to communicate the love of Jesus to the next generation."'
+      heroTitle: 'About Us',
+      quote: '"We are a generation called to bring the light of the Gospel into the heart of youth culture."',
+      visionTitle: 'Our Vision',
+      visionDesc: 'Flipping the world upside down through the creative language of youth culture. We believe in the power of authenticity, creativity, and unwavering faith.',
+      beliefs: [
+        { icon: 'menu_book', title: 'The Bible — Our Compass', desc: 'We believe the Holy Bible is the infallible Word of God.' },
+        { icon: 'diversity_3', title: 'God — The Creator', desc: 'We believe in the one true, living God.' },
+        { icon: 'church', title: 'Jesus Christ — Our Only Way', desc: 'Jesus is fully God and fully man.' },
+        { icon: 'local_fire_department', title: 'Holy Spirit — Our Guide', desc: 'The Holy Spirit dwells within us.' },
+        { icon: 'card_giftcard', title: 'Salvation — The Ultimate Gift', desc: 'Salvation is a free gift of grace.' },
+        { icon: 'healing', title: 'Mankind — Restoration', desc: 'Every human being needs restoration through Jesus.' }
+      ],
+      ministries: [
+        { icon: 'music_note', title: 'Worship & Unity', desc: 'Every Monday, our Worship Night serves as a spiritual engine.' },
+        { icon: 'public', title: 'Global Missions', desc: 'Our mission teams actively serve in Europe and Latin America.' },
+        { icon: 'theater_comedy', title: '"The Gospel" (Cultural Arts)', desc: 'Through our original musical production, we provide a platform for youth.' }
+      ]
     },
     conference: {
       heroDate: 'August 20-22, 2026',
-      heroTitle: 'Passion Fruits',
-      heroSubtitle: 'JUDGES: Conquest to Conquer',
-      verse: '"But you are a chosen people, a royal priesthood, a holy nation, God\'s special possession, that you may declare the praises of him who called you out of darkness into his wonderful light." — 1 Peter 2:9'
+      heroTitle: 'JUDGES',
+      heroSubtitle: 'Conquest to Conquer',
+      verse: '"But you are a chosen people, a royal priesthood, a holy nation..." — 1 Peter 2:9',
+      speakers: [
+        { name: 'Guest Speaker 1', role: 'To be announced' },
+        { name: 'Guest Speaker 2', role: 'To be announced' }
+      ]
     },
     events: {
       heroTitle: 'Events & Updates',
@@ -61,7 +87,6 @@ export default function AdminDashboard() {
 
   // --- Form States ---
   const [newPost, setNewPost] = useState({ title: '', content: '' })
-  const [newImageUrl, setNewImageUrl] = useState('')
 
   useEffect(() => {
     setIsLoaded(true)
@@ -75,7 +100,6 @@ export default function AdminDashboard() {
     const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false })
     if (postsData) setPosts(postsData)
 
-    // Load Site Settings from Supabase
     const { data: settingsData } = await supabase.from('site_settings').select('*')
     if (settingsData) {
       const content = settingsData.find(s => s.key === 'page_content')?.value
@@ -92,7 +116,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // --- Actions ---
   const handleSaveContent = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsUploading(true)
@@ -160,19 +183,16 @@ export default function AdminDashboard() {
       const fileName = `${Math.random()}.${fileExt}`
       const filePath = `${fileName}`
 
-      // 1. Upload to Storage
       const { error: uploadError } = await supabase.storage
         .from('gallery')
         .upload(filePath, file)
 
       if (uploadError) throw uploadError
 
-      // 2. Get Public URL
       const { data: { publicUrl } } = supabase.storage
         .from('gallery')
         .getPublicUrl(filePath)
 
-      // 3. Save to Database
       const { data: insertedData, error: dbError } = await supabase
         .from('gallery')
         .insert([{ url: publicUrl, title: file.name }])
@@ -195,7 +215,6 @@ export default function AdminDashboard() {
     if (!window.confirm('Are you sure you want to delete this image?')) return
 
     try {
-      // 1. Delete from Database
       const { error: dbError } = await supabase
         .from('gallery')
         .delete()
@@ -203,7 +222,6 @@ export default function AdminDashboard() {
 
       if (dbError) throw dbError
 
-      // 2. Delete from Storage (Optional but recommended)
       const fileName = url.split('/').pop()
       if (fileName) {
         await supabase.storage.from('gallery').remove([fileName])
@@ -232,7 +250,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans">
-      {/* Sidebar */}
       <aside className={`
         w-72 bg-brand-dark text-white p-8 flex flex-col fixed h-full z-20
         transition-all duration-700
@@ -273,12 +290,10 @@ export default function AdminDashboard() {
         </button>
       </aside>
 
-      {/* Main Content */}
       <main className={`
         flex-1 ml-72 p-12 transition-all duration-[800ms] delay-300
         ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
       `}>
-        {/* Header */}
         <header className="flex justify-between items-center mb-12">
           <div>
             <h2 className="text-4xl font-black text-brand-dark uppercase tracking-tighter">
@@ -302,10 +317,8 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* Site Content Tab */}
         {activeTab === 'content' && (
           <div className="space-y-8">
-            {/* Page Selector */}
             <div className="flex gap-4 p-2 bg-slate-200/50 rounded-2xl w-fit">
               {pages.map(page => (
                 <button
@@ -333,6 +346,15 @@ export default function AdminDashboard() {
                         />
                       </div>
                       <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
+                        <input 
+                          type="text"
+                          value={pageContent.home.heroSubtitle}
+                          onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, heroSubtitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Map Address (Google Maps)</label>
                         <input 
                           type="text"
@@ -342,21 +364,13 @@ export default function AdminDashboard() {
                           className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
                         />
                       </div>
-                      <div className="space-y-4 md:col-span-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
-                        <textarea 
-                          value={pageContent.home.heroSubtitle}
-                          onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, heroSubtitle: e.target.value}})}
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-32"
-                        />
-                      </div>
                     </div>
 
                     <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
                       <div className="flex justify-between items-center mb-6">
                         <div>
                           <h4 className="font-black text-brand-dark uppercase text-sm">Hero Background Video</h4>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Currently: {heroVideoUrl.split('/').pop()}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate max-w-[300px]">URL: {heroVideoUrl}</p>
                         </div>
                         <label className="px-6 py-3 bg-brand-dark text-white rounded-xl font-black text-[10px] uppercase tracking-widest cursor-pointer hover:scale-105 transition-transform">
                           Change Video
@@ -379,64 +393,102 @@ export default function AdminDashboard() {
                           />
                         </label>
                       </div>
-                      <div className="aspect-video bg-black rounded-2xl overflow-hidden relative group">
-                        <video src={heroVideoUrl} autoPlay loop muted className="w-full h-full object-cover opacity-60" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="material-symbols-outlined text-white text-4xl opacity-0 group-hover:opacity-100 transition-opacity">play_circle</span>
-                        </div>
-                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Conf Section Subtitle</label>
-                        <input 
-                          type="text"
-                          value={pageContent.home.confLatestUpdate}
-                          onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, confLatestUpdate: e.target.value}})}
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                        />
-                      </div>
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Conf Section Title</label>
-                        <input 
-                          type="text"
-                          value={pageContent.home.confMainTitle}
-                          onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, confMainTitle: e.target.value}})}
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                        />
+                    <div className="pt-10 border-t border-slate-100">
+                      <h4 className="text-brand-purple font-black text-xs uppercase tracking-widest mb-8">Journey Section Items</h4>
+                      <div className="space-y-6">
+                        {pageContent.home.journeyItems?.map((item: any, idx: number) => (
+                          <div key={idx} className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative group">
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const items = [...pageContent.home.journeyItems];
+                                items.splice(idx, 1);
+                                setPageContent({...pageContent, home: {...pageContent.home, journeyItems: items}});
+                              }}
+                              className="absolute top-6 right-6 w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-300 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                              <span className="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Icon (Material Name)</label>
+                                <input 
+                                  type="text"
+                                  value={item.icon}
+                                  onChange={(e) => {
+                                    const items = [...pageContent.home.journeyItems];
+                                    items[idx].icon = e.target.value;
+                                    setPageContent({...pageContent, home: {...pageContent.home, journeyItems: items}});
+                                  }}
+                                  className="w-full px-5 py-3 bg-white border border-slate-100 rounded-xl focus:outline-none focus:border-brand-purple font-bold text-xs"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Title</label>
+                                <input 
+                                  type="text"
+                                  value={item.title}
+                                  onChange={(e) => {
+                                    const items = [...pageContent.home.journeyItems];
+                                    items[idx].title = e.target.value;
+                                    setPageContent({...pageContent, home: {...pageContent.home, journeyItems: items}});
+                                  }}
+                                  className="w-full px-5 py-3 bg-white border border-slate-100 rounded-xl focus:outline-none focus:border-brand-purple font-bold text-xs"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Subtitle/Desc</label>
+                                <input 
+                                  type="text"
+                                  value={item.desc}
+                                  onChange={(e) => {
+                                    const items = [...pageContent.home.journeyItems];
+                                    items[idx].desc = e.target.value;
+                                    setPageContent({...pageContent, home: {...pageContent.home, journeyItems: items}});
+                                  }}
+                                  className="w-full px-5 py-3 bg-white border border-slate-100 rounded-xl focus:outline-none focus:border-brand-purple font-bold text-xs"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const items = [...(pageContent.home.journeyItems || [])];
+                            items.push({ icon: 'star', title: 'NEW ITEM', desc: 'DESCRIPTION' });
+                            setPageContent({...pageContent, home: {...pageContent.home, journeyItems: items}});
+                          }}
+                          className="w-full py-5 bg-white border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-black text-[10px] uppercase tracking-widest hover:border-brand-purple hover:text-brand-purple transition-all"
+                        >
+                          + Add Journey Item
+                        </button>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {activePage === 'about' && (
-                  <div className="space-y-10">
+                  <div className="space-y-12">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Massive Title</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Title</label>
                         <input 
                           type="text"
-                          value={pageContent.about.massiveTitle}
-                          onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, massiveTitle: e.target.value}})}
+                          value={pageContent.about.heroTitle}
+                          onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, heroTitle: e.target.value}})}
                           className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
                         />
                       </div>
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Creative Call Label</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vision Title</label>
                         <input 
                           type="text"
-                          value={pageContent.about.creativeCall}
-                          onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, creativeCall: e.target.value}})}
+                          value={pageContent.about.visionTitle}
+                          onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, visionTitle: e.target.value}})}
                           className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                        />
-                      </div>
-                      <div className="space-y-4 md:col-span-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Massive Description</label>
-                        <textarea 
-                          value={pageContent.about.massiveDesc}
-                          onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, massiveDesc: e.target.value}})}
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-32"
                         />
                       </div>
                     </div>
@@ -468,25 +520,98 @@ export default function AdminDashboard() {
                           />
                         </label>
                       </div>
-                      <div className="aspect-[16/9] rounded-2xl overflow-hidden shadow-lg border-4 border-white">
+                      <div className="aspect-[16/9] rounded-2xl overflow-hidden shadow-lg border-4 border-white bg-slate-200">
                         <img src={aboutImageUrl} alt="About preview" className="w-full h-full object-cover" />
                       </div>
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Creative Quote</label>
-                      <input 
-                        type="text"
-                        value={pageContent.about.creativeQuote}
-                        onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, creativeQuote: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vision Description</label>
+                      <textarea 
+                        value={pageContent.about.visionDesc}
+                        onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, visionDesc: e.target.value}})}
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-32"
                       />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quote</label>
+                      <textarea 
+                        value={pageContent.about.quote}
+                        onChange={(e) => setPageContent({...pageContent, about: {...pageContent.about, quote: e.target.value}})}
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-24 italic"
+                      />
+                    </div>
+
+                    <div className="pt-10 border-t border-slate-100">
+                      <h4 className="text-brand-purple font-black text-xs uppercase tracking-widest mb-8">Our Beliefs</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {pageContent.about.beliefs?.map((item: any, idx: number) => (
+                          <div key={idx} className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative group">
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const items = [...pageContent.about.beliefs];
+                                items.splice(idx, 1);
+                                setPageContent({...pageContent, about: {...pageContent.about, beliefs: items}});
+                              }}
+                              className="absolute top-6 right-6 w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                              <span className="material-symbols-outlined text-xs">delete</span>
+                            </button>
+                            <div className="space-y-4">
+                              <input 
+                                type="text"
+                                placeholder="Icon Name"
+                                value={item.icon}
+                                onChange={(e) => {
+                                  const items = [...pageContent.about.beliefs];
+                                  items[idx].icon = e.target.value;
+                                  setPageContent({...pageContent, about: {...pageContent.about, beliefs: items}});
+                                }}
+                                className="w-full px-4 py-2 bg-white border border-slate-100 rounded-lg focus:outline-none focus:border-brand-purple font-bold text-[10px]"
+                              />
+                              <input 
+                                type="text"
+                                placeholder="Title"
+                                value={item.title}
+                                onChange={(e) => {
+                                  const items = [...pageContent.about.beliefs];
+                                  items[idx].title = e.target.value;
+                                  setPageContent({...pageContent, about: {...pageContent.about, beliefs: items}});
+                                }}
+                                className="w-full px-4 py-2 bg-white border border-slate-100 rounded-lg focus:outline-none focus:border-brand-purple font-bold text-[10px]"
+                              />
+                              <textarea 
+                                placeholder="Description"
+                                value={item.desc}
+                                onChange={(e) => {
+                                  const items = [...pageContent.about.beliefs];
+                                  items[idx].desc = e.target.value;
+                                  setPageContent({...pageContent, about: {...pageContent.about, beliefs: items}});
+                                }}
+                                className="w-full px-4 py-2 bg-white border border-slate-100 rounded-lg focus:outline-none focus:border-brand-purple font-bold text-[10px] h-20"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const items = [...(pageContent.about.beliefs || [])];
+                            items.push({ icon: 'menu_book', title: 'New Belief', desc: 'Description' });
+                            setPageContent({...pageContent, about: {...pageContent.about, beliefs: items}});
+                          }}
+                          className="h-full min-h-[200px] bg-white border-2 border-dashed border-slate-200 rounded-[2.5rem] text-slate-400 font-black text-[10px] uppercase tracking-widest hover:border-brand-purple hover:text-brand-purple transition-all"
+                        >
+                          + Add Belief
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {activePage === 'conference' && (
-                  <div className="space-y-10">
+                  <div className="space-y-12">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Date</label>
@@ -507,50 +632,64 @@ export default function AdminDashboard() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
-                      <input 
-                        type="text"
-                        value={pageContent.conference.heroSubtitle}
-                        onChange={(e) => setPageContent({...pageContent, conference: {...pageContent.conference, heroSubtitle: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bible Verse</label>
-                      <textarea 
-                        value={pageContent.conference.verse}
-                        onChange={(e) => setPageContent({...pageContent, conference: {...pageContent.conference, verse: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-24"
-                      />
-                    </div>
-                    <div className="p-8 bg-brand-purple/5 rounded-[2rem] border border-brand-purple/10">
-                      <h4 className="text-brand-purple font-black text-xs uppercase tracking-widest mb-2">More Content Coming Soon</h4>
-                      <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Speakers and Schedule management will be integrated in the next update.</p>
-                    </div>
-                  </div>
-                )}
 
-                {activePage === 'events' && (
-                  <div className="space-y-10">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Title</label>
-                        <input 
-                          type="text"
-                          value={pageContent.events.heroTitle}
-                          onChange={(e) => setPageContent({...pageContent, events: {...pageContent.events, heroTitle: e.target.value}})}
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                        />
-                      </div>
-                      <div className="space-y-4">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
-                        <input 
-                          type="text"
-                          value={pageContent.events.heroSubtitle}
-                          onChange={(e) => setPageContent({...pageContent, events: {...pageContent.events, heroSubtitle: e.target.value}})}
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                        />
+                    <div className="pt-10 border-t border-slate-100">
+                      <h4 className="text-brand-purple font-black text-xs uppercase tracking-widest mb-8">Speakers</h4>
+                      <div className="space-y-6">
+                        {pageContent.conference.speakers?.map((item: any, idx: number) => (
+                          <div key={idx} className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative group">
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const items = [...pageContent.conference.speakers];
+                                items.splice(idx, 1);
+                                setPageContent({...pageContent, conference: {...pageContent.conference, speakers: items}});
+                              }}
+                              className="absolute top-6 right-6 w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-300 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                              <span className="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Speaker Name</label>
+                                <input 
+                                  type="text"
+                                  value={item.name}
+                                  onChange={(e) => {
+                                    const items = [...pageContent.conference.speakers];
+                                    items[idx].name = e.target.value;
+                                    setPageContent({...pageContent, conference: {...pageContent.conference, speakers: items}});
+                                  }}
+                                  className="w-full px-5 py-3 bg-white border border-slate-100 rounded-xl focus:outline-none focus:border-brand-purple font-bold text-xs"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Role/Subtitle</label>
+                                <input 
+                                  type="text"
+                                  value={item.role}
+                                  onChange={(e) => {
+                                    const items = [...pageContent.conference.speakers];
+                                    items[idx].role = e.target.value;
+                                    setPageContent({...pageContent, conference: {...pageContent.conference, speakers: items}});
+                                  }}
+                                  className="w-full px-5 py-3 bg-white border border-slate-100 rounded-xl focus:outline-none focus:border-brand-purple font-bold text-xs"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const items = [...(pageContent.conference.speakers || [])];
+                            items.push({ name: 'New Speaker', role: 'To be announced' });
+                            setPageContent({...pageContent, conference: {...pageContent.conference, speakers: items}});
+                          }}
+                          className="w-full py-5 bg-white border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-black text-[10px] uppercase tracking-widest hover:border-brand-purple hover:text-brand-purple transition-all"
+                        >
+                          + Add Speaker
+                        </button>
                       </div>
                     </div>
                   </div>

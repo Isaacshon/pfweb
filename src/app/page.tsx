@@ -248,7 +248,11 @@ export default function Home() {
           <FeatureGrid />
         </section>
 
-        <StepGuide />
+        <StepGuide 
+          items={settings?.home?.journeyItems} 
+          title={settings?.home?.journeyTitle} 
+          subtitle={settings?.home?.journeySubtitle} 
+        />
 
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-6">

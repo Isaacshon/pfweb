@@ -145,7 +145,7 @@ export default function ConferencePage() {
           <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block text-center">Lineup</span>
           <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter text-center mb-12 md:mb-16">Visionary Speakers</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {speakers.map((s, i) => (
+            {(content?.speakers || speakers).map((s: any, i: number) => (
               <div key={i} className="bg-slate-50 rounded-3xl p-6 md:p-8 text-center border border-slate-100 hover:border-brand-purple transition-colors">
                 <div className="w-20 md:w-24 h-20 md:h-24 bg-brand-purple/10 rounded-full mx-auto mb-6 flex items-center justify-center">
                   <span className="material-symbols-outlined text-brand-purple text-3xl md:text-4xl">person</span>
