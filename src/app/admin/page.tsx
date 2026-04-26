@@ -47,6 +47,8 @@ export default function AdminDashboard() {
   }
 
   const [pageContent, setPageContent] = useState(defaultPageContent)
+  const [mapAddress, setMapAddress] = useState('Toronto, Ontario, Canada')
+  const [heroVideoUrl, setHeroVideoUrl] = useState('/hero-video.mp4')
 
   // --- Form States ---
   const [newPost, setNewPost] = useState({ title: '', content: '' })
@@ -67,32 +69,53 @@ export default function AdminDashboard() {
     if (galleryData) setGallery(galleryData)
 
     // Load from LocalStorage (Temporarily keeping others in LS)
+    // Load Site Settings from Supabase
+    const { data: settingsData } = await supabase
+      .from('site_settings')
+      .select('*')
+    
+    if (settingsData) {
+      const content = settingsData.find(s => s.key === 'page_content')?.value
+      const address = settingsData.find(s => s.key === 'map_address')?.value
+      const video = settingsData.find(s => s.key === 'hero_video')?.value
+      const settings = settingsData.find(s => s.key === 'admin_settings')?.value
+
+      if (content) setPageContent(content)
+      if (address) setMapAddress(address)
+      if (video) setHeroVideoUrl(video)
+      if (settings) setSiteSettings(settings)
+    }
+
+    // Fallback to LocalStorage for backward compatibility
     const savedPosts = localStorage.getItem('pf_posts')
-    const savedSettings = localStorage.getItem('pf_settings')
-    const savedContent = localStorage.getItem('pf_page_content')
-
     if (savedPosts) setPosts(JSON.parse(savedPosts))
-    else setPosts([
-      { id: 1, title: 'Welcome to PF 2026', content: 'Our new season is starting!', date: '2026-04-26', author: 'PF Leader' }
-    ])
-
-    if (savedSettings) setSiteSettings(JSON.parse(savedSettings))
-    if (savedContent) setPageContent(JSON.parse(savedContent))
   }
 
   // --- Actions ---
-  const handleSaveContent = (e: React.FormEvent) => {
+  const handleSaveContent = async (e: React.FormEvent) => {
     e.preventDefault()
-    localStorage.setItem('pf_page_content', JSON.stringify(pageContent))
-    localStorage.setItem('pf_settings', JSON.stringify(siteSettings))
-    alert('Changes saved and applied to live site!')
+    setIsUploading(true)
+    try {
+      await Promise.all([
+        supabase.from('site_settings').upsert({ key: 'page_content', value: pageContent }),
+        supabase.from('site_settings').upsert({ key: 'map_address', value: mapAddress }),
+        supabase.from('site_settings').upsert({ key: 'hero_video', value: heroVideoUrl }),
+        supabase.from('site_settings').upsert({ key: 'admin_settings', value: siteSettings })
+      ])
+      alert('All changes saved to Supabase and published!')
+    } catch (error: any) {
+      alert('Error saving: ' + error.message)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
-  const handleResetDefaults = () => {
+  const handleResetDefaults = async () => {
     if (window.confirm('Are you sure you want to reset all content to original values?')) {
-      localStorage.removeItem('pf_page_content')
       setPageContent(defaultPageContent)
-      window.location.reload()
+      setMapAddress('Toronto, Ontario, Canada')
+      setHeroVideoUrl('/hero-video.mp4')
+      alert('Reset locally. Please Save to apply.')
     }
   }
 
@@ -288,41 +311,91 @@ export default function AdminDashboard() {
             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
               <form onSubmit={handleSaveContent} className="space-y-10">
                 {activePage === 'home' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Title</label>
-                      <input 
-                        type="text"
-                        value={pageContent.home.heroTitle}
-                        onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, heroTitle: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                      />
+                  <div className="space-y-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Title</label>
+                        <input 
+                          type="text"
+                          value={pageContent.home.heroTitle}
+                          onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, heroTitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Map Address (Google Maps)</label>
+                        <input 
+                          type="text"
+                          value={mapAddress}
+                          onChange={(e) => setMapAddress(e.target.value)}
+                          placeholder="e.g. Toronto, Ontario, Canada"
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4 md:col-span-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
+                        <textarea 
+                          value={pageContent.home.heroSubtitle}
+                          onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, heroSubtitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-32"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-4 md:col-span-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
-                      <textarea 
-                        value={pageContent.home.heroSubtitle}
-                        onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, heroSubtitle: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold h-32"
-                      />
+
+                    <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+                      <div className="flex justify-between items-center mb-6">
+                        <div>
+                          <h4 className="font-black text-brand-dark uppercase text-sm">Hero Background Video</h4>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Currently: {heroVideoUrl.split('/').pop()}</p>
+                        </div>
+                        <label className="px-6 py-3 bg-brand-dark text-white rounded-xl font-black text-[10px] uppercase tracking-widest cursor-pointer hover:scale-105 transition-transform">
+                          Change Video
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="video/*" 
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+                              setIsUploading(true)
+                              try {
+                                const { data, error } = await supabase.storage.from('gallery').upload(`videos/${Date.now()}-${file.name}`, file)
+                                if (error) throw error
+                                const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
+                                setHeroVideoUrl(publicUrl)
+                              } catch (err: any) { alert(err.message) }
+                              finally { setIsUploading(false) }
+                            }}
+                          />
+                        </label>
+                      </div>
+                      <div className="aspect-video bg-black rounded-2xl overflow-hidden relative group">
+                        <video src={heroVideoUrl} autoPlay loop muted className="w-full h-full object-cover opacity-60" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-white text-4xl opacity-0 group-hover:opacity-100 transition-opacity">play_circle</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Conf Section Subtitle</label>
-                      <input 
-                        type="text"
-                        value={pageContent.home.confLatestUpdate}
-                        onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, confLatestUpdate: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Conf Section Title</label>
-                      <input 
-                        type="text"
-                        value={pageContent.home.confMainTitle}
-                        onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, confMainTitle: e.target.value}})}
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
-                      />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Conf Section Subtitle</label>
+                        <input 
+                          type="text"
+                          value={pageContent.home.confLatestUpdate}
+                          onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, confLatestUpdate: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Conf Section Title</label>
+                        <input 
+                          type="text"
+                          value={pageContent.home.confMainTitle}
+                          onChange={(e) => setPageContent({...pageContent, home: {...pageContent.home, confMainTitle: e.target.value}})}
+                          className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple font-bold"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

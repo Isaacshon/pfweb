@@ -22,6 +22,8 @@ export default function Home() {
   const [heroSubtitle, setHeroSubtitle] = useState(t('hero.subtitle'))
   const [confLatestUpdate, setConfLatestUpdate] = useState('Latest Update')
   const [confMainTitle, setConfMainTitle] = useState('Conference & Events')
+  const [mapAddress, setMapAddress] = useState('Toronto, Ontario, Canada')
+  const [heroVideoUrl, setHeroVideoUrl] = useState('/hero-video.mp4')
 
   const galleryImages = [
     { src: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=800", alt: "Event 1" },
@@ -50,23 +52,29 @@ export default function Home() {
   }
 
   useEffect(() => {
-    // Sync with Admin Settings
-    fetchGallery()
+    const fetchSiteSettings = async () => {
+      const { data: settingsData } = await supabase
+        .from('site_settings')
+        .select('*')
+      
+      if (settingsData) {
+        const content = settingsData.find(s => s.key === 'page_content')?.value
+        const address = settingsData.find(s => s.key === 'map_address')?.value
+        const video = settingsData.find(s => s.key === 'hero_video')?.value
 
-    const savedContent = localStorage.getItem('pf_page_content')
-    if (savedContent) {
-      const content = JSON.parse(savedContent)
-      if (content.home) {
-        setHeroTitle(content.home.heroTitle || t('hero.title'))
-        setHeroSubtitle(content.home.heroSubtitle || t('hero.subtitle'))
-        setConfLatestUpdate(content.home.confLatestUpdate || 'Latest Update')
-        setConfMainTitle(content.home.confMainTitle || 'Conference & Events')
+        if (content && content.home) {
+          setHeroTitle(content.home.heroTitle || t('hero.title'))
+          setHeroSubtitle(content.home.heroSubtitle || t('hero.subtitle'))
+          setConfLatestUpdate(content.home.confLatestUpdate || 'Latest Update')
+          setConfMainTitle(content.home.confMainTitle || 'Conference & Events')
+        }
+        if (address) setMapAddress(address)
+        if (video) setHeroVideoUrl(video)
       }
-    } else {
-      // No overrides, use translations
-      setHeroTitle(t('hero.title'))
-      setHeroSubtitle(t('hero.subtitle'))
     }
+
+    fetchSiteSettings()
+    fetchGallery()
 
     const introPlayed = sessionStorage.getItem('introPlayed')
     if (introPlayed) {
@@ -162,12 +170,10 @@ export default function Home() {
       <section className="relative h-[95vh] min-h-[750px] flex flex-col overflow-hidden">
         <div className="absolute inset-0 z-0">
           <video
+            src={heroVideoUrl}
             autoPlay loop muted playsInline preload="auto"
-            className="w-full h-full object-cover"
-          >
-            <source src="/hero-video.mp4" type="video/mp4" />
-            <source src="/hero-video.mov" type="video/mp4" />
-          </video>
+            className="absolute inset-0 w-full h-full object-cover scale-105"
+          />
           <div className="absolute inset-0 bg-black/45" />
           <div className="absolute inset-0 vignette-overlay opacity-60" />
         </div>
@@ -261,10 +267,26 @@ export default function Home() {
 
         <section className="bg-white py-32 px-6">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            <div className="rounded-[3rem] overflow-hidden h-[550px] bg-slate-100 relative shadow-2xl border-4 border-white">
-              <div className="absolute inset-0 flex items-center justify-center text-slate-300 font-black text-2xl uppercase tracking-tighter">
-                [ Interactive Map ]
-              </div>
+            <div className="rounded-[3rem] overflow-hidden h-[550px] bg-slate-100 relative shadow-2xl border-4 border-white group">
+              <iframe 
+                width="100%" 
+                height="100%" 
+                frameBorder="0" 
+                style={{ border: 0, filter: 'grayscale(1) contrast(1.2) invert(0.9)' }} 
+                src={`https://www.google.com/maps/embed/v1/place?key=REPLACE_WITH_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(mapAddress)}`}
+                allowFullScreen
+                className="transition-all duration-700 group-hover:grayscale-0 group-hover:invert-0"
+              ></iframe>
+              {/* Fallback info if API key is missing or for clean embed without key */}
+              <iframe 
+                width="100%" 
+                height="100%" 
+                frameBorder="0" 
+                style={{ border: 0, filter: 'grayscale(1) contrast(1.2) invert(0.9)' }} 
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(mapAddress)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                allowFullScreen
+                className="absolute inset-0 transition-all duration-700 group-hover:grayscale-0 group-hover:invert-0"
+              ></iframe>
             </div>
             <div className="flex flex-col justify-center">
               <span className="text-brand-purple font-black text-sm tracking-widest uppercase mb-6">Contact</span>
