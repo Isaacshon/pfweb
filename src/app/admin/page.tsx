@@ -1104,10 +1104,12 @@ export default function AdminDashboard() {
                           if (!file) return
                           setIsUploading(true)
                           try {
-                            const { data, error } = await supabase.storage.from('gallery').upload(`branding/favicon-${Date.now()}`, file)
+                            const fileExt = file.name.split('.').pop()
+                            const { data, error } = await supabase.storage.from('gallery').upload(`branding/favicon-${Date.now()}.${fileExt}`, file)
                             if (error) throw error
                             const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
                             setSiteSettings({...siteSettings, faviconUrl: publicUrl})
+                            alert('Icon uploaded! Please click "Save Branding Changes" to apply.')
                           } catch (err: any) { alert(err.message) }
                           finally { setIsUploading(false) }
                         }}

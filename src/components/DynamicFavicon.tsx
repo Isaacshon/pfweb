@@ -17,11 +17,11 @@ export const DynamicFavicon = () => {
       if (data?.value?.branding?.faviconUrl) {
         setFaviconUrl(data.value.branding.faviconUrl)
       } else {
-        // Fallback to site_settings separate key if we move it there later
+        // Check admin_settings key
         const { data: brandingData } = await supabase
           .from('site_settings')
           .select('*')
-          .eq('key', 'site_settings')
+          .eq('key', 'admin_settings')
           .single()
         
         if (brandingData?.value?.faviconUrl) {
