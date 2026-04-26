@@ -12,7 +12,7 @@ export const DynamicFavicon = () => {
         .from('site_settings')
         .select('*')
         .eq('key', 'page_content')
-        .single()
+        .maybeSingle()
       
       if (data?.value?.branding?.faviconUrl) {
         setFaviconUrl(data.value.branding.faviconUrl)
@@ -22,7 +22,7 @@ export const DynamicFavicon = () => {
           .from('site_settings')
           .select('*')
           .eq('key', 'admin_settings')
-          .single()
+          .maybeSingle()
         
         if (brandingData?.value?.faviconUrl) {
           setFaviconUrl(brandingData.value.faviconUrl)
