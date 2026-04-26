@@ -119,36 +119,36 @@ const translations = {
       thu: '크리에이티브 랩'
     },
     about: {
-      massiveTitle: '우리는 단순한 추종자가 아닌 창조자입니다.',
-      massiveDesc: '우리는 정형화된 틀을 깨고 청년들의 창의적인 재능과 가공되지 않은 열정이 복음의 통로가 되는 공간을 만듭니다. 우리는 변화를 일으키는 트렌디한 청년 문화를 주도합니다.',
-      creativeCall: '창의적인 부르심',
+      massiveTitle: '우리는 단순한 추종자가 아닌, 창조자입니다.',
+      massiveDesc: '정형화된 틀을 깨고 청년들의 창의적인 재능과 가공되지 않은 열정이 복음의 통로가 되는 공간을 만듭니다. 우리는 변화를 일으키는 트렌디한 청년 문화를 주도합니다.',
+      creativeCall: '창조적인 부르심',
       creativeQuote: '"예술과 문화는 우리가 다음 세대에게 예수님의 사랑을 전할 수 있는 가장 강력한 언어입니다."',
-      commitment: '우리의 헌신',
-      commitmentDesc: '소외된 이들을 위한 지원부터 사회를 치유하는 문화 프로젝트까지, 우리는 세상을 뒤집어 놓는 젊은 체인지메이커들의 공동체입니다.',
+      commitment: '우리의 다짐',
+      commitmentDesc: '소외된 이들을 향한 마음부터 사회를 치유하는 문화 프로젝트까지, 우리는 세상을 뒤집어 놓는 젊은 체인지메이커들의 공동체입니다.',
       beliefsTitle: '우리의 믿음',
-      foundation: '기초',
+      foundation: '신앙의 기초',
       missionTitle: '예수를 향한 열정, 세상을 향한 문화'
     },
     contactPage: {
       title: '문의하기',
-      subtitle: '토론토의 크리에이티브 허브를 방문해 보세요. 여러분의 이야기를 듣고 싶습니다.',
+      subtitle: '토론토의 크리에이티브 허브를 방문해 보세요. 여러분의 소중한 목소리를 기다립니다.',
       addressTitle: '찾아오시는 길',
       address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
       emailTitle: '이메일 문의',
       email: 'passionfruits.ministry@gmail.com',
-      instaTitle: '인스타그램',
+      instaTitle: '공식 인스타그램',
       instaHandle: '@passionfruits_ministry',
-      formTitle: '메시지 보내기',
-      namePlaceholder: '성함',
+      formTitle: '메시지 남기기',
+      namePlaceholder: '이름',
       emailPlaceholder: '이메일 주소',
       messagePlaceholder: '무엇을 도와드릴까요?',
-      sendBtn: '메시지 전송'
+      sendBtn: '메시지 전송하기'
     }
   },
   zh: {
     nav: {
       home: '首页',
-      conference: '大会',
+      conference: '特会',
       events: '活动',
       about: '关于我们',
       contact: '联系我们',
@@ -157,29 +157,29 @@ const translations = {
     hero: {
       influence: '神国影响力',
       title: '热情 果实',
-      subtitle: '引领既时尚又具有变革力的青年文化。加入变革者的行列。',
-      getStarted: '开始体验',
+      subtitle: '引领走在潮流尖端且具有变革力的青年文化。加入变革者的行列。',
+      getStarted: '立即开始',
       vision: '我们的愿景'
     },
     menu: {
-      conf: '2026 大会',
-      confSub: '特会',
-      events: '活动',
-      eventsSub: '国度新闻',
+      conf: '2026 特会',
+      confSub: '年度特会',
+      events: '近期活动',
+      eventsSub: '神国新闻',
       about: '关于我们',
       aboutSub: '我们的故事',
-      vision: '愿景',
-      visionSub: '我们的愿景',
-      contact: '联系',
-      contactSub: '保持联系',
-      support: '支持',
-      supportSub: '赞助'
+      vision: '异象',
+      visionSub: '核心愿景',
+      contact: '联系我们',
+      contactSub: '保持沟通',
+      support: '支持事工',
+      supportSub: '赞助与合作'
     },
     schedule: {
-      title: '事工',
-      subtitle: '日程',
-      desc: '我们的事工充满了创意的语言和热情。今天就找到你的位置。',
-      cta: '加入事工',
+      title: '事工板块',
+      subtitle: '日程表',
+      desc: '我们的事工充满了创意的语言和热情。今天就找到属于你的位置。',
+      cta: '参与事工',
       mon: '周一崇拜',
       sun: '热情崇拜',
       sat: '青年聚会',
@@ -187,28 +187,28 @@ const translations = {
     },
     about: {
       massiveTitle: '我们是创造者，而不仅仅是追随者。',
-      massiveDesc: '我们打破僵化的传统，创造一个空间，让年轻人的创意天赋和纯粹的热情成为福音的桥梁。我们引领着既潮流又具转型能力的青年文化。',
+      massiveDesc: '我们打破僵化的传统，创造一个让年轻人的创意天赋和纯粹热情成为福音桥梁的空间。我们引领着既潮流又具转型能力的青年文化。',
       creativeCall: '创意的呼召',
       creativeQuote: '“艺术和文化是我们向下一代传达耶稣之爱最强有力的语言。”',
       commitment: '我们的承诺',
       commitmentDesc: '从支持弱势群体到发起治愈社会的文化项目，我们是一个致力于颠覆世界的年轻变革者社区。',
       beliefsTitle: '我们的信仰',
-      foundation: '基础',
-      missionTitle: '为耶稣而热，为世界而文'
+      foundation: '信仰基础',
+      missionTitle: '为耶稣燃烧热情，以文化改变世界'
     },
     contactPage: {
-      title: '联系我们',
-      subtitle: '欢迎访问我们在多伦多的创意中心。我们期待收到您的消息。',
+      title: '保持联系',
+      subtitle: '欢迎访问我们在多伦多的创意中心。我们非常期待听到您的声音。',
       addressTitle: '我们的位置',
       address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
-      emailTitle: '发送邮件',
+      emailTitle: '邮件联系',
       email: 'passionfruits.ministry@gmail.com',
       instaTitle: '关注我们',
       instaHandle: '@passionfruits_ministry',
-      formTitle: '发送消息',
+      formTitle: '在线留言',
       namePlaceholder: '您的姓名',
       emailPlaceholder: '电子邮件',
-      messagePlaceholder: '我们能帮您什么？',
+      messagePlaceholder: '有什么可以帮到您的？',
       sendBtn: '发送消息'
     }
   },
@@ -219,7 +219,7 @@ const translations = {
       events: 'Eventos',
       about: 'Nosotros',
       contact: 'Contacto',
-      join: 'Unirse'
+      join: 'Únete'
     },
     hero: {
       influence: 'Influencia del Reino',
@@ -243,8 +243,8 @@ const translations = {
       supportSub: 'Patrocinio'
     },
     schedule: {
-      title: 'Ministerio',
-      subtitle: 'Horario',
+      title: 'Ministerios',
+      subtitle: 'Horarios',
       desc: 'Nuestros ministerios están llenos de lenguaje creativo y pasión. Encuentra tu lugar hoy.',
       cta: 'Unirse al Ministerio',
       mon: 'Adoración Lunes',
@@ -260,7 +260,7 @@ const translations = {
       commitment: 'Nuestro Compromiso',
       commitmentDesc: 'Desde el apoyo a los marginados hasta el lanzamiento de proyectos culturales que sanan la sociedad, somos una comunidad de jóvenes agentes de cambio que están transformando el mundo.',
       beliefsTitle: 'Lo Que Creemos',
-      foundation: 'Fundación',
+      foundation: 'Fundamentos',
       missionTitle: 'Pasión por Jesús, Cultura para el Mundo'
     },
     contactPage: {

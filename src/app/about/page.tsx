@@ -121,10 +121,22 @@ export default function AboutPage() {
                 <div className="absolute -top-6 -left-4 md:-left-6 w-16 md:w-20 h-16 md:h-20 bg-brand-purple rounded-2xl md:rounded-3xl flex items-center justify-center text-white shadow-xl rotate-3 group-hover:rotate-0 transition-transform">
                   <span className="material-symbols-outlined text-3xl md:text-4xl">auto_awesome</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black text-brand-dark uppercase tracking-tighter mb-6 md:mb-8 leading-tight">
-                  {content.massiveTitle.split(',').map((part: string, i: number) => (
-                    <span key={i} className={i === 0 ? "block" : "text-brand-purple block"}>{part}{i === 0 && content.massiveTitle.includes(',') && ','}</span>
-                  ))}
+                <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter mb-6 md:mb-8 leading-tight break-keep">
+                  {content.massiveTitle.split(',').map((part: string, i: number) => {
+                    const trimmed = part.trim();
+                    if (!trimmed) return null;
+                    const firstChar = trimmed[0];
+                    const rest = trimmed.slice(1);
+                    return (
+                      <span key={i} className="block">
+                        <span className={i === 0 ? "text-brand-purple" : "text-brand-yellow"}>
+                          {firstChar}
+                        </span>
+                        <span>{rest}</span>
+                        {i === 0 && content.massiveTitle.includes(',') && ','}
+                      </span>
+                    );
+                  })}
                 </h2>
                 <p className="text-slate-500 font-bold text-base md:text-lg leading-relaxed break-keep">
                   {content.massiveDesc}
