@@ -28,10 +28,10 @@ export default function AdminDashboard() {
       journeyTitle: 'PASSIONFRUITS JOURNEY',
       journeySubtitle: 'OUR PATH',
       journeyItems: [
-        { icon: 'flare', title: 'WORSHIP', desc: 'ENCOUNTER JESUS' },
-        { icon: 'palette', title: 'CREATIVITY', desc: 'THE GOSPEL ARTS' },
-        { icon: 'public', title: 'MISSIONS', desc: 'GLOBAL IMPACT' },
-        { icon: 'star', title: 'INFLUENCE', desc: 'KINGDOM CULTURE' }
+        { icon: 'flare', title: 'WORSHIP', desc: 'ENCOUNTER JESUS', iconUrl: '' },
+        { icon: 'palette', title: 'CREATIVITY', desc: 'THE GOSPEL ARTS', iconUrl: '' },
+        { icon: 'public', title: 'MISSIONS', desc: 'GLOBAL IMPACT', iconUrl: '' },
+        { icon: 'star', title: 'INFLUENCE', desc: 'KINGDOM CULTURE', iconUrl: '' }
       ]
     },
     about: {
@@ -40,17 +40,17 @@ export default function AdminDashboard() {
       visionTitle: 'Our Vision',
       visionDesc: 'Flipping the world upside down through the creative language of youth culture. We believe in the power of authenticity, creativity, and unwavering faith.',
       beliefs: [
-        { icon: 'menu_book', title: 'The Bible — Our Compass', desc: 'We believe the Holy Bible is the infallible Word of God.' },
-        { icon: 'diversity_3', title: 'God — The Creator', desc: 'We believe in the one true, living God.' },
-        { icon: 'church', title: 'Jesus Christ — Our Only Way', desc: 'Jesus is fully God and fully man.' },
-        { icon: 'local_fire_department', title: 'Holy Spirit — Our Guide', desc: 'The Holy Spirit dwells within us.' },
-        { icon: 'card_giftcard', title: 'Salvation — The Ultimate Gift', desc: 'Salvation is a free gift of grace.' },
-        { icon: 'healing', title: 'Mankind — Restoration', desc: 'Every human being needs restoration through Jesus.' }
+        { icon: 'menu_book', title: 'The Bible — Our Compass', desc: 'We believe the Holy Bible is the infallible Word of God.', iconUrl: '' },
+        { icon: 'diversity_3', title: 'God — The Creator', desc: 'We believe in the one true, living God.', iconUrl: '' },
+        { icon: 'church', title: 'Jesus Christ — Our Only Way', desc: 'Jesus is fully God and fully man.', iconUrl: '' },
+        { icon: 'local_fire_department', title: 'Holy Spirit — Our Guide', desc: 'The Holy Spirit dwells within us.', iconUrl: '' },
+        { icon: 'card_giftcard', title: 'Salvation — The Ultimate Gift', desc: 'Salvation is a free gift of grace.', iconUrl: '' },
+        { icon: 'healing', title: 'Mankind — Restoration', desc: 'Every human being needs restoration through Jesus.', iconUrl: '' }
       ],
       ministries: [
-        { icon: 'music_note', title: 'Worship & Unity', desc: 'Every Monday, our Worship Night serves as a spiritual engine.' },
-        { icon: 'public', title: 'Global Missions', desc: 'Our mission teams actively serve in Europe and Latin America.' },
-        { icon: 'theater_comedy', title: '"The Gospel" (Cultural Arts)', desc: 'Through our original musical production, we provide a platform for youth.' }
+        { icon: 'music_note', title: 'Worship & Unity', desc: 'Every Monday, our Worship Night serves as a spiritual engine.', iconUrl: '' },
+        { icon: 'public', title: 'Global Missions', desc: 'Our mission teams actively serve in Europe and Latin America.', iconUrl: '' },
+        { icon: 'theater_comedy', title: '"The Gospel" (Cultural Arts)', desc: 'Through our original musical production, we provide a platform for youth.', iconUrl: '' }
       ]
     },
     conference: {
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const [pageContent, setPageContent] = useState(defaultPageContent)
+  const [pageContent, setPageContent] = useState<any>(defaultPageContent)
   const [mapAddress, setMapAddress] = useState('Toronto, Ontario, Canada')
   const [heroVideoUrl, setHeroVideoUrl] = useState('/hero-video.mp4')
   const [aboutImageUrl, setAboutImageUrl] = useState('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80')
