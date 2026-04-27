@@ -388,54 +388,64 @@ export default function AppPage() {
                     )}
                   </div>
 
-                  {/* Context Menu (Floating Menu) */}
+                  {/* Context Menu (Floating Menu) - Redesigned for Premium Look */}
                   {activeMenuVerse === v.verse && (
-                    <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-[100] animate-in zoom-in-95 duration-200 border border-slate-50 overflow-hidden">
-                      {!isPaletteOpen ? (
-                        <div className="flex items-center gap-5 px-5 py-2.5">
+                    <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-[0_15px_50px_rgba(0,0,0,0.15)] z-[100] animate-in zoom-in-95 duration-200 border border-slate-100/50 overflow-hidden">
+                      <div className="flex items-center gap-1 px-2 py-1.5">
+                        {/* Palette Section */}
+                        <div className={`flex items-center gap-3 transition-all duration-300 overflow-hidden ${isPaletteOpen ? 'w-[100px] px-2' : 'w-10'}`}>
                           <button 
-                            onClick={() => toggleHighlight(v.verse, selectedColor)} 
-                            className="text-sm font-black text-brand-dark active:scale-95 transition-transform uppercase tracking-widest"
+                            onClick={() => setIsPaletteOpen(!isPaletteOpen)}
+                            className="w-8 h-8 rounded-full border-2 border-white shadow-sm flex items-center justify-center shrink-0 active:scale-90 transition-transform"
+                            style={{ backgroundColor: selectedColor }}
                           >
-                            Highlight
+                            <span className="material-icons text-white text-[14px]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>
+                              {isPaletteOpen ? 'close' : 'palette'}
+                            </span>
                           </button>
                           
-                          <button 
-                            onClick={() => setIsPaletteOpen(true)}
-                            className="w-6 h-6 rounded-full border-2 border-white transition-all active:scale-90 shadow-sm"
-                            style={{ backgroundColor: selectedColor, boxShadow: `0 0 0 2px ${selectedColor}44` }}
-                          ></button>
-
-                          <button 
-                            onClick={() => openNoteModal(v.verse)} 
-                            className="text-sm font-black text-brand-dark active:scale-95 transition-transform uppercase tracking-widest"
-                          >
-                            Note
-                          </button>
-
-                          <div className="flex items-center text-slate-300">
-                            <span className="material-icons text-lg">more_vert</span>
-                          </div>
+                          {isPaletteOpen && (
+                            <div className="flex gap-2 animate-in slide-in-from-left-2">
+                              <button 
+                                onClick={() => { setSelectedColor('#fffbbd'); setIsPaletteOpen(false); }} 
+                                className={`w-6 h-6 rounded-full bg-[#fffbbd] border border-slate-100 shadow-sm active:scale-125 transition-transform`}
+                              ></button>
+                              <button 
+                                onClick={() => { setSelectedColor('#9a78b4'); setIsPaletteOpen(false); }} 
+                                className={`w-6 h-6 rounded-full bg-[#9a78b4] border border-slate-100 shadow-sm active:scale-125 transition-transform`}
+                              ></button>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="flex items-center gap-6 px-6 py-2.5 animate-in slide-in-from-right-4 duration-300">
-                          <button 
-                            onClick={() => { setSelectedColor('#fffbbd'); setIsPaletteOpen(false); }} 
-                            className={`w-7 h-7 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#fffbbd' ? 'ring-2 ring-[#fffbbd] ring-offset-1' : ''}`}
-                          ></button>
-                          <button 
-                            onClick={() => { setSelectedColor('#9a78b4'); setIsPaletteOpen(false); }} 
-                            className={`w-7 h-7 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#9a78b4' ? 'ring-2 ring-[#9a78b4] ring-offset-1' : ''}`}
-                          ></button>
-                          <div className="w-px h-4 bg-slate-100 mx-1"></div>
-                          <button 
-                            onClick={() => setIsPaletteOpen(false)} 
-                            className="material-icons text-slate-400 text-lg active:scale-90 transition-transform"
-                          >
-                            close
-                          </button>
-                        </div>
-                      )}
+
+                        <div className="w-px h-4 bg-slate-100 mx-1"></div>
+
+                        {/* Actions */}
+                        <button 
+                          onClick={() => toggleHighlight(v.verse, selectedColor)} 
+                          className="w-10 h-10 flex flex-col items-center justify-center text-slate-600 hover:text-brand-purple active:scale-90 transition-all gap-0.5"
+                        >
+                          <span className="material-icons text-[20px]">draw</span>
+                        </button>
+                        <button 
+                          onClick={() => openNoteModal(v.verse)} 
+                          className="w-10 h-10 flex flex-col items-center justify-center text-slate-600 hover:text-brand-purple active:scale-90 transition-all gap-0.5"
+                        >
+                          <span className="material-icons text-[20px]">sticky_note_2</span>
+                        </button>
+                        <button 
+                          onClick={() => { navigator.clipboard.writeText(v.text); setActiveMenuVerse(null); }} 
+                          className="w-10 h-10 flex flex-col items-center justify-center text-slate-600 hover:text-brand-purple active:scale-90 transition-all gap-0.5"
+                        >
+                          <span className="material-icons text-[20px]">content_copy</span>
+                        </button>
+                        <button 
+                          onClick={() => setActiveMenuVerse(null)} 
+                          className="w-10 h-10 flex flex-col items-center justify-center text-slate-600 hover:text-brand-purple active:scale-90 transition-all gap-0.5"
+                        >
+                          <span className="material-icons text-[20px]">share</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
