@@ -53,33 +53,23 @@ export default function CommunityPage() {
 
   const filteredPosts = posts.filter(p => p.type === activeTab)
 
-  const toggleReaction = (postId: number, reactionLabel: string) => {
-    setUserReactions(prev => {
-      const currentReaction = prev[postId]
-      const newReaction = currentReaction === reactionLabel ? null : reactionLabel
-      setPosts(pList => pList.map(p => {
-        if (p.id === postId) {
-          const updatedReactions = { ...p.reactions }
-          if (currentReaction) (updatedReactions as any)[currentReaction] -= 1
-          if (newReaction) (updatedReactions as any)[newReaction] += 1
-          return { ...p, reactions: updatedReactions }
-        }
-        return p
-      }))
-      return { ...prev, [postId]: newReaction }
-    })
-  }
-
   if (view === 'selection') {
     return (
-      <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-500">
+      <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-700 bg-black font-pretendard">
         <div className="flex-1 flex overflow-hidden pb-24"> 
+          
           {/* Left: Meditation */}
           <button 
             onClick={() => { setActiveTab('meditation'); setView('feed'); }}
-            className="flex-1 bg-brand-purple relative group transition-all duration-700 hover:flex-[1.1] flex items-center justify-center overflow-hidden"
+            className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden"
+            style={{ backgroundColor: 'rgba(109, 64, 217, 0.85)' }}
           >
-            <h2 className="text-4xl md:text-6xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-105">
+            {/* Geometric Shapes */}
+            <div className="absolute top-20 left-10 w-16 h-16 border-2 border-white/20 rounded-full animate-pulse"></div>
+            <div className="absolute bottom-40 left-20 w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-b-[35px] border-b-white/10 rotate-12"></div>
+            <div className="absolute top-1/4 left-1/4 w-32 h-px bg-white/10 -rotate-45"></div>
+
+            <h2 className="text-3xl md:text-5xl font-extralight tracking-[0.25em] text-white transition-all duration-1000 group-hover:scale-105 group-hover:tracking-[0.35em]">
               MEDITATION
             </h2>
           </button>
@@ -87,25 +77,50 @@ export default function CommunityPage() {
           {/* Right: Prayer */}
           <button 
             onClick={() => { setActiveTab('prayer'); setView('feed'); }}
-            className="flex-1 bg-brand-yellow relative group transition-all duration-700 hover:flex-[1.1] flex items-center justify-center overflow-hidden"
+            className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden"
+            style={{ backgroundColor: 'rgba(252, 211, 77, 0.85)' }}
           >
-            <h2 className="text-4xl md:text-6xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-105">
+            {/* Geometric Shapes */}
+            <div className="absolute top-32 right-12 w-12 h-12 border-2 border-white/30 rotate-45 animate-pulse"></div>
+            <div className="absolute bottom-24 right-20 w-8 h-8 rounded-full bg-white/10"></div>
+            <div className="absolute bottom-1/3 right-1/4 w-32 h-px bg-white/15 rotate-12"></div>
+
+            <h2 className="text-3xl md:text-5xl font-extralight tracking-[0.25em] text-white transition-all duration-1000 group-hover:scale-105 group-hover:tracking-[0.35em]">
               PRAYER
             </h2>
           </button>
+
+          {/* Center Cross Divider (Inspired by Reference Person) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none z-[60]">
+            <div className="relative flex items-center justify-center">
+              {/* Vertical Bar */}
+              <div className="w-[3px] h-64 bg-white/40 backdrop-blur-md rounded-full shadow-2xl"></div>
+              {/* Horizontal Bar */}
+              <div className="absolute top-16 w-32 h-[3px] bg-white/40 backdrop-blur-md rounded-full shadow-2xl"></div>
+              
+              {/* Central Glow Dot */}
+              <div className="absolute top-16 w-4 h-4 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.8)] animate-pulse"></div>
+            </div>
+            <p className="mt-8 text-[9px] font-black tracking-[0.6em] text-white/40 uppercase">PassionFruits</p>
+          </div>
         </div>
+
+        {/* Global Styles for Pretendard */}
+        <style jsx global>{`
+          .font-pretendard { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; }
+        `}</style>
       </div>
     )
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} ${textColor} pb-40 transition-colors duration-500`}>
+    <div className={`min-h-screen ${bgColor} ${textColor} pb-40 transition-colors duration-500 font-pretendard`}>
       <header className="px-6 pt-16 pb-4 flex items-center justify-between sticky top-0 z-40 bg-inherit/80 backdrop-blur-md border-b border-zinc-500/10">
         <div className="flex items-center gap-4">
           <button onClick={() => setView('selection')} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10 active:scale-90 transition-transform">
             <span className="material-icons text-xl">arrow_back</span>
           </button>
-          <h1 className="text-xl font-black font-plus-jakarta tracking-tight">
+          <h1 className="text-xl font-black tracking-tight">
             {activeTab === 'meditation' ? 'Meditation' : 'Prayer'}
           </h1>
         </div>
@@ -114,8 +129,6 @@ export default function CommunityPage() {
       <section className="flex flex-col">
         {filteredPosts.map((p) => {
           const isExpanded = expandedId === p.id
-          const userActiveReaction = userReactions[p.id]
-
           return (
             <div key={p.id} className="flex flex-col border-b border-zinc-500/5">
               <div className="px-6 py-4 flex items-center justify-between">
@@ -143,7 +156,7 @@ export default function CommunityPage() {
                 className={`px-6 py-8 cursor-pointer group relative overflow-hidden transition-all duration-500 ${isExpanded ? 'bg-zinc-500/5' : 'hover:bg-zinc-500/5'}`}
               >
                 <div className="relative z-10 space-y-2">
-                  <h3 className="text-2xl font-black font-plus-jakarta tracking-tight leading-tight">
+                  <h3 className="text-2xl font-black tracking-tight leading-tight">
                     {p.title}
                   </h3>
                   <div className="flex items-center gap-2">
@@ -190,6 +203,7 @@ export default function CommunityPage() {
       <style jsx global>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .font-pretendard { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; }
       `}</style>
     </div>
   )
