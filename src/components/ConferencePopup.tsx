@@ -52,12 +52,12 @@ export const ConferencePopup = ({ trigger }: ConferencePopupProps) => {
       />
 
       {/* Modal Container */}
-      <div className={`relative w-full max-w-[400px] aspect-[3/4] bg-white rounded-[40px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 fade-in duration-500 transition-transform ${isClosing ? 'scale-95' : 'scale-100'} border-8 border-brand-dark`}>
+      <div className={`relative w-full max-w-[400px] aspect-[3/4] bg-white rounded-[40px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 fade-in duration-500 transition-transform ${isClosing ? 'scale-95' : 'scale-100'} border border-slate-100`}>
         
         {/* Full-bleed Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800" 
+            src="/images/IMG_6846.PNG" 
             alt="Conference 2026"
             className="w-full h-full object-cover"
           />

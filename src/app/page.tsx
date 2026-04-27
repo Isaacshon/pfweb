@@ -84,13 +84,13 @@ export default function Home() {
       return
     }
 
-    // 2초 후 축소 시작
-    const t1 = setTimeout(() => setPhase(1), 2000)
-    // 축소 시작 직후 콘텐츠 등장 (0.8초 후)
+    // 0.8초 후 축소 시작
+    const t1 = setTimeout(() => setPhase(1), 800)
+    // 1.5초 후 최종 안착
     const t2 = setTimeout(() => {
       setPhase(2)
       sessionStorage.setItem('introPlayed', 'true')
-    }, 2800)
+    }, 1500)
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [t])
 
@@ -189,31 +189,16 @@ export default function Home() {
             <span className="text-white/80 text-[10px] font-black tracking-[0.5em] uppercase">{t('hero.influence')}</span>
           </div>
 
-          <h1 className={`
-            text-4xl sm:text-6xl md:text-[10rem] lg:text-[11rem] font-black tracking-tighter mb-6 md:mb-10 uppercase
-            drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)]
-            transition-all duration-[800ms] delay-[100ms]
-            ${(language === 'ko' || language === 'zh') ? 'leading-[1.2] md:leading-[1.1]' : 'leading-[0.9] md:leading-[0.8]'}
+          <div className={`
+            mb-10 transition-all duration-[1000ms] delay-[100ms]
             ${landed ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
           `}>
-            {(() => {
-              const title = heroTitle;
-              const parts = title.split(' ');
-              const word1 = parts[0] || '';
-              const word2 = parts.slice(1).join(' ') || '';
-              return (
-                <>
-                  <span className="text-brand-purple">{word1[0]}</span>
-                  <span className="text-white">{word1.slice(1)}</span>
-                  <br />
-                  <span className="md:ml-8">
-                    <span className="text-brand-yellow">{word2[0]}</span>
-                    <span className="text-white">{word2.slice(1)}</span>
-                  </span>
-                </>
-              );
-            })()}
-          </h1>
+            <img 
+              src="/logo.png" 
+              alt="PassionFruits" 
+              className="w-64 md:w-[500px] h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)] mx-auto" 
+            />
+          </div>
 
           <p className={`
             text-white text-base md:text-2xl max-w-2xl mx-auto font-bold leading-relaxed mb-10 md:mb-16 drop-shadow-lg px-4
