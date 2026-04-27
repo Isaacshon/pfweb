@@ -120,11 +120,10 @@ export function CommentsSheet({ isOpen, onClose, comments, onAddComment, authorN
           ))}
         </div>
 
-        {/* Input Area */}
-        <div className="px-6 pb-10 pt-2 border-t border-zinc-500/5">
+        {/* Input Area - Minimal Version */}
+        <div className="px-6 pb-10 pt-4 border-t border-zinc-500/5">
           <div className="flex items-center gap-4">
-            <img src="/images/PF app logo iphone.png" className="w-10 h-10 rounded-full object-cover" alt="" />
-            <div className={`flex-1 flex items-center gap-3 h-12 px-5 rounded-full ${inputBg}`}>
+            <div className={`flex-1 flex items-center gap-3 h-12 px-6 rounded-full ${inputBg}`}>
               <input 
                 type="text" 
                 value={inputText}
@@ -133,7 +132,6 @@ export function CommentsSheet({ isOpen, onClose, comments, onAddComment, authorN
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 className="flex-1 bg-transparent border-none outline-none text-sm font-medium placeholder:opacity-40"
               />
-              <button className={`material-icons text-[20px] ${subTextColor} border border-zinc-500/30 rounded px-1 text-[12px] font-bold`}>GIF</button>
             </div>
             {inputText.trim() && (
               <button 
