@@ -312,7 +312,11 @@ export default function CommunityPage() {
   if (view === 'selection') {
     return (
       <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-700 bg-black font-pretendard">
-        <div className="flex-1 flex overflow-hidden pb-24"> 
+        <div className="flex-1 flex overflow-hidden pb-24 relative"> 
+          {/* Sacred Cross Elements */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10 z-20" />
+          <div className="absolute left-[35%] right-[35%] top-[28%] h-px bg-white/40 z-20 shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
+
           <button onClick={() => navigateToFeed('meditation')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(154, 120, 180, 0.85)' }}>
             <div className="absolute top-20 left-10 w-16 h-16 border-2 border-white/20 rounded-full animate-pulse"></div>
             <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white">MEDITATION</h2>
