@@ -44,6 +44,7 @@ export function AppNavBar() {
   }
 
   const activeColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
+  const activeBorder = isDarkMode ? 'border-brand-yellow' : 'border-brand-purple'
   const bgColor = isDarkMode ? 'bg-[#050505]/95' : 'bg-white/95'
   const borderColor = isDarkMode ? 'border-zinc-900' : 'border-zinc-50'
 
@@ -64,20 +65,25 @@ export function AppNavBar() {
                 className="relative -top-6 cursor-pointer flex flex-col items-center"
               >
                 <div 
-                  className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-white'} rounded-full w-14 h-14 flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.1)] border-[3px] overflow-hidden transition-all duration-300 active:scale-90 relative`}
+                  className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} rounded-full w-14 h-14 flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.1)] border-[1px] overflow-hidden transition-all duration-300 active:scale-90 relative`}
                   style={{
                     transform: isSwiping && touchStart && currentY 
                       ? `translateY(${Math.max(-20, currentY - touchStart)}px)` 
                       : 'translateY(0)'
                   }}
                 >
-                  <img 
-                    src="/images/PF app logo.png" 
-                    alt="PF Logo" 
-                    className="w-full h-full object-contain scale-100 opacity-90"
-                  />
-                  <div className={`absolute -top-1 left-1/2 -translate-x-1/2 ${activeColor} animate-bounce`}>
-                    <span className="material-icons text-[16px]">expand_less</span>
+                  {/* Minimal Corner Guides instead of Logo */}
+                  <div className="absolute inset-2">
+                    <div className={`absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 ${activeBorder} rounded-tl-sm opacity-60`}></div>
+                    <div className={`absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 ${activeBorder} rounded-tr-sm opacity-60`}></div>
+                    <div className={`absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 ${activeBorder} rounded-bl-sm opacity-60`}></div>
+                    <div className={`absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 ${activeBorder} rounded-br-sm opacity-60`}></div>
+                  </div>
+
+                  {/* Minimal Arrow Indicator */}
+                  <div className={`flex flex-col items-center gap-0.5 ${activeColor} animate-pulse`}>
+                    <span className="material-icons text-[14px]">expand_less</span>
+                    <span className="text-[7px] font-black uppercase tracking-[0.2em]">Scan</span>
                   </div>
                 </div>
               </div>

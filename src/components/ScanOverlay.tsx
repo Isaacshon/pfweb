@@ -84,11 +84,8 @@ export function ScanOverlay({ isOpen, onClose }: ScanOverlayProps) {
         </div>
       </div>
 
-      {/* Brand Footer with New Logo */}
+      {/* Brand Footer - Logo removed as requested for extreme minimalism */}
       <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-white/5 backdrop-blur-xl p-2 border border-white/10">
-          <img src="/images/PF app logo.png" alt="PF Logo" className="w-full h-full object-contain" />
-        </div>
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'} animate-pulse`}></div>
           <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em]">Scanner Ready</span>
