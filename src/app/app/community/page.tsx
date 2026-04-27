@@ -210,21 +210,17 @@ export default function CommunityPage() {
 
               <div className="px-6 py-4 flex items-center justify-between relative">
                 <div className="flex items-center gap-6">
-                  {/* Reaction Summary (Fixed overlap) */}
-                  <div className="flex items-center">
-                    <div className="flex items-center -space-x-1.5 mr-2">
-                      {reactionTypes.slice(0, 3).map((rt, i) => (
-                        (p.reactions as any)[rt.label] > 0 && (
-                          <div key={i} className={`w-5 h-5 rounded-full border-2 ${isDarkMode ? 'border-black' : 'border-white'} ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} flex items-center justify-center`}>
-                            <span className={`material-icons text-[10px] ${rt.color}`}>{rt.icon}</span>
-                          </div>
-                        )
-                      ))}
+                  {/* Simplified Reaction Summary: Show only Like icon + Total Count */}
+                  {Object.values(p.reactions).reduce((a, b) => a + b, 0) > 0 && (
+                    <div className="flex items-center mr-4">
+                      <div className={`w-6 h-6 rounded-full border-2 ${isDarkMode ? 'border-black' : 'border-white'} ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} flex items-center justify-center mr-2 shadow-sm`}>
+                        <span className="material-icons text-[12px] text-blue-500">thumb_up</span>
+                      </div>
+                      <span className="text-[12px] font-black opacity-30">
+                        {Object.values(p.reactions).reduce((a, b) => a + b, 0)}
+                      </span>
                     </div>
-                    <span className="text-[11px] font-black opacity-30">
-                      {Object.values(p.reactions).reduce((a, b) => a + b, 0)}
-                    </span>
-                  </div>
+                  )}
 
                   <button onClick={(e) => { e.stopPropagation(); setExpandedId(p.id); }} className="material-icons text-[22px] text-zinc-400">chat_bubble_outline</button>
                   {p.type !== 'prayer' && (
