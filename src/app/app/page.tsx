@@ -212,7 +212,7 @@ export default function AppPage() {
 
       <div 
         id="bible-content" 
-        className="flex-1 overflow-y-auto px-10 pt-10 pb-32 no-scrollbar outline-none"
+        className="flex-1 overflow-y-auto px-10 pt-10 pb-40 no-scrollbar outline-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >

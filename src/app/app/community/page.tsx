@@ -72,55 +72,57 @@ export default function CommunityPage() {
 
   if (view === 'selection') {
     return (
-      <div className="fixed inset-0 z-[999] flex overflow-hidden animate-in fade-in duration-500">
-        {/* Left: Meditation */}
-        <button 
-          onClick={() => { setActiveTab('meditation'); setView('feed'); }}
-          className="flex-1 bg-brand-purple relative group transition-all duration-700 hover:flex-[1.4] flex items-center justify-center overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
-          <h2 className="text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110" 
-              style={{ 
-                textShadow: `
-                  -2px -2px 0 #fcd34d,  
-                   2px -2px 0 #fcd34d,
-                  -2px  2px 0 #fcd34d,
-                   2px  2px 0 #fcd34d,
-                   0px 0px 20px rgba(252,211,77,0.4)
-                `
-              }}>
-            묵상
-          </h2>
-          <span className="absolute bottom-20 text-[11px] text-white/60 font-black uppercase tracking-[0.6em] animate-pulse">Meditation</span>
-        </button>
+      <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-500">
+        <div className="flex-1 flex overflow-hidden pb-24"> {/* pb-24 to avoid NavBar area */}
+          {/* Left: Meditation */}
+          <button 
+            onClick={() => { setActiveTab('meditation'); setView('feed'); }}
+            className="flex-1 bg-brand-purple relative group transition-all duration-700 hover:flex-[1.4] flex items-center justify-center overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+            <h2 className="text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110" 
+                style={{ 
+                  textShadow: `
+                    -2px -2px 0 #fcd34d,  
+                     2px -2px 0 #fcd34d,
+                    -2px  2px 0 #fcd34d,
+                     2px  2px 0 #fcd34d,
+                     0px 0px 20px rgba(252,211,77,0.4)
+                  `
+                }}>
+              묵상
+            </h2>
+            <span className="absolute bottom-20 text-[11px] text-white/60 font-black uppercase tracking-[0.6em] animate-pulse">Meditation</span>
+          </button>
 
-        {/* Right: Prayer */}
-        <button 
-          onClick={() => { setActiveTab('prayer'); setView('feed'); }}
-          className="flex-1 bg-brand-yellow relative group transition-all duration-700 hover:flex-[1.4] flex items-center justify-center overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
-          <h2 className="text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110"
-              style={{ 
-                textShadow: `
-                  -2px -2px 0 #6d28d9,  
-                   2px -2px 0 #6d28d9,
-                  -2px  2px 0 #6d28d9,
-                   2px  2px 0 #6d28d9,
-                   0px 0px 20px rgba(109,40,217,0.3)
-                `
-              }}>
-            기도
-          </h2>
-          <span className="absolute bottom-20 text-black/30 font-black uppercase tracking-[0.6em] animate-pulse">Prayer</span>
-        </button>
+          {/* Right: Prayer */}
+          <button 
+            onClick={() => { setActiveTab('prayer'); setView('feed'); }}
+            className="flex-1 bg-brand-yellow relative group transition-all duration-700 hover:flex-[1.4] flex items-center justify-center overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
+            <h2 className="text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110"
+                style={{ 
+                  textShadow: `
+                    -2px -2px 0 #6d28d9,  
+                     2px -2px 0 #6d28d9,
+                    -2px  2px 0 #6d28d9,
+                     2px  2px 0 #6d28d9,
+                     0px 0px 20px rgba(109,40,217,0.3)
+                  `
+                }}>
+              기도
+            </h2>
+            <span className="absolute bottom-20 text-black/30 font-black uppercase tracking-[0.6em] animate-pulse">Prayer</span>
+          </button>
+        </div>
 
-        {/* Overlay Branding */}
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none">
-          <div className="w-8 h-8 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center">
-            <span className="material-icons text-white text-sm">groups</span>
+        {/* Floating Category Label Overlay */}
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none z-[60]">
+          <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center">
+            <span className="material-icons text-white text-xl">groups</span>
           </div>
-          <p className="text-[10px] text-white font-black uppercase tracking-[0.4em] opacity-40">Choose Channel</p>
+          <p className="text-[10px] text-white font-black uppercase tracking-[0.4em] opacity-60">COMMUNITY</p>
         </div>
       </div>
     )
@@ -136,10 +138,6 @@ export default function CommunityPage() {
           <h1 className="text-xl font-black font-plus-jakarta tracking-tight">
             {activeTab === 'meditation' ? 'Meditation Feed' : 'Prayer Feed'}
           </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="material-icons text-zinc-500">search</button>
-          <button className="material-icons text-zinc-500">notifications_none</button>
         </div>
       </header>
 
@@ -168,7 +166,6 @@ export default function CommunityPage() {
                     <p className="text-[10px] text-zinc-500">{p.date}</p>
                   </div>
                 </div>
-                <button className="material-icons text-zinc-400">more_vert</button>
               </div>
 
               <div 
@@ -195,9 +192,7 @@ export default function CommunityPage() {
                     <span className="text-xs font-bold">{Object.values(p.reactions).reduce((a, b) => a + b, 0)}</span>
                   </button>
                   <button className="material-icons text-2xl">chat_bubble_outline</button>
-                  <button className="material-icons text-2xl">repeat</button>
                 </div>
-                <button className="material-icons text-2xl">bookmark_border</button>
               </div>
 
               <div className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded ? 'max-h-[1200px] opacity-100 pb-12' : 'max-h-0 opacity-0'}`}>
