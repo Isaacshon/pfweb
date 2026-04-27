@@ -42,14 +42,15 @@ export default function AppPage() {
   const [localBibles, setLocalBibles] = useState<Record<string, any>>({})
 
   // Study Features
-  const [highlights, setHighlights] = useState<Record<string, string>>({})
-  const [notes, setNotes] = useState<Record<string, string>>({})
+  const [highlights, setHighlights] = useState<Record<string, any>>({})
+  const [notes, setNotes] = useState<Record<string, any>>({})
   const [activeMenuVerse, setActiveMenuVerse] = useState<number | null>(null)
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
   const [currentNote, setCurrentNote] = useState('')
   const [selectedColor, setSelectedColor] = useState('#fffbbd')
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [historyTab, setHistoryTab] = useState<'time' | 'book'>('time')
 
   // Appearance
   const [fontSize, setFontSize] = useState(20)
@@ -88,8 +89,22 @@ export default function AppPage() {
     if (savedFontSize) setFontSize(parseInt(savedFontSize))
     if (savedLineHeight) setLineHeight(parseFloat(savedLineHeight))
     if (savedVerseGap) setVerseGap(parseInt(savedVerseGap))
-    if (savedHighlights) setHighlights(JSON.parse(savedHighlights))
-    if (savedNotes) setNotes(JSON.parse(savedNotes))
+    if (savedHighlights) {
+      const h = JSON.parse(savedHighlights)
+      // Migration for legacy string format
+      Object.keys(h).forEach(k => {
+        if (typeof h[k] === 'string') h[k] = { color: h[k], time: Date.now() }
+      })
+      setHighlights(h)
+    }
+    if (savedNotes) {
+      const n = JSON.parse(savedNotes)
+      // Migration for legacy string format
+      Object.keys(n).forEach(k => {
+        if (typeof n[k] === 'string') n[k] = { text: n[k], time: Date.now() }
+      })
+      setNotes(n)
+    }
     
     setIsLoaded(true)
   }, [])
@@ -301,22 +316,44 @@ export default function AppPage() {
     setActiveMenuVerse(null)
   }
 
-  const toggleHighlight = (num: number, color: string) => {
+  const toggleHighlight = (num: number, color: string, verseText?: string) => {
     const key = `${book.id}_${chapter}_${num}`
-    setHighlights(prev => ({
-      ...prev,
-      [key]: prev[key] === color ? '' : color
-    }))
+    setHighlights(prev => {
+      const next = { ...prev }
+      if (next[key]?.color === color) {
+        delete next[key]
+      } else {
+        next[key] = { color, time: Date.now(), verseText: verseText || next[key]?.verseText }
+      }
+      return next
+    })
     setActiveMenuVerse(null)
     setIsPaletteOpen(false)
   }
 
-  const openNoteModal = (num: number) => {
+  const saveNote = (verseText?: string) => {
+    if (!activeMenuVerse && !isNoteModalOpen) return
+    const vNum = activeMenuVerse || (window as any)._noteVerse
+    const key = `${book.id}_${chapter}_${vNum}`
+    setNotes(prev => ({
+      ...prev,
+      [key]: { 
+        text: currentNote, 
+        time: Date.now(), 
+        verseText: verseText || prev[key]?.verseText || (window as any)._noteVerseText 
+      }
+    }))
+    setIsNoteModalOpen(false)
+  }
+
+  const openNoteModal = (num: number, verseText: string) => {
     const key = `${book.id}_${chapter}_${num}`
     setActiveMenuVerse(null)
     setIsPaletteOpen(false)
-    setCurrentNote(notes[key] || '')
+    setCurrentNote(notes[key]?.text || '')
     setIsNoteModalOpen(true)
+    ;(window as any)._noteVerse = num
+    ;(window as any)._noteVerseText = verseText
   }
 
   const isEn = version.lang === 'en'
@@ -376,6 +413,7 @@ export default function AppPage() {
               
               return (
                   <div 
+                    id={`verse-${v.verse}`}
                     key={v.verse} 
                     className="flex flex-col gap-2 group relative active:opacity-70 transition-opacity"
                     onPointerDown={(e) => handlePointerDown(v.verse, e)}
@@ -393,7 +431,7 @@ export default function AppPage() {
                     {highlightColor && (
                       <div 
                         className="absolute inset-x-[-4px] inset-y-0 opacity-30 z-0 rounded-sm" 
-                        style={{ backgroundColor: highlightColor }}
+                        style={{ backgroundColor: highlightColor.color }}
                       />
                     )}
                     <p style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }} className="font-medium tracking-tight relative z-10">{v.text}</p>
@@ -409,76 +447,76 @@ export default function AppPage() {
                     <div className={`absolute ${v.verse <= 2 ? 'top-full mt-4' : '-top-24'} left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_20px_60px_rgba(0,0,0,0.25)] z-[300] animate-in zoom-in-95 duration-200 border border-slate-100/50 overflow-visible`}>
                       {highlightColor ? (
                         /* Case 1: Already Highlighted (Edit Menu) */
-                        <div className="flex items-center gap-8 px-8 py-3.5 min-w-max">
+                        <div className="flex items-center gap-6 px-6 py-2.5 min-w-max">
                           <button 
                             onClick={(e) => { e.stopPropagation(); removeHighlight(v.verse); }}
-                            className="text-slate-800 font-black text-[15px] active:scale-90 transition-transform"
+                            className="text-slate-800 font-black text-[13px] active:scale-90 transition-transform"
                           >
-                            삭제
+                            Delete
                           </button>
                           
                           <div className="relative flex items-center justify-center">
                             <div 
-                              className="w-10 h-10 rounded-full border-[3px] border-white shadow-lg shrink-0"
-                              style={{ backgroundColor: highlightColor }}
+                              className="w-8 h-8 rounded-full border-[2px] border-white shadow-lg shrink-0"
+                              style={{ backgroundColor: highlightColor.color }}
                             ></div>
                             <div 
-                              className="absolute w-[54px] h-[54px] rounded-full border-2 opacity-30"
-                              style={{ borderColor: highlightColor }}
+                              className="absolute w-[44px] h-[44px] rounded-full border-2 opacity-30"
+                              style={{ borderColor: highlightColor.color }}
                             ></div>
                           </div>
 
                           <button 
-                            onClick={(e) => { e.stopPropagation(); openNoteModal(v.verse); }}
-                            className="text-slate-800 font-black text-[15px] active:scale-90 transition-transform"
+                            onClick={(e) => { e.stopPropagation(); openNoteModal(v.verse, v.text); }}
+                            className="text-slate-800 font-black text-[13px] active:scale-90 transition-transform"
                           >
-                            메모
+                            Note
                           </button>
                           
                           <button 
                             onClick={(e) => { e.stopPropagation(); setActiveMenuVerse(null); }}
-                            className="text-slate-800 font-black text-[15px] active:scale-90 transition-transform"
+                            className="text-slate-800 font-black text-[13px] active:scale-90 transition-transform"
                           >
-                            공유
+                            Share
                           </button>
                         </div>
                       ) : (
                         /* Case 2: New Highlight (Original Menu) */
-                        <div className="flex items-center gap-3 px-4 py-3 min-w-max">
+                        <div className="flex items-center gap-2 px-3 py-2 min-w-max">
                           {/* Close Button - Far Left */}
                           <button 
                             onClick={(e) => { e.stopPropagation(); setActiveMenuVerse(null); }}
-                            className="w-9 h-9 rounded-full bg-brand-purple flex items-center justify-center shrink-0 active:scale-90 transition-transform shadow-md"
+                            className="w-8 h-8 rounded-full bg-brand-purple flex items-center justify-center shrink-0 active:scale-90 transition-transform shadow-md"
                           >
-                            <span className="material-icons text-white text-[20px]">close</span>
+                            <span className="material-icons text-white text-[16px]">close</span>
                           </button>
 
                           {/* Direct Color Choices */}
-                          <div className="flex gap-2.5">
+                          <div className="flex gap-2">
                             <button 
-                              onClick={(e) => { e.stopPropagation(); setSelectedColor('#fffbbd'); toggleHighlight(v.verse, '#fffbbd'); }} 
-                              className={`w-9 h-9 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#fffbbd' ? 'ring-2 ring-brand-yellow/50 ring-offset-2' : ''}`}
+                              onClick={(e) => { e.stopPropagation(); setSelectedColor('#fffbbd'); toggleHighlight(v.verse, '#fffbbd', v.text); }} 
+                              className={`w-8 h-8 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#fffbbd' ? 'ring-2 ring-brand-yellow/50 ring-offset-2' : ''}`}
                             ></button>
                             <button 
-                              onClick={(e) => { e.stopPropagation(); setSelectedColor('#9a78b4'); toggleHighlight(v.verse, '#9a78b4'); }} 
-                              className={`w-9 h-9 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#9a78b4' ? 'ring-2 ring-brand-purple/50 ring-offset-2' : ''}`}
+                              onClick={(e) => { e.stopPropagation(); setSelectedColor('#9a78b4'); toggleHighlight(v.verse, '#9a78b4', v.text); }} 
+                              className={`w-8 h-8 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#9a78b4' ? 'ring-2 ring-brand-purple/50 ring-offset-2' : ''}`}
                             ></button>
                           </div>
 
-                          <div className="w-px h-6 bg-slate-100 mx-1"></div>
+                          <div className="w-px h-5 bg-slate-100 mx-0.5"></div>
 
                           {/* Actions */}
                           <button 
-                            onClick={(e) => { e.stopPropagation(); toggleHighlight(v.verse, selectedColor); }} 
-                            className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
+                            onClick={(e) => { e.stopPropagation(); toggleHighlight(v.verse, selectedColor, v.text); }} 
+                            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
                           >
-                            <span className="material-icons text-[26px]">draw</span>
+                            <span className="material-icons text-[22px]">draw</span>
                           </button>
                           <button 
-                            onClick={(e) => { e.stopPropagation(); openNoteModal(v.verse); }} 
-                            className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
+                            onClick={(e) => { e.stopPropagation(); openNoteModal(v.verse, v.text); }} 
+                            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
                           >
-                            <span className="material-icons text-[26px]">sticky_note_2</span>
+                            <span className="material-icons text-[22px]">sticky_note_2</span>
                           </button>
                           <button 
                             onClick={(e) => { 
@@ -486,15 +524,15 @@ export default function AppPage() {
                               navigator.clipboard.writeText(v.text); 
                               setActiveMenuVerse(null); 
                             }} 
-                            className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
+                            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
                           >
-                            <span className="material-icons text-[26px]">content_copy</span>
+                            <span className="material-icons text-[22px]">content_copy</span>
                           </button>
                           <button 
                             onClick={(e) => { e.stopPropagation(); setActiveMenuVerse(null); }} 
-                            className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
+                            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
                           >
-                            <span className="material-icons text-[26px]">share</span>
+                            <span className="material-icons text-[22px]">share</span>
                           </button>
                         </div>
                       )}
@@ -518,6 +556,17 @@ export default function AppPage() {
         <div className="fixed inset-0 z-50 bg-black/5" onClick={() => setOpenUI(null)}>
           <div className={`absolute bottom-28 left-6 right-6 p-8 rounded-[40px] shadow-2xl border transition-all animate-in slide-in-from-bottom-4 duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`} onClick={e => e.stopPropagation()}>
             <div className="flex flex-col gap-6">
+              <div className="grid grid-cols-2 gap-3 mb-2">
+                <button onClick={() => { setOpenUI(null); setIsHistoryOpen(true); setHistoryTab('time'); }} className={`h-14 rounded-2xl border flex items-center justify-center gap-2 font-black text-[13px] tracking-tight transition-all active:scale-95 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
+                  <span className="material-icons text-lg">history_edu</span>
+                  HIGHLIGHTS
+                </button>
+                <button onClick={() => { setOpenUI(null); setIsHistoryOpen(true); setHistoryTab('time'); }} className={`h-14 rounded-2xl border flex items-center justify-center gap-2 font-black text-[13px] tracking-tight transition-all active:scale-95 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
+                  <span className="material-icons text-lg">sticky_note_2</span>
+                  NOTES
+                </button>
+              </div>
+
               <div className="flex justify-between items-center"><span className="text-[10px] font-black uppercase tracking-widest opacity-30">Night Mode</span><button onClick={toggleTheme} className={`w-12 h-6 rounded-full relative transition-all ${isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'}`}><div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isDarkMode ? 'left-7' : 'left-1'}`}></div></button></div>
               <div className="flex justify-between items-center"><span className="text-[10px] font-black uppercase tracking-widest opacity-30">Text Size</span><div className="flex items-center gap-6"><button onClick={() => setFontSize(Math.max(14, fontSize - 2))} className={`${accentColor} font-black`}>-</button><span className="font-space-grotesk font-black text-sm">{fontSize}</span><button onClick={() => setFontSize(Math.min(32, fontSize + 2))} className={`${accentColor} font-black`}>+</button></div></div>
               <div className="flex justify-between items-center"><span className="text-[10px] font-black uppercase tracking-widest opacity-30">Line Height</span><div className="flex items-center gap-6"><button onClick={() => setLineHeight(Math.max(1.2, lineHeight - 0.1))} className={`${accentColor} font-black`}>-</button><span className="font-space-grotesk font-black text-sm">{lineHeight.toFixed(1)}</span><button onClick={() => setLineHeight(Math.min(2.5, lineHeight + 0.1))} className={`${accentColor} font-black`}>+</button></div></div>
@@ -601,48 +650,112 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* History Sheet */}
+      {/* History Side-Sheet */}
       {isHistoryOpen && (
-        <div className="fixed inset-0 z-[300] bg-black/40 backdrop-blur-sm flex items-end animate-in fade-in duration-300" onClick={() => setIsHistoryOpen(false)}>
-          <div className={`w-full rounded-t-[40px] max-h-[85vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 duration-500 shadow-2xl ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`} onClick={e => e.stopPropagation()}>
-            <div className={`p-8 flex items-center justify-between border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-50'}`}>
-              <div>
-                <h2 className="text-2xl font-black uppercase tracking-tight">Study History</h2>
-                <p className="text-xs font-bold opacity-40 uppercase tracking-widest mt-1">{historyItems.length} Saved Activities</p>
-              </div>
-              <button onClick={() => setIsHistoryOpen(false)} className={`w-10 h-10 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-50'}`}><span className="material-icons text-slate-300">close</span></button>
+        <div className="fixed inset-0 z-[100] flex justify-end">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsHistoryOpen(false)}></div>
+          <div className={`relative w-full max-w-lg h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-500 ${isDarkMode ? 'bg-[#151515]' : 'bg-[#fcfcfc]'}`}>
+            <div className={`shrink-0 h-20 px-8 flex items-center justify-between border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
+              <button onClick={() => setIsHistoryOpen(false)} className="material-icons text-slate-400">close</button>
+              <h2 className="font-plus-jakarta font-black text-lg tracking-tight">Study History</h2>
+              <div className="w-6"></div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar pb-20">
-              {historyItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 opacity-20">
-                  <span className="material-icons text-6xl mb-4">history_edu</span>
-                  <p className="font-bold">No history yet</p>
-                </div>
-              ) : (
-                historyItems.map(key => {
-                  const [bId, cNum, vNum] = key.split('_')
-                  const bName = bibleBooks.find(b => b.id === parseInt(bId))?.name
-                  const highlightColor = highlights[key]
-                  const noteText = notes[key]
-                  
+
+            <div className={`flex h-14 border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
+              <button 
+                onClick={() => setHistoryTab('time')}
+                className={`flex-1 font-bold text-[13px] transition-all relative ${historyTab === 'time' ? accentColor : 'text-slate-400'}`}
+              >
+                By Time
+                {historyTab === 'time' && <div className={`absolute bottom-0 left-0 right-0 h-1 ${accentBg}`}></div>}
+              </button>
+              <button 
+                onClick={() => setHistoryTab('book')}
+                className={`flex-1 font-bold text-[13px] transition-all relative ${historyTab === 'book' ? accentColor : 'text-slate-400'}`}
+              >
+                By Book
+                {historyTab === 'book' && <div className={`absolute bottom-0 left-0 right-0 h-1 ${accentBg}`}></div>}
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto no-scrollbar pb-24">
+              {(() => {
+                const hItems = [
+                  ...Object.entries(highlights).map(([key, val]) => ({ key, type: 'highlight', ...val })),
+                  ...Object.entries(notes).map(([key, val]) => ({ key, type: 'note', ...val }))
+                ].filter((item, index, self) => 
+                  index === self.findIndex((t) => t.key === item.key)
+                );
+
+                if (historyTab === 'time') {
+                  hItems.sort((a, b) => (b.time || 0) - (a.time || 0));
+                } else {
+                  hItems.sort((a, b) => {
+                    const [aB, aC, aV] = a.key.split('_').map(Number);
+                    const [bB, bC, bV] = b.key.split('_').map(Number);
+                    if (aB !== bB) return aB - bB;
+                    if (aC !== bC) return aC - bC;
+                    return aV - bV;
+                  });
+                }
+
+                if (hItems.length === 0) {
                   return (
-                    <div key={key} onClick={() => { 
-                      const b = bibleBooks.find(b => b.id === parseInt(bId));
-                      if (b) { setBook(b); setChapter(parseInt(cNum)); setIsHistoryOpen(false); }
-                    }} className={`p-5 rounded-[32px] border flex flex-col gap-3 active:scale-[0.98] transition-all ${isDarkMode ? 'bg-zinc-800/50 border-zinc-700' : 'bg-slate-50/50 border-slate-100'}`}>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${accentColor}`}>{bName} {cNum}:{vNum}</span>
-                        {highlightColor && <div className="w-3 h-3 rounded-full" style={{ backgroundColor: highlightColor }}></div>}
-                      </div>
-                      {noteText && (
-                        <div className={`p-4 rounded-2xl shadow-sm border-l-4 ${isDarkMode ? 'bg-zinc-900 border-brand-yellow' : 'bg-white border-brand-purple'}`}>
-                          <p className="text-sm font-bold leading-relaxed">{noteText}</p>
-                        </div>
-                      )}
+                    <div className="flex flex-col items-center justify-center h-full opacity-30 gap-4">
+                      <span className="material-icons text-6xl">history_edu</span>
+                      <p className="font-bold">No history yet</p>
                     </div>
-                  )
-                })
-              )}
+                  );
+                }
+
+                return hItems.map((item) => {
+                  const [bId, cNum, vNum] = item.key.split('_').map(Number);
+                  const b = bibleBooks.find(x => x.id === bId);
+                  const date = new Date(item.time || Date.now());
+                  const dateStr = date.toLocaleString('ko-KR', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', weekday: 'short'
+                  });
+
+                  return (
+                    <div 
+                      key={item.key} 
+                      onClick={() => {
+                        if (b) setBook(b);
+                        setChapter(cNum);
+                        setIsHistoryOpen(false);
+                        setTimeout(() => {
+                          const el = document.getElementById(`verse-${vNum}`);
+                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 500);
+                      }}
+                      className={`p-6 border-b transition-colors cursor-pointer ${isDarkMode ? 'border-zinc-800 hover:bg-zinc-900/50' : 'border-slate-50 hover:bg-slate-50'}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`font-black text-[13px] ${accentColor}`}>
+                          {isEn ? b?.eng : b?.name} {cNum}:{vNum}
+                        </span>
+                        <span className="text-[11px] opacity-40 font-medium tracking-tight">{dateStr}</span>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-4">
+                          {item.color && (
+                            <div className="w-1.5 h-full shrink-0 rounded-full" style={{ backgroundColor: item.color }}></div>
+                          )}
+                          <p className={`text-sm font-medium leading-relaxed opacity-80 line-clamp-3 ${isDarkMode ? 'text-zinc-300' : 'text-slate-600'}`}>
+                            {item.verseText || 'Verse content not available'}
+                          </p>
+                        </div>
+                        {item.type === 'note' && (
+                          <div className={`mt-2 p-3 rounded-xl border-l-2 ${isDarkMode ? 'bg-zinc-900 border-brand-yellow' : 'bg-slate-50 border-brand-purple'}`}>
+                            <p className="text-[12px] font-bold italic opacity-60">"{item.text}"</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>
@@ -650,25 +763,22 @@ export default function AppPage() {
 
       {/* Note Modal */}
       {isNoteModalOpen && (
-        <div className="fixed inset-0 z-[400] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className={`w-full max-w-sm rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-500 ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`}>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-black uppercase tracking-tight">Verse Note</h2>
-              <button onClick={() => setIsNoteModalOpen(false)} className="material-icons text-slate-300">close</button>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center px-6">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsNoteModalOpen(false)}></div>
+          <div className={`relative w-full max-w-lg rounded-[32px] p-8 shadow-2xl animate-in zoom-in-95 duration-300 ${isDarkMode ? 'bg-[#151515]' : 'bg-white'}`}>
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="font-plus-jakarta font-black text-xl tracking-tight">Verse Note</h3>
+              <button onClick={() => setIsNoteModalOpen(false)} className="material-icons text-slate-400">close</button>
             </div>
-            <textarea 
+            <textarea
               value={currentNote}
               onChange={(e) => setCurrentNote(e.target.value)}
               placeholder="What did God speak to you today?"
-              className={`w-full h-40 rounded-3xl p-5 outline-none font-medium placeholder:opacity-30 resize-none mb-6 ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-50'}`}
+              className={`w-full h-48 p-6 rounded-2xl border-2 focus:ring-4 outline-none transition-all font-medium leading-relaxed resize-none ${isDarkMode ? 'bg-zinc-900 border-zinc-800 focus:border-brand-yellow focus:ring-brand-yellow/10' : 'bg-slate-50 border-slate-100 focus:border-brand-purple focus:ring-brand-purple/5'}`}
               autoFocus
             />
             <button 
-              onClick={() => {
-                const key = `${book.id}_${chapter}_${activeMenuVerse}`
-                setNotes(prev => ({ ...prev, [key]: currentNote }))
-                setIsNoteModalOpen(false)
-              }}
+              onClick={saveNote}
               className={`w-full py-5 rounded-3xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all ${isDarkMode ? 'bg-brand-yellow text-black shadow-brand-yellow/20' : 'bg-brand-purple text-white shadow-brand-purple/20'}`}
             >
               Save Note
@@ -677,7 +787,16 @@ export default function AppPage() {
         </div>
       )}
 
-      <style jsx global>{` .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   )
 }
