@@ -29,6 +29,7 @@ export default function BiblePage() {
   const [activeMenuVerse, setActiveMenuVerse] = useState<number | null>(null)
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
   const [selectedColor, setSelectedColor] = useState('#fffbbd')
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false)
 
   // Long Press Logic
   const longPressTimer = useRef<any>(null)
@@ -51,6 +52,7 @@ export default function BiblePage() {
     longPressTimer.current = setTimeout(() => {
       isLongPressing.current = true
       setActiveMenuVerse(num)
+      setIsPaletteOpen(false) // Reset palette state on new long press
       if (window.navigator.vibrate) window.navigator.vibrate(50)
     }, 600)
   }
@@ -65,10 +67,12 @@ export default function BiblePage() {
       [num]: prev[num] === color ? '' : color
     }))
     setActiveMenuVerse(null)
+    setIsPaletteOpen(false)
   }
 
   const openNoteModal = (num: number) => {
     setActiveMenuVerse(null)
+    setIsPaletteOpen(false)
     setCurrentNote(notes[num] || '')
     setIsNoteModalOpen(true)
   }
@@ -138,37 +142,54 @@ export default function BiblePage() {
                   </div>
                 </div>
 
-                {/* Context Menu - Reference Image 1 Style */}
+                {/* Context Menu - Expandable Palette */}
                 {activeMenuVerse === v.num && (
-                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white px-5 py-2.5 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-[100] animate-in zoom-in-95 duration-200 border border-slate-50">
-                    <button 
-                      onClick={() => toggleHighlight(v.num, selectedColor)} 
-                      className="text-sm font-bold text-slate-800 active:scale-95 transition-transform"
-                    >
-                      형광펜
-                    </button>
-                    
-                    <div className="flex items-center gap-2 px-3 border-x border-slate-100">
-                      <button 
-                        onClick={() => setSelectedColor('#9a78b4')} 
-                        className={`w-6 h-6 rounded-full bg-[#9a78b4] border-2 transition-all ${selectedColor === '#9a78b4' ? 'border-white ring-2 ring-[#9a78b4] scale-110' : 'border-transparent opacity-60'}`}
-                      ></button>
-                      <button 
-                        onClick={() => setSelectedColor('#fffbbd')} 
-                        className={`w-6 h-6 rounded-full bg-[#fffbbd] border-2 transition-all ${selectedColor === '#fffbbd' ? 'border-white ring-2 ring-[#fffbbd] scale-110' : 'border-transparent opacity-60'}`}
-                      ></button>
-                    </div>
+                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-[100] animate-in zoom-in-95 duration-200 border border-slate-50 overflow-hidden">
+                    {!isPaletteOpen ? (
+                      <div className="flex items-center gap-5 px-5 py-2.5">
+                        <button 
+                          onClick={() => toggleHighlight(v.num, selectedColor)} 
+                          className="text-sm font-bold text-slate-800 active:scale-95 transition-transform"
+                        >
+                          형광펜
+                        </button>
+                        
+                        <button 
+                          onClick={() => setIsPaletteOpen(true)}
+                          className="w-6 h-6 rounded-full border-2 border-white ring-2 ring-offset-1 transition-all active:scale-90"
+                          style={{ backgroundColor: selectedColor, ringColor: selectedColor }}
+                        ></button>
 
-                    <button 
-                      onClick={() => openNoteModal(v.num)} 
-                      className="text-sm font-bold text-slate-800 active:scale-95 transition-transform"
-                    >
-                      메모
-                    </button>
+                        <button 
+                          onClick={() => openNoteModal(v.num)} 
+                          className="text-sm font-bold text-slate-800 active:scale-95 transition-transform"
+                        >
+                          메모
+                        </button>
 
-                    <div className="flex items-center text-slate-300">
-                      <span className="material-icons text-lg">more_vert</span>
-                    </div>
+                        <div className="flex items-center text-slate-300">
+                          <span className="material-icons text-lg">more_vert</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-6 px-6 py-2.5 animate-in slide-in-from-right-4 duration-300">
+                        <button 
+                          onClick={() => { setSelectedColor('#fffbbd'); setIsPaletteOpen(false); }} 
+                          className={`w-7 h-7 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#fffbbd' ? 'ring-2 ring-[#fffbbd] ring-offset-1' : ''}`}
+                        ></button>
+                        <button 
+                          onClick={() => { setSelectedColor('#9a78b4'); setIsPaletteOpen(false); }} 
+                          className={`w-7 h-7 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#9a78b4' ? 'ring-2 ring-[#9a78b4] ring-offset-1' : ''}`}
+                        ></button>
+                        <div className="w-px h-4 bg-slate-100 mx-1"></div>
+                        <button 
+                          onClick={() => setIsPaletteOpen(false)} 
+                          className="material-icons text-slate-400 text-lg active:scale-90 transition-transform"
+                        >
+                          close
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
