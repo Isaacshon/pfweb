@@ -14,6 +14,26 @@ export default function DownloadPage() {
   const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
   const accentBg = isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white'
 
+  const [installPrompt, setInstallPrompt] = React.useState<any>(null)
+
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
+
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} pb-40 transition-colors duration-500`}>
       {/* Header */}
@@ -51,6 +71,15 @@ export default function DownloadPage() {
 
         {/* Action Buttons */}
         <div className="w-full flex flex-col gap-4">
+          {installPrompt && (
+            <button 
+              onClick={handleInstallClick}
+              className={`w-full py-5 rounded-[32px] font-black text-xs uppercase tracking-[0.2em] shadow-xl bg-white text-black border-2 ${activeBorder} animate-bounce mb-4`}
+            >
+              Install App Now
+            </button>
+          )}
+
           <button 
             onClick={() => {
               if (navigator.share) {
