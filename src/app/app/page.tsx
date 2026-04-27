@@ -375,14 +375,19 @@ export default function AppPage() {
               const noteText = notes[key]
               
               return (
-                <div 
-                  key={v.verse} 
-                  className="flex flex-col gap-2 group relative"
-                  onPointerDown={(e) => handlePointerDown(v.verse, e)}
-                  onPointerUp={handlePointerUp}
-                  onPointerLeave={handlePointerUp}
-                  onContextMenu={(e) => e.preventDefault()}
-                >
+                  <div 
+                    key={v.verse} 
+                    className="flex flex-col gap-2 group relative active:opacity-70 transition-opacity"
+                    onPointerDown={(e) => handlePointerDown(v.verse, e)}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onClick={() => {
+                      if (highlightColor && !isLongPressing.current) {
+                        setActiveMenuVerse(v.verse);
+                      }
+                    }}
+                  >
                   <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-brand-yellow/50' : 'text-brand-purple/30'}`}>{v.verse}</span>
                   <div className="relative inline">
                     {highlightColor && (
