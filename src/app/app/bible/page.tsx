@@ -28,8 +28,10 @@ export default function BiblePage() {
   const [notes, setNotes] = useState<Record<number, string>>({})
   const [activeMenuVerse, setActiveMenuVerse] = useState<number | null>(null)
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
+  const [currentNote, setCurrentNote] = useState('')
   const [selectedColor, setSelectedColor] = useState('#fffbbd')
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
 
   // Long Press Logic
   const longPressTimer = useRef<any>(null)
@@ -47,14 +49,14 @@ export default function BiblePage() {
     localStorage.setItem('pf_bible_notes', JSON.stringify(notes))
   }, [highlights, notes])
 
-  const handlePointerDown = (num: number) => {
+  const handlePointerDown = (num: number, e: React.PointerEvent) => {
     isLongPressing.current = false
     longPressTimer.current = setTimeout(() => {
       isLongPressing.current = true
       setActiveMenuVerse(num)
-      setIsPaletteOpen(false) // Reset palette state on new long press
+      setIsPaletteOpen(false)
       if (window.navigator.vibrate) window.navigator.vibrate(50)
-    }, 600)
+    }, 500)
   }
 
   const handlePointerUp = () => {
@@ -77,9 +79,20 @@ export default function BiblePage() {
     setIsNoteModalOpen(true)
   }
 
+  const hasHistory = Object.keys(highlights).length > 0 || Object.keys(notes).length > 0
+  const historyItems = initialVerses.filter(v => (highlights[v.num] && highlights[v.num] !== '') || notes[v.num])
+
   return (
-    <div className="pt-20 px-6 flex flex-col gap-8 pb-32 font-pretendard">
-      <AppTopBar title="Bible Reader" />
+    <div className="pt-20 px-6 flex flex-col gap-8 pb-32 font-pretendard select-none">
+      <header className="flex items-center justify-between">
+        <AppTopBar title="Bible Reader" />
+        <button 
+          onClick={() => setIsHistoryOpen(true)}
+          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${hasHistory ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/20' : 'bg-slate-100 text-slate-400'}`}
+        >
+          <span className="material-icons text-xl">history_edu</span>
+        </button>
+      </header>
 
       {/* Selector Section */}
       <div className="flex justify-between items-center bg-white p-4 rounded-[24px] shadow-[0_10px_30px_rgba(109,40,217,0.04)]">
@@ -115,10 +128,11 @@ export default function BiblePage() {
             {initialVerses.map((v) => (
               <div 
                 key={v.num} 
-                className="relative group"
-                onPointerDown={() => handlePointerDown(v.num)}
+                className="relative group touch-none"
+                onPointerDown={(e) => handlePointerDown(v.num, e)}
                 onPointerUp={handlePointerUp}
                 onPointerLeave={handlePointerUp}
+                onContextMenu={(e) => e.preventDefault()}
               >
                 <div className="flex items-start gap-4">
                   <span className="font-bold text-[12px] uppercase tracking-widest text-brand-purple mt-1.5 shrink-0 w-4 text-center">
@@ -131,7 +145,7 @@ export default function BiblePage() {
                         style={{ backgroundColor: highlights[v.num] }}
                       />
                     )}
-                    <p className="text-[18px] font-medium text-brand-dark leading-relaxed relative z-10">
+                    <p className="text-[18px] font-medium text-brand-dark leading-relaxed relative z-10 select-none">
                       {v.text}
                     </p>
                     {notes[v.num] && (
@@ -212,9 +226,47 @@ export default function BiblePage() {
         </BentoCard>
       </div>
 
+      {/* Activity History Sheet */}
+      {isHistoryOpen && (
+        <div className="fixed inset-0 z-[300] bg-black/40 backdrop-blur-sm flex items-end animate-in fade-in duration-300">
+          <div className="w-full bg-white rounded-t-[40px] max-h-[85vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 duration-500 shadow-2xl">
+            <div className="p-8 flex items-center justify-between border-b border-slate-50">
+              <div>
+                <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Study History</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{historyItems.length} Saved Activities</p>
+              </div>
+              <button onClick={() => setIsHistoryOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center"><span className="material-icons text-slate-300">close</span></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar pb-20">
+              {historyItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 opacity-20">
+                  <span className="material-icons text-6xl mb-4">history_edu</span>
+                  <p className="font-bold">No history yet</p>
+                </div>
+              ) : (
+                historyItems.map(v => (
+                  <div key={v.num} onClick={() => setIsHistoryOpen(false)} className="p-5 rounded-[32px] bg-slate-50/50 border border-slate-100 flex flex-col gap-3 active:scale-[0.98] transition-transform">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-brand-purple uppercase tracking-[0.2em]">Verse {v.num}</span>
+                      {highlights[v.num] && <div className="w-3 h-3 rounded-full" style={{ backgroundColor: highlights[v.num] }}></div>}
+                    </div>
+                    <p className="text-sm font-medium text-brand-dark line-clamp-2 opacity-60 italic">"{v.text}"</p>
+                    {notes[v.num] && (
+                      <div className="mt-1 p-4 bg-white rounded-2xl shadow-sm border-l-4 border-brand-purple">
+                        <p className="text-sm font-bold text-brand-dark leading-relaxed">{notes[v.num]}</p>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Note Modal */}
       {isNoteModalOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[400] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-500">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-black text-brand-dark uppercase tracking-tight">Verse Note</h2>
@@ -228,7 +280,7 @@ export default function BiblePage() {
             />
             <button 
               onClick={() => {
-                const verseNum = Object.keys(highlights).find(k => activeMenuVerse === Number(k)) || activeMenuVerse
+                const verseNum = activeMenuVerse
                 if (verseNum !== null) {
                   setNotes(prev => ({ ...prev, [verseNum]: currentNote }))
                   setIsNoteModalOpen(false)
@@ -256,7 +308,7 @@ export default function BiblePage() {
         <button className="mr-4 px-6 py-2.5 bg-brand-purple text-white rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-purple/20 hover:scale-105 active:scale-95 transition-all">
           Save
         </button>
-      </div>
+      </BentoCard>
     </div>
   )
 }
