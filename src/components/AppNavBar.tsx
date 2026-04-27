@@ -9,7 +9,7 @@ import { useTheme } from '@/context/ThemeContext'
 const navItems = [
   { label: 'Home', icon: 'home', path: '/app' },
   { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
-  { label: 'Scan', icon: 'pf_logo', path: '/app/scan', isElevated: true },
+  { label: 'Scan', icon: 'keyboard_arrow_up', path: '/app/scan', isElevated: true },
   { label: 'Community', icon: 'groups', path: '/app/community' },
   { label: 'My', icon: 'person', path: '/app/profile' },
 ]
@@ -36,7 +36,7 @@ export function AppNavBar() {
   const handleTouchEnd = () => {
     if (touchStart !== null && currentY !== null) {
       const distance = touchStart - currentY
-      if (distance > 80) setIsScanOpen(true)
+      if (distance > 50) setIsScanOpen(true)
     }
     setTouchStart(null)
     setCurrentY(null)
@@ -49,7 +49,7 @@ export function AppNavBar() {
 
   return (
     <>
-      <nav className={`fixed bottom-0 left-0 right-0 h-24 px-4 pb-6 flex justify-around items-center max-w-md mx-auto ${bgColor} backdrop-blur-md rounded-t-[40px] z-50 border-t ${borderColor} shadow-[0_-10px_40px_rgba(0,0,0,0.03)] md:max-w-none md:rounded-none transition-colors duration-500`}>
+      <nav className={`fixed bottom-0 left-0 right-0 h-20 px-2 pb-2 flex justify-around items-center max-w-md mx-auto ${bgColor} backdrop-blur-md rounded-t-[32px] z-50 border-t ${borderColor} shadow-[0_-10px_40px_rgba(0,0,0,0.03)] md:max-w-none md:rounded-none transition-colors duration-500`}>
         {navItems.map((item) => {
           const isActive = pathname === item.path
           
@@ -61,23 +61,26 @@ export function AppNavBar() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 onClick={() => setIsScanOpen(true)}
-                className="relative -top-8 cursor-pointer group"
+                className="relative -top-6 cursor-pointer flex flex-col items-center"
               >
                 <div 
-                  className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-white'} rounded-full w-20 h-20 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.1)] border-[4px] overflow-hidden transition-all duration-300 active:scale-90`}
+                  className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-white'} rounded-full w-14 h-14 flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.1)] border-[3px] overflow-hidden transition-all duration-300 active:scale-90 relative`}
                   style={{
                     transform: isSwiping && touchStart && currentY 
-                      ? `translateY(${Math.max(-40, currentY - touchStart)}px)` 
+                      ? `translateY(${Math.max(-20, currentY - touchStart)}px)` 
                       : 'translateY(0)'
                   }}
                 >
                   <img 
                     src="/images/IMG_6847.PNG" 
                     alt="PF Logo" 
-                    className="w-full h-full object-contain scale-110"
+                    className="w-full h-full object-contain scale-100 opacity-80"
                   />
+                  {/* Subtle Indicator Arrow */}
+                  <div className={`absolute -top-1 left-1/2 -translate-x-1/2 ${activeColor} animate-bounce`}>
+                    <span className="material-icons text-[16px]">expand_less</span>
+                  </div>
                 </div>
-                <span className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.2em] text-center w-full ${activeColor}`}>Scan</span>
               </div>
             )
           }
@@ -86,14 +89,14 @@ export function AppNavBar() {
             <Link
               key={item.label}
               href={item.path}
-              className={`flex flex-col items-center gap-1.5 transition-all active:scale-90 duration-200 min-w-[60px] ${
+              className={`flex flex-col items-center gap-1 transition-all active:scale-90 duration-200 min-w-[50px] ${
                 isActive ? activeColor : 'text-slate-400'
               }`}
             >
-              <span className="material-icons text-[26px]">
+              <span className="material-icons text-[24px]">
                 {item.icon}
               </span>
-              <span className="font-plus-jakarta font-black text-[9px] uppercase tracking-widest">{item.label}</span>
+              <span className="font-plus-jakarta font-black text-[8px] uppercase tracking-widest">{item.label}</span>
             </Link>
           )
         })}

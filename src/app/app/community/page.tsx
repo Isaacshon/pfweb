@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from 'react'
-import Image from 'next/image'
+import React from 'react'
+import { useTheme } from '@/context/ThemeContext'
 
 const reactionTypes = [
   { label: 'Like', icon: 'thumb_up', color: 'text-blue-500' },
@@ -32,86 +32,92 @@ const recentMeditations = [
   },
 ]
 
-const trendingVerses = [
-  { rank: 1, verse: "Psalm 23:1 (for test.)", count: 124 },
-  { rank: 2, verse: "Philippians 4:13 (for test.)", count: 98 },
-]
-
 export default function CommunityPage() {
-  const [searchQuery, setSearchQuery] = useState('')
+  const { isDarkMode } = useTheme()
+
+  const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-white'
+  const textColor = isDarkMode ? 'text-white' : 'text-zinc-900'
+  const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
+
+  const handleShare = (post: any) => {
+    if (navigator.share) {
+      navigator.share({
+        title: post.verse,
+        text: post.content,
+        url: window.location.href,
+      }).catch(console.error);
+    } else {
+      alert("Sharing (for test.): " + post.content);
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-white pb-32">
-      {/* Header */}
-      <header className="px-6 pt-16 pb-8">
-        <h1 className="text-4xl font-black font-plus-jakarta tracking-tight mb-2">Community</h1>
-        <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Connect & Share (for test.)</p>
+    <div className={`min-h-screen ${bgColor} ${textColor} pb-32 transition-colors duration-500`}>
+      {/* Immersive Header */}
+      <header className="px-8 pt-20 pb-12 flex items-end justify-between">
+        <div className="space-y-1">
+          <h1 className="text-5xl font-black font-plus-jakarta tracking-tighter">Posts</h1>
+          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em] ml-1">For test.</p>
+        </div>
+        <button className={`w-12 h-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white'} shadow-xl active:scale-90 transition-transform`}>
+          <span className="material-icons">add</span>
+        </button>
       </header>
 
-      {/* Main Feature: Meditations with Reactions */}
-      <section className="px-6 mb-12">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-black font-plus-jakarta tracking-tight">Recent Meditations</h2>
-          <button className="text-brand-purple font-black text-xs uppercase tracking-widest">Post (for test.)</button>
-        </div>
-        
-        <div className="flex flex-col gap-12">
-          {recentMeditations.map((m) => (
-            <div key={m.id} className="flex flex-col gap-5 border-b border-slate-50 pb-12 last:border-none">
+      {/* Distilled Post Feed */}
+      <section className="px-8 flex flex-col gap-16">
+        {recentMeditations.map((m) => (
+          <div key={m.id} className="flex flex-col gap-6 group">
+            {/* User Info */}
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-brand-purple/10">
+                <div className="relative w-10 h-10 rounded-2xl overflow-hidden border border-slate-100">
                   <img src={m.avatar} alt={m.user} className="w-full h-full object-cover" />
                 </div>
-                <div>
-                  <p className="font-black text-base">{m.user}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-[10px] text-brand-purple font-black uppercase tracking-widest">{m.verse}</p>
-                    <span className="w-1 h-1 rounded-full bg-slate-200"></span>
-                    <span className="text-[10px] font-bold text-slate-300 uppercase">{m.date}</span>
-                  </div>
+                <div className="space-y-0.5">
+                  <p className="font-black text-sm">{m.user}</p>
+                  <p className={`text-[9px] font-black uppercase tracking-widest ${accentColor}`}>{m.verse}</p>
                 </div>
               </div>
+              <button 
+                onClick={() => handleShare(m)}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-slate-300 hover:text-brand-purple transition-colors"
+              >
+                <span className="material-icons text-xl">ios_share</span>
+              </button>
+            </div>
 
-              <p className="text-[17px] leading-relaxed text-zinc-700 font-medium bg-slate-50 p-8 rounded-[40px] rounded-tl-none">
-                "{m.content}"
-              </p>
+            {/* Content Body */}
+            <p className={`text-[18px] leading-snug font-medium tracking-tight ${isDarkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
+              {m.content}
+            </p>
 
-              {/* Reaction Buttons matching user request */}
-              <div className="flex flex-wrap gap-2 px-2">
+            {/* Reaction Bar (Single Line, Adjusted Size) */}
+            <div className="flex items-center justify-between bg-slate-50/10 p-1 rounded-full border border-slate-50/5">
+              <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
                 {reactionTypes.map((rt) => (
                   <button 
                     key={rt.label}
-                    className="flex items-center gap-2 bg-white border border-slate-100 px-4 py-2.5 rounded-full hover:border-brand-purple/30 transition-all active:scale-95 group"
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all active:scale-90 whitespace-nowrap ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-white'} border`}
                   >
-                    <span className={`material-icons text-lg ${rt.color} group-hover:scale-125 transition-transform`}>{rt.icon}</span>
-                    <span className="text-xs font-black text-slate-400">
+                    <span className={`material-icons text-base ${rt.color}`}>{rt.icon}</span>
+                    <span className={`text-[10px] font-black ${isDarkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
                       {(m.reactions as any)[rt.label]}
                     </span>
                   </button>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
+            
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-100/10 to-transparent"></div>
+          </div>
+        ))}
       </section>
 
-      {/* Sub Feature: Rankings */}
-      <section className="px-6 pt-10 border-t border-slate-100">
-        <h2 className="text-xl font-black font-plus-jakarta mb-6 opacity-30">Trending Verses (Sub)</h2>
-        <div className="flex flex-col gap-4">
-          {trendingVerses.map((v) => (
-            <div key={v.rank} className="bg-slate-50/50 p-5 rounded-[32px] flex items-center gap-5 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
-              <div className="w-10 h-10 rounded-2xl bg-brand-yellow/10 flex items-center justify-center font-black text-brand-yellow text-sm">
-                {v.rank}
-              </div>
-              <div className="flex-1">
-                <p className="font-black text-xs mb-1">{v.verse}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Shared {v.count} times</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <style jsx>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   )
 }
