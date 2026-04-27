@@ -15,7 +15,7 @@ const recentMeditations = [
   { 
     id: 1, 
     user: "Test Account (for test.)", 
-    avatar: "/images/PF app logo.png",
+    avatar: "/images/PF app logo2.png",
     verse: "John 3:16 (for test.)", 
     content: "Today I felt the immense love of God through this verse. It's a reminder that we are never alone. (for test.)",
     date: "2h ago",
@@ -24,7 +24,7 @@ const recentMeditations = [
   { 
     id: 2, 
     user: "Test Account (for test.)", 
-    avatar: "/images/PF app logo.png",
+    avatar: "/images/PF app logo2.png",
     verse: "Matthew 5:14 (for test.)", 
     content: "Being the light of the world is a call to action. How can I shine today? (for test.)",
     date: "5h ago",
@@ -64,7 +64,7 @@ export default function CommunityPage() {
         </button>
       </header>
 
-      {/* Distilled Post Feed with New Avatars */}
+      {/* Distilled Post Feed with V2 Avatars */}
       <section className="px-8 flex flex-col gap-16">
         {recentMeditations.map((m) => (
           <div key={m.id} className="flex flex-col gap-6 group">

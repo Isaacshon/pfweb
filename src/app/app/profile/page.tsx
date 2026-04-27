@@ -15,11 +15,11 @@ export default function ProfilePage() {
 
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} pb-32 transition-colors duration-500`}>
-      {/* Profile Header with Official Logo */}
+      {/* Profile Header with V2 Logo */}
       <section className="px-8 pt-20 pb-12 flex flex-col items-center text-center">
         <div className={`relative w-32 h-32 rounded-[56px] overflow-hidden border-4 ${isDarkMode ? 'border-zinc-900 shadow-brand-yellow/5' : 'border-slate-50 shadow-brand-purple/5'} shadow-2xl mb-8`}>
           <img 
-            src="/images/PF app logo.png" 
+            src="/images/PF app logo2.png" 
             alt="PassionFruits Account" 
             className="w-full h-full object-contain scale-110"
           />
