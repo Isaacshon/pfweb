@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 
 const bibleVersions = [
-  { name: '개역개정', code: 'KRV' }, // Using KRV as primary Korean source
-  { name: '새번역', code: 'NKP' },   // NKP is often New Korean
+  { name: '개역개정', code: 'KRV' },
+  { name: '새번역', code: 'NKP' },
   { name: 'ESV', code: 'ESV' },
   { name: 'NIV', code: 'NIV' },
   { name: 'KJV', code: 'KJV' },
@@ -27,23 +27,29 @@ const bibleBooks = [
 ]
 
 export default function AppPage() {
+  // Core Data State
   const [version, setVersion] = useState(bibleVersions[0])
-  const [book, setBook] = useState(bibleBooks[42]) // John by default
+  const [book, setBook] = useState(bibleBooks[42])
   const [chapter, setChapter] = useState(1)
   const [verses, setVerses] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [maxChapters, setMaxChapters] = useState(21)
+
+  // Reading Settings State
+  const [fontSize, setFontSize] = useState(20)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const fetchChapter = useCallback(async (vCode: string, bId: number, cNum: number) => {
     setIsLoading(true)
     try {
       const res = await fetch(`https://bolls.life/get-chapter/${vCode}/${bId}/${cNum}/`)
       const data = await res.json()
-      if (Array.isArray(data)) {
-        setVerses(data)
-      }
+      if (Array.isArray(data)) setVerses(data)
     } catch (err) {
-      console.error('Failed to fetch Bible content:', err)
+      console.error('Fetch error:', err)
     } finally {
       setIsLoading(false)
     }
@@ -54,88 +60,144 @@ export default function AppPage() {
       const res = await fetch(`https://bolls.life/get-books/${vCode}/`)
       const data = await res.json()
       const currentBook = data.find((b: any) => b.bookid === bId)
-      if (currentBook) {
-        setMaxChapters(currentBook.chapters)
-      }
+      if (currentBook) setMaxChapters(currentBook.chapters)
     } catch (err) {
-      console.error('Failed to fetch book info:', err)
+      console.error('Book info error:', err)
     }
   }, [])
 
-  useEffect(() => {
-    fetchBookInfo(version.code, book.id)
-  }, [version.code, book.id, fetchBookInfo])
-
-  useEffect(() => {
+  useEffect(() => { fetchBookInfo(version.code, book.id) }, [version.code, book.id, fetchBookInfo])
+  useEffect(() => { 
     fetchChapter(version.code, book.id, chapter)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [version.code, book.id, chapter, fetchChapter])
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pt-0 pb-32">
-      {/* Fixed Selector Row */}
-      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md px-6 py-4 flex items-center gap-4 border-b border-slate-50">
-        <select 
-          value={book.id}
-          onChange={(e) => {
-            const selected = bibleBooks.find(b => b.id === Number(e.target.value))
-            if (selected) {
-              setBook(selected)
-              setChapter(1)
-            }
-          }}
-          className="bg-transparent font-plus-jakarta font-black text-xl text-brand-dark focus:outline-none cursor-pointer max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"
-        >
-          {bibleBooks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-        </select>
+    <div className={`min-h-screen flex flex-col pt-0 pb-32 transition-colors duration-300 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-white text-brand-dark'}`}>
+      
+      {/* Enhanced Sticky Header */}
+      <div className={`sticky top-0 z-50 px-6 py-4 flex flex-col gap-4 border-b transition-all ${isDarkMode ? 'bg-zinc-950/90 border-zinc-800' : 'bg-white/95 border-slate-50'} backdrop-blur-md`}>
+        <div className="flex items-center gap-3">
+          {/* Menu / Settings Trigger */}
+          <button 
+            onClick={() => { setShowSettings(!showSettings); setIsSearching(false); }}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${showSettings ? 'bg-brand-purple text-white' : 'hover:bg-slate-50'}`}
+          >
+            <span className="material-symbols-outlined text-[24px]">settings</span>
+          </button>
 
-        <select 
-          value={chapter}
-          onChange={(e) => setChapter(Number(e.target.value))}
-          className="bg-transparent font-plus-jakarta font-black text-xl text-brand-purple focus:outline-none cursor-pointer"
-        >
-          {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
-            <option key={c} value={c}>{c}장</option>
-          ))}
-        </select>
+          {/* Book & Chapter Selectors */}
+          <div className="flex-1 flex items-center gap-2 overflow-hidden">
+            <select 
+              value={book.id}
+              onChange={(e) => {
+                const selected = bibleBooks.find(b => b.id === Number(e.target.value))
+                if (selected) { setBook(selected); setChapter(1); }
+              }}
+              className="bg-transparent font-plus-jakarta font-black text-lg focus:outline-none cursor-pointer max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap"
+            >
+              {bibleBooks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
 
-        <div className="flex-1" />
+            <select 
+              value={chapter}
+              onChange={(e) => setChapter(Number(e.target.value))}
+              className="bg-transparent font-plus-jakarta font-black text-lg text-brand-purple focus:outline-none cursor-pointer"
+            >
+              {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
 
-        <select 
-          value={version.code}
-          onChange={(e) => {
-            const selected = bibleVersions.find(v => v.code === e.target.value)
-            if (selected) setVersion(selected)
-          }}
-          className="bg-slate-50 text-slate-400 font-bold text-[11px] px-3 py-1.5 rounded-lg focus:outline-none cursor-pointer uppercase tracking-widest"
-        >
-          {bibleVersions.map(v => <option key={v.code} value={v.code}>{v.name}</option>)}
-        </select>
+          {/* Version Selector */}
+          <select 
+            value={version.code}
+            onChange={(e) => {
+              const selected = bibleVersions.find(v => v.code === e.target.value)
+              if (selected) setVersion(selected)
+            }}
+            className={`text-[10px] font-black px-2 py-1 rounded-md focus:outline-none cursor-pointer uppercase tracking-widest ${isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-slate-50 text-slate-400'}`}
+          >
+            {bibleVersions.map(v => <option key={v.code} value={v.code}>{v.code}</option>)}
+          </select>
+
+          {/* Search Trigger */}
+          <button 
+            onClick={() => { setIsSearching(!isSearching); setShowSettings(false); }}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isSearching ? 'bg-brand-purple text-white' : 'hover:bg-slate-50'}`}
+          >
+            <span className="material-symbols-outlined text-[24px]">search</span>
+          </button>
+        </div>
+
+        {/* Expandable Settings Panel */}
+        {showSettings && (
+          <div className={`p-4 rounded-2xl flex flex-col gap-5 animate-in slide-in-from-top-2 duration-200 ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'}`}>
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Reading Mode</span>
+              <button 
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-xs transition-all ${isDarkMode ? 'bg-brand-purple text-white' : 'bg-white text-brand-dark shadow-sm'}`}
+              >
+                <span className="material-symbols-outlined text-sm">{isDarkMode ? 'dark_mode' : 'light_mode'}</span>
+                {isDarkMode ? 'Dark' : 'Light'}
+              </button>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Font Size</span>
+              <div className="flex items-center gap-4">
+                <button onClick={() => setFontSize(Math.max(14, fontSize - 2))} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">-</button>
+                <span className="font-bold text-sm min-w-[30px] text-center">{fontSize}</span>
+                <button onClick={() => setFontSize(Math.min(32, fontSize + 2))} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">+</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Expandable Search Panel */}
+        {isSearching && (
+          <div className="animate-in slide-in-from-top-2 duration-200">
+            <input 
+              type="text"
+              placeholder="Search scripture..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full py-3 px-4 rounded-xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple/20 transition-all ${isDarkMode ? 'bg-zinc-800 text-white border-zinc-700' : 'bg-slate-50 text-brand-dark border-slate-100'}`}
+              autoFocus
+            />
+          </div>
+        )}
       </div>
 
-      {/* Scripture Body */}
+      {/* Main Content */}
       <main className="px-8 mt-10 flex flex-col gap-8">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-8 h-8 border-4 border-brand-purple/20 border-t-brand-purple rounded-full animate-spin"></div>
-            <p className="font-bold text-[10px] text-slate-400 uppercase tracking-widest">Loading Word...</p>
+            <div className={`w-8 h-8 border-4 border-t-brand-purple rounded-full animate-spin ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}></div>
           </div>
         ) : (
-          verses.map((v: any) => (
-            <div key={v.verse} className="flex items-start gap-5 group">
-              <span className="font-space-grotesk font-black text-[12px] text-brand-purple/20 mt-2 shrink-0 w-6 text-center group-hover:text-brand-purple/40 transition-colors">
-                {v.verse}
-              </span>
-              <p className="text-[20px] font-medium text-brand-dark leading-[1.8] tracking-tight">
-                {v.text}
-              </p>
-            </div>
-          ))
+          verses.map((v: any) => {
+            const isMatch = searchQuery && v.text.toLowerCase().includes(searchQuery.toLowerCase())
+            return (
+              <div key={v.verse} className={`flex items-start gap-5 group transition-opacity ${searchQuery && !isMatch ? 'opacity-30' : 'opacity-100'}`}>
+                <span className={`font-space-grotesk font-black text-[12px] mt-2 shrink-0 w-6 text-center transition-colors ${isDarkMode ? 'text-zinc-700 group-hover:text-zinc-500' : 'text-brand-purple/20 group-hover:text-brand-purple/40'}`}>
+                  {v.verse}
+                </span>
+                <p 
+                  style={{ fontSize: `${fontSize}px` }}
+                  className={`font-medium leading-[1.8] tracking-tight transition-all ${isMatch ? 'bg-brand-yellow/30 text-brand-dark rounded px-1' : ''}`}
+                >
+                  {v.text}
+                </p>
+              </div>
+            )
+          })
         )}
         
-        {/* Navigation buttons at bottom of text */}
         {!isLoading && verses.length > 0 && (
-          <div className="flex justify-between items-center mt-12 pt-8 border-t border-slate-50">
+          <div className={`flex justify-between items-center mt-12 pt-8 border-t ${isDarkMode ? 'border-zinc-800' : 'border-slate-50'}`}>
             <button 
               disabled={chapter === 1}
               onClick={() => setChapter(c => Math.max(1, c - 1))}
