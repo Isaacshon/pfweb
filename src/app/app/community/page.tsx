@@ -172,8 +172,10 @@ export default function CommunityPage() {
         }
         if (next) {
           updatedReactions[next] = (updatedReactions[next] || 0) + 1
-          showNotify("한 명이 당신을 위해 함께 기도합니다.")
-          triggerPush("PassionFruits", "당신의 글에 누군가 함께 기도하고 있습니다.")
+          if (p.type === 'prayer') {
+            showNotify("한 명이 당신을 위해 함께 기도합니다.")
+            triggerPush("PassionFruits", "당신의 글에 누군가 함께 기도하고 있습니다.")
+          }
         }
         
         return { ...p, userReaction: next, reactions: updatedReactions }
