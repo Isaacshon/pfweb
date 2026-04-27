@@ -70,7 +70,7 @@ export const ConferencePopup = ({ trigger }: ConferencePopupProps) => {
           onClick={handleClose}
           className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-brand-yellow text-brand-dark flex items-center justify-center hover:bg-white transition-all border-4 border-brand-dark shadow-lg"
         >
-          <span className="material-symbols-outlined font-black">close</span>
+          <span className="material-icons">close</span>
         </button>
 
         {/* Content (High Contrast Center) */}
