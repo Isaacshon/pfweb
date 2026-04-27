@@ -415,7 +415,7 @@ export default function AppPage() {
                   <div 
                     id={`verse-${v.verse}`}
                     key={v.verse} 
-                    className="flex flex-col gap-2 group relative active:opacity-70 transition-opacity"
+                    className={`flex flex-col gap-2 group relative transition-opacity ${activeMenuVerse === v.verse ? 'z-[100]' : 'z-0'} active:opacity-70`}
                     onPointerDown={(e) => handlePointerDown(v.verse, e)}
                     onPointerUp={handlePointerUp}
                     onPointerLeave={handlePointerUp}
