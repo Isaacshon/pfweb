@@ -4,7 +4,15 @@ import React, { useState } from 'react'
 import { AppTopBar } from '@/components/AppTopBar'
 import { BentoCard } from '@/components/BentoCard'
 
-const bibleVersions = ['개역개정', '현대인', '중국어', '스페인어', 'ESV', 'NIV', 'KJV']
+const bibleVersions = [
+  { name: '개역개정', lang: '🇰🇷' },
+  { name: '현대인', lang: '🇰🇷' },
+  { name: '중국어', lang: '🇨🇳' },
+  { name: '스페인어', lang: '🇪🇸' },
+  { name: 'ESV', lang: '🇺🇸' },
+  { name: 'NIV', lang: '🇺🇸' },
+  { name: 'KJV', lang: '🇬🇧' }
+]
 
 const verses = [
   { num: 1, text: '태초에 말씀이 계시니라 이 말씀이 하나님과 함께 계셨으니 이 말씀은 곧 하나님이시니라' },
@@ -19,12 +27,12 @@ export default function BiblePage() {
 
   return (
     <div className="pt-20 px-6 flex flex-col gap-8 pb-32">
-      <AppTopBar title="Bible" />
+      <AppTopBar title="Bible Reader" />
 
       {/* Selector Section */}
       <div className="flex justify-between items-center bg-white p-4 rounded-[24px] shadow-[0_10px_30px_rgba(109,40,217,0.04)]">
         <button className="flex items-center gap-2 px-4 py-2 bg-[#f8f9ff] rounded-full hover:bg-[#e6eeff] transition-colors">
-          <span className="font-bold text-[18px] text-brand-dark">John 1</span>
+          <span className="font-bold text-[18px] text-brand-dark uppercase tracking-tighter">John Chapter 1</span>
           <span className="material-icons text-slate-400">expand_more</span>
         </button>
         
@@ -32,11 +40,11 @@ export default function BiblePage() {
           <select 
             value={version}
             onChange={(e) => setVersion(e.target.value)}
-            className="appearance-none bg-brand-purple text-white font-bold text-sm px-5 py-2.5 pr-10 rounded-full focus:outline-none shadow-lg shadow-brand-purple/20 cursor-pointer"
+            className="appearance-none bg-brand-purple text-white font-bold text-xs px-5 py-2.5 pr-10 rounded-full focus:outline-none shadow-lg shadow-brand-purple/20 cursor-pointer"
           >
-            {bibleVersions.map(v => <option key={v} value={v}>{v}</option>)}
+            {bibleVersions.map(v => <option key={v.name} value={v.name}>{v.name}({v.lang})</option>)}
           </select>
-          <span className="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-white pointer-events-none text-sm">arrow_drop_down</span>
+          <span className="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-white pointer-events-none text-[10px]">arrow_drop_down</span>
         </div>
       </div>
 
@@ -46,6 +54,10 @@ export default function BiblePage() {
           {/* Playful Integration Icon */}
           <div className="absolute -top-6 -right-4 w-16 h-16 bg-brand-yellow rounded-full flex items-center justify-center shadow-lg transform rotate-12 animate-pulse" style={{ animationDuration: '3s' }}>
             <span className="material-icons text-3xl text-brand-dark" style={{ fontVariationSettings: "'FILL' 1" }}>auto_stories</span>
+          </div>
+
+          <div className="mb-6">
+            <span className="text-[10px] font-black text-brand-purple uppercase tracking-[0.3em] opacity-40">References</span>
           </div>
 
           <div className="flex-1 space-y-6 overflow-y-auto no-scrollbar">
@@ -86,7 +98,7 @@ export default function BiblePage() {
           </div>
           <div>
             <h3 className="font-black text-brand-dark text-sm uppercase tracking-tight">Save Progress</h3>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">JOHN 1</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">JOHN CHAPTER 1</p>
           </div>
         </div>
         <button className="mr-4 px-6 py-2.5 bg-brand-purple text-white rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-purple/20 hover:scale-105 active:scale-95 transition-all">

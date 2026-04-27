@@ -76,13 +76,20 @@ export default function CommunityPage() {
 
   const currentUserName = "Isaac Shon"
 
-  // Load from DB & Request Notification Permission
+  // Load from DB & State Persistence
   useEffect(() => {
     const savedPosts = localStorage.getItem('pf_db_posts_v3')
     if (savedPosts) {
       setPosts(JSON.parse(savedPosts))
     } else {
       setPosts(initialPosts)
+    }
+
+    const savedView = localStorage.getItem('pf_comm_view')
+    const savedTab = localStorage.getItem('pf_comm_tab')
+    if (savedView === 'feed' && savedTab) {
+      setView('feed')
+      setActiveTab(savedTab as any)
     }
 
     const tutorialSeen = localStorage.getItem('pf_comm_tutorial_seen')
@@ -97,11 +104,13 @@ export default function CommunityPage() {
     setIsLoaded(true)
   }, [])
 
-  // Save to DB
+  // Save to DB & Persistence
   useEffect(() => {
     if (!isLoaded) return
     localStorage.setItem('pf_db_posts_v3', JSON.stringify(posts))
-  }, [posts, isLoaded])
+    localStorage.setItem('pf_comm_view', view)
+    localStorage.setItem('pf_comm_tab', activeTab)
+  }, [posts, view, activeTab, isLoaded])
 
   const showNotify = useCallback((msg: string) => {
     setNotification(msg)
@@ -120,20 +129,21 @@ export default function CommunityPage() {
 
   // Navigation & Native Back Button
   useEffect(() => {
-    if (view === 'selection') {
-      window.history.replaceState({ pf_view: 'selection' }, '')
-    }
-
     const handlePopState = (e: PopStateEvent) => {
-      // Priority: Close modal first, then feed, then selection
+      // Priority 1: Close comments modal
       if (isCommentsOpen) {
         setIsCommentsOpen(false)
         return
       }
       
+      // Priority 2: Return to selection from feed
       if (view === 'feed') {
         setView('selection')
-      } else if (view === 'selection') {
+        return
+      } 
+      
+      // Priority 3: Exit app handling
+      if (view === 'selection') {
         const now = Date.now()
         if (now - lastBackPress < 2000) {
           showNotify("Exiting...")
