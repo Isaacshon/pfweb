@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useTheme } from '@/context/ThemeContext'
+import Link from 'next/link'
 
 export default function ProfilePage() {
   const { isDarkMode } = useTheme()
