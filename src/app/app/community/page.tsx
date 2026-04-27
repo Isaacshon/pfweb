@@ -331,7 +331,14 @@ export default function CommunityPage() {
                     {isPickerOpen && (
                       <div className={`absolute bottom-full left-0 mb-4 flex items-center gap-3 p-3 px-4 rounded-[40px] shadow-2xl border animate-in slide-in-from-bottom-6 zoom-in duration-300 z-50 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`}>
                         {reactionTypes.map((rt) => (
-                          <button key={rt.label} onClick={() => handleReaction(p.id, rt.label)} className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-150 active:scale-90"><span className={`material-icons text-2xl ${rt.color}`}>{rt.icon}</span></button>
+                          <button 
+                            key={rt.label} 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleReaction(p.id, rt.label); }} 
+                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-150 active:scale-90"
+                          >
+                            <span className={`material-icons text-2xl ${rt.color}`}>{rt.icon}</span>
+                          </button>
                         ))}
                       </div>
                     )}

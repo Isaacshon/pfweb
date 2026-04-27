@@ -112,8 +112,9 @@ export function CommentsSheet({ isOpen, onClose, comments, onAddComment, authorN
           {['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'].map(s => (
             <button 
               key={s} 
-              onClick={() => setInputText(prev => prev + s)}
-              className="text-2xl hover:scale-125 transition-transform active:scale-90"
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setInputText(prev => prev + s); }}
+              className="text-2xl hover:scale-125 transition-transform active:scale-90 p-2"
             >
               {s}
             </button>
