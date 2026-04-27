@@ -18,11 +18,9 @@ export default function Home() {
   // phase 0 = fullscreen intro, phase 1 = shrinking, phase 2 = landed
   const [phase, setPhase] = useState(0)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [heroTitle, setHeroTitle] = useState(t('hero.title'))
-  const [heroSubtitle, setHeroSubtitle] = useState(t('hero.subtitle'))
+  const [mapAddress, setMapAddress] = useState('Toronto, Ontario, Canada')
   const [confLatestUpdate, setConfLatestUpdate] = useState('Latest Update')
   const [confMainTitle, setConfMainTitle] = useState('Conference & Events')
-  const [mapAddress, setMapAddress] = useState('Toronto, Ontario, Canada')
   const [heroVideoUrl, setHeroVideoUrl] = useState('/hero-video.mp4')
   const [pageContent, setPageContent] = useState<any>(null)
 
@@ -65,10 +63,6 @@ export default function Home() {
 
         if (content && content.home) {
           setPageContent(content)
-          setHeroTitle(content.home.heroTitle || t('hero.title'))
-          setHeroSubtitle(content.home.heroSubtitle || t('hero.subtitle'))
-          setConfLatestUpdate(content.home.confLatestUpdate || 'Latest Update')
-          setConfMainTitle(content.home.confMainTitle || 'Conference & Events')
         }
         if (address) setMapAddress(address)
         if (video) setHeroVideoUrl(video)
@@ -205,7 +199,7 @@ export default function Home() {
             transition-all duration-[600ms] delay-[200ms] break-keep
             ${landed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
           `}>
-            {heroSubtitle}
+            {t('hero.subtitle')}
           </p>
 
           <div className={`
@@ -213,7 +207,7 @@ export default function Home() {
             transition-all duration-[600ms] delay-[300ms]
             ${landed ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
           `}>
-            <Link href="/conference" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-[#fffbbd] text-brand-dark rounded-full font-black text-base md:text-lg uppercase shadow-[0_10px_30px_rgba(255,251,189,0.3)] hover:scale-105 transition-transform active:scale-95 text-center">
+            <Link href="/conference" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-brand-yellow text-brand-dark rounded-full font-black text-base md:text-lg uppercase shadow-[0_10px_30px_rgba(255,221,0,0.3)] hover:scale-105 transition-transform active:scale-95 text-center">
               {t('hero.getStarted')}
             </Link>
             <Link href="/about" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-white/10 backdrop-blur-md text-white border border-white/30 rounded-full font-black text-base md:text-lg uppercase hover:bg-white/20 transition-all text-center">

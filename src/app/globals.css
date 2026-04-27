@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-purple: #9a78b4;
-  --color-brand-purple-light: #f5f0f9;
-  --color-brand-yellow: #fffbbd;
-  --color-brand-dark: #121c2a;
-  --color-brand-surface: #f8f9ff;
+  --color-brand-purple: #7c3aed;
+  --color-brand-purple-light: #f5f3ff;
+  --color-brand-yellow: #ffdd00;
+  --color-brand-dark: #0f172a;
+  --color-brand-surface: #f8fafc;
   
   --font-plus-jakarta: "Plus Jakarta Sans", sans-serif;
   --font-space-grotesk: "Space Grotesk", sans-serif;
