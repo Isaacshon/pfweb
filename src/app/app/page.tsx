@@ -778,7 +778,7 @@ export default function AppPage() {
               autoFocus
             />
             <button 
-              onClick={saveNote}
+              onClick={() => saveNote()}
               className={`w-full py-5 rounded-3xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all ${isDarkMode ? 'bg-brand-yellow text-black shadow-brand-yellow/20' : 'bg-brand-purple text-white shadow-brand-purple/20'}`}
             >
               Save Note
