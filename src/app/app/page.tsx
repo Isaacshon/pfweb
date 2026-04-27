@@ -225,7 +225,7 @@ export default function AppPage() {
       const currentIdx = bibleBooks.findIndex(b => b.id === book.id)
       if (currentIdx > 0) {
         const prevBook = bibleBooks[currentIdx - 1]
-        const prevMax = await fetchBookInfo(version.code, prevBook.id)
+        const prevMax = await fetchBookInfo(version.code, prevBook.id, version.local || false)
         setBook(prevBook)
         setChapter(prevMax || 1)
       }
