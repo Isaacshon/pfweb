@@ -28,7 +28,7 @@ export default function BiblePage() {
   const [notes, setNotes] = useState<Record<number, string>>({})
   const [activeMenuVerse, setActiveMenuVerse] = useState<number | null>(null)
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
-  const [currentNote, setCurrentNote] = useState('')
+  const [selectedColor, setSelectedColor] = useState('#fffbbd')
 
   // Long Press Logic
   const longPressTimer = useRef<any>(null)
@@ -71,13 +71,6 @@ export default function BiblePage() {
     setActiveMenuVerse(null)
     setCurrentNote(notes[num] || '')
     setIsNoteModalOpen(true)
-  }
-
-  const saveNote = () => {
-    if (activeMenuVerse !== null || isNoteModalOpen) {
-      const verseNum = activeMenuVerse || Object.keys(notes).find(k => notes[Number(k)] === currentNote) // Simplified for demo
-      // In a real scenario, we'd pass the verseNum to openNoteModal
-    }
   }
 
   return (
@@ -130,7 +123,7 @@ export default function BiblePage() {
                   <div className="relative inline">
                     {highlights[v.num] && (
                       <div 
-                        className="absolute inset-0 -mx-1 -my-0.5 rounded-sm opacity-40 z-0" 
+                        className="absolute inset-x-[-4px] inset-y-0 opacity-40 z-0" 
                         style={{ backgroundColor: highlights[v.num] }}
                       />
                     )}
@@ -138,24 +131,44 @@ export default function BiblePage() {
                       {v.text}
                     </p>
                     {notes[v.num] && (
-                      <div className="mt-2 p-3 bg-slate-50 rounded-xl border-l-2 border-brand-purple">
+                      <div className="mt-2 p-3 bg-slate-50 rounded-xl border-l-2 border-brand-purple relative z-10">
                         <p className="text-xs text-slate-500 italic">"{notes[v.num]}"</p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Context Menu */}
+                {/* Context Menu - Reference Image 1 Style */}
                 {activeMenuVerse === v.num && (
-                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-zinc-900 p-2 rounded-2xl shadow-2xl z-[100] animate-in zoom-in-95 duration-200">
-                    <button onClick={() => toggleHighlight(v.num, '#9a78b4')} className="w-8 h-8 rounded-full bg-[#9a78b4] border-2 border-white/20"></button>
-                    <button onClick={() => toggleHighlight(v.num, '#fffbbd')} className="w-8 h-8 rounded-full bg-[#fffbbd] border-2 border-white/20"></button>
-                    <div className="w-px h-4 bg-white/10 mx-1"></div>
-                    <button onClick={() => openNoteModal(v.num)} className="flex items-center gap-2 px-3 py-1.5 text-white text-xs font-bold">
-                      <span className="material-icons text-sm">edit_note</span>
-                      Memo
+                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white px-5 py-2.5 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-[100] animate-in zoom-in-95 duration-200 border border-slate-50">
+                    <button 
+                      onClick={() => toggleHighlight(v.num, selectedColor)} 
+                      className="text-sm font-bold text-slate-800 active:scale-95 transition-transform"
+                    >
+                      형광펜
                     </button>
-                    <button onClick={() => setActiveMenuVerse(null)} className="material-icons text-white/40 text-sm ml-1">close</button>
+                    
+                    <div className="flex items-center gap-2 px-3 border-x border-slate-100">
+                      <button 
+                        onClick={() => setSelectedColor('#9a78b4')} 
+                        className={`w-6 h-6 rounded-full bg-[#9a78b4] border-2 transition-all ${selectedColor === '#9a78b4' ? 'border-white ring-2 ring-[#9a78b4] scale-110' : 'border-transparent opacity-60'}`}
+                      ></button>
+                      <button 
+                        onClick={() => setSelectedColor('#fffbbd')} 
+                        className={`w-6 h-6 rounded-full bg-[#fffbbd] border-2 transition-all ${selectedColor === '#fffbbd' ? 'border-white ring-2 ring-[#fffbbd] scale-110' : 'border-transparent opacity-60'}`}
+                      ></button>
+                    </div>
+
+                    <button 
+                      onClick={() => openNoteModal(v.num)} 
+                      className="text-sm font-bold text-slate-800 active:scale-95 transition-transform"
+                    >
+                      메모
+                    </button>
+
+                    <div className="flex items-center text-slate-300">
+                      <span className="material-icons text-lg">more_vert</span>
+                    </div>
                   </div>
                 )}
               </div>
