@@ -230,7 +230,7 @@ export default function CommunityPage() {
         {filteredPosts.map((p) => {
           const userActiveReaction = userReactions[p.id]
           const isPickerOpen = pickerPostId === p.id
-          const totalReactions = Object.values(p.reactions).reduce((a: any, b: any) => a + b, 0)
+          const totalReactions = Object.values(p.reactions).reduce((a: any, b: any) => (a as number) + (b as number), 0) as number
 
           return (
             <div key={p.id} className="flex flex-col border-b border-zinc-500/5">
