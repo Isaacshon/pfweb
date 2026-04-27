@@ -24,7 +24,7 @@ export function AppNavBar() {
   const [showTutorial, setShowTutorial] = useState(false)
 
   const TRIGGER_THRESHOLD = 90 
-  const MAX_PULL = 130
+  const MAX_PULL = 140
 
   // Tutorial Check
   useEffect(() => {
@@ -50,12 +50,13 @@ export function AppNavBar() {
     const diff = touchStart - currentY
     
     if (diff > 0) {
-      const dampenedDiff = Math.min(diff * 0.7, MAX_PULL)
+      // Elastic resistance
+      const dampenedDiff = Math.min(diff * 0.75, MAX_PULL)
       setPullDistance(dampenedDiff)
 
       if (dampenedDiff >= TRIGGER_THRESHOLD && !hasVibrated) {
         if (window.navigator.vibrate) {
-          window.navigator.vibrate([50, 30, 50])
+          window.navigator.vibrate([60, 40, 60]) // Stronger haptic as requested
         }
         setHasVibrated(true)
       }
@@ -77,8 +78,22 @@ export function AppNavBar() {
   const bgColor = isDarkMode ? '#050505' : '#ffffff'
   const borderColor = isDarkMode ? '#18181b' : '#f8fafc'
 
-  const curveY = 20 - pullDistance * 0.8
-  const svgPath = `M 0 20 Q 200 ${curveY} 400 20 L 400 120 L 0 120 Z`
+  // --- Liquid Droplet Path Calculation ---
+  // We use Cubic Bezier to create a bulbous "liquid" peak in the center
+  const peakY = 20 - pullDistance
+  const cp1X = 140
+  const cp2X = 260
+  // Control points move closer to center as we pull to make it look like a droplet forming
+  const dynamicCp1X = 140 + (pullDistance * 0.3)
+  const dynamicCp2X = 260 - (pullDistance * 0.3)
+  
+  const svgPath = `
+    M 0 20 
+    L ${dynamicCp1X - 60} 20
+    C ${dynamicCp1X} 20, ${dynamicCp1X + 20} ${peakY}, 200 ${peakY}
+    C ${dynamicCp2X - 20} ${peakY}, ${dynamicCp2X} 20, ${dynamicCp2X + 60} 20
+    L 400 20 L 400 120 L 0 120 Z
+  `
 
   return (
     <>
@@ -88,10 +103,10 @@ export function AppNavBar() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* The "Gummy" Stretch Base */}
+        {/* The "Liquid Droplet" Stretch Base */}
         <svg 
           viewBox="0 0 400 120" 
-          className="absolute bottom-0 w-full h-[140px] pointer-events-none drop-shadow-2xl transition-colors duration-500"
+          className="absolute bottom-0 w-full h-[160px] pointer-events-none drop-shadow-2xl transition-colors duration-500"
           preserveAspectRatio="none"
         >
           <path 
@@ -99,7 +114,7 @@ export function AppNavBar() {
             fill={bgColor} 
             stroke={borderColor}
             strokeWidth="0.5"
-            className="transition-all duration-75 ease-out"
+            className="transition-all duration-100 ease-out"
           />
         </svg>
 
@@ -113,7 +128,10 @@ export function AppNavBar() {
                 className={`flex flex-col items-center gap-1 transition-all active:scale-90 duration-200 min-w-[60px] relative ${
                   isActive ? activeColor : 'text-zinc-500 opacity-60'
                 }`}
-                style={{ transform: `translateY(${-pullDistance * 0.2}px)` }}
+                style={{ 
+                  transform: `translateY(${isActive ? -pullDistance * 0.1 : 0}px)`,
+                  filter: isActive && pullDistance > 20 ? `blur(${pullDistance * 0.02}px)` : 'none'
+                }}
               >
                 <span className="material-icons text-[26px]">
                   {item.icon}
@@ -127,17 +145,19 @@ export function AppNavBar() {
           })}
         </nav>
 
-        {/* Swipe Indicator (Glow when pulling) */}
+        {/* Liquid Indicator Dot */}
         <div 
-          className={`absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full transition-all duration-300 ${activeBg}`}
+          className={`absolute left-1/2 -translate-x-1/2 w-2 h-2 rounded-full transition-all duration-300 ${activeBg} shadow-lg`}
           style={{ 
+            bottom: `${60 + pullDistance * 0.6}px`,
             opacity: pullDistance / TRIGGER_THRESHOLD,
-            transform: `translateX(-50%) translateY(${-pullDistance * 0.5}px) scaleX(${1 + pullDistance * 0.01})`
+            transform: `translateX(-50%) scale(${1 + pullDistance * 0.02})`,
+            boxShadow: `0 0 ${pullDistance * 0.5}px ${isDarkMode ? 'rgba(252,211,77,0.5)' : 'rgba(109,40,217,0.5)'}`
           }}
         ></div>
       </div>
 
-      {/* First-time Tutorial Popup */}
+      {/* First-time Tutorial Popup (Korean Restored) */}
       {showTutorial && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center px-8 pb-40 bg-black/40 backdrop-blur-sm animate-in fade-in duration-500" onClick={closeTutorial}>
           <div className={`p-10 rounded-[48px] ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border shadow-2xl w-full max-w-sm space-y-8 animate-in slide-in-from-bottom-10 duration-700`} onClick={e => e.stopPropagation()}>
@@ -157,9 +177,9 @@ export function AppNavBar() {
               </div>
               <button 
                 onClick={closeTutorial}
-                className={`w-full py-5 rounded-[24px] font-black text-xs uppercase tracking-widest ${activeBg} shadow-xl active:scale-95 transition-all`}
+                className={`w-full py-5 rounded-[24px] font-black text-xs uppercase tracking-widest ${activeBg} text-white shadow-xl active:scale-95 transition-all`}
               >
-                Got it!
+                확인했습니다!
               </button>
             </div>
           </div>

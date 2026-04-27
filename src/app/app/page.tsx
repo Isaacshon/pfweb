@@ -29,8 +29,8 @@ const bibleBooks = [
 
 export default function AppPage() {
   const { isDarkMode, toggleTheme } = useTheme()
-  const [version, setVersion] = useState(bibleVersions[3]) // NIV Default
-  const [book, setBook] = useState(bibleBooks[42]) // John Default
+  const [version, setVersion] = useState(bibleVersions[3]) 
+  const [book, setBook] = useState(bibleBooks[42]) 
   const [chapter, setChapter] = useState(1)
   const [verses, setVerses] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -46,7 +46,6 @@ export default function AppPage() {
   const [bookSearch, setBookSearch] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
 
-  // --- Persistence Logic ---
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
@@ -69,7 +68,6 @@ export default function AppPage() {
     if (savedFontSize) setFontSize(parseInt(savedFontSize))
     if (savedLineHeight) setLineHeight(parseFloat(savedLineHeight))
     if (savedVerseGap) setVerseGap(parseInt(savedVerseGap))
-    
     setIsLoaded(true)
   }, [])
 
@@ -82,9 +80,6 @@ export default function AppPage() {
     localStorage.setItem('pf_bible_lineheight', lineHeight.toString())
     localStorage.setItem('pf_bible_versegap', verseGap.toString())
   }, [version.code, book.id, chapter, fontSize, lineHeight, verseGap, isLoaded])
-  // -------------------------
-
-  const isEn = version.lang === 'en'
 
   const cleanText = (text: string) => {
     return text.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim()
@@ -121,7 +116,6 @@ export default function AppPage() {
     } catch (err) { console.error(err) }
   }, [version.code])
 
-  // Cross-Book Navigation Logic
   const goToNextChapter = useCallback(async () => {
     if (chapter < maxChapters) {
       setChapter(c => c + 1)
@@ -162,7 +156,6 @@ export default function AppPage() {
     if (content) content.scrollTo({ top: 0, behavior: 'smooth' })
   }, [version.code, book.id, chapter, fetchChapter])
 
-  // --- Swipe Gesture Logic ---
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   
   const handleTouchStart = (e: React.TouchEvent) => setTouchStartX(e.targetTouches[0].clientX)
@@ -170,14 +163,14 @@ export default function AppPage() {
     if (touchStartX === null) return
     const touchEndX = e.changedTouches[0].clientX
     const diff = touchStartX - touchEndX
-    
-    if (Math.abs(diff) > 100) { // Threshold for swipe
+    if (Math.abs(diff) > 100) { 
       if (diff > 0) goToNextChapter()
       else goToPrevChapter()
     }
     setTouchStartX(null)
   }
-  // ---------------------------
+
+  const isEn = version.lang === 'en'
 
   const filteredBooks = useMemo(() => {
     return bibleBooks.filter(b => b.name.includes(bookSearch) || b.eng.toLowerCase().includes(bookSearch.toLowerCase()))
@@ -190,7 +183,6 @@ export default function AppPage() {
 
   return (
     <div className={`h-full flex flex-col transition-colors duration-500 ${bgColor} ${textColor}`}>
-      
       <header className={`shrink-0 h-20 px-6 flex items-center justify-between z-40 border-b ${isDarkMode ? 'bg-[#050505]/80 border-zinc-900' : 'bg-white/80 border-slate-50'} backdrop-blur-sm`}>
         <button onClick={() => setOpenUI(openUI === 'settings' ? null : 'settings')} className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'settings' ? accentColor : 'text-slate-300'}`}>
           <span className="material-icons">tune</span>
@@ -210,31 +202,19 @@ export default function AppPage() {
         </button>
       </header>
 
-      <div 
-        id="bible-content" 
-        className="flex-1 overflow-y-auto px-10 pt-10 pb-40 no-scrollbar outline-none"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div id="bible-content" className="flex-1 overflow-y-auto px-10 pt-10 pb-40 no-scrollbar outline-none" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {isLoading ? (
-          <div className="flex items-center justify-center py-40">
-            <div className={`w-2 h-2 rounded-full ${accentBg} animate-ping`}></div>
-          </div>
+          <div className="flex items-center justify-center py-40"><div className={`w-2 h-2 rounded-full ${accentBg} animate-ping`}></div></div>
         ) : (
           <div className="flex flex-col" style={{ gap: `${verseGap}px` }}>
             {verses.map((v: any) => (
               <div key={v.verse} className="flex flex-col gap-2 group">
-                <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-brand-yellow/50' : 'text-brand-purple/30'}`}>
-                  {v.verse}
-                </span>
-                <p style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }} className="font-medium tracking-tight">
-                  {v.text}
-                </p>
+                <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-brand-yellow/50' : 'text-brand-purple/30'}`}>{v.verse}</span>
+                <p style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }} className="font-medium tracking-tight">{v.text}</p>
               </div>
             ))}
           </div>
         )}
-        
         {!isLoading && verses.length > 0 && (
           <div className="flex justify-between items-center mt-20 opacity-20 hover:opacity-100 transition-opacity">
             <button onClick={goToPrevChapter} className={`text-slate-400 hover:${accentColor} transition-all`}><span className="material-icons text-4xl">chevron_left</span></button>
@@ -266,9 +246,7 @@ export default function AppPage() {
             <div className="flex flex-col gap-10">
               {searchResults.map((res: any, idx) => (
                 <button key={idx} onClick={() => { const b = bibleBooks.find(b => b.id === res.book); if (b) { setBook(b); setChapter(res.chapter); setOpenUI(null); } }} className="text-left group active:opacity-50">
-                  <p className={`font-black text-[9px] ${accentColor} uppercase tracking-[0.3em] mb-3`}>
-                    {isEn ? bibleBooks.find(b => b.id === res.book)?.eng : bibleBooks.find(b => b.id === res.book)?.name} {res.chapter}:{res.verse}
-                  </p>
+                  <p className={`font-black text-[9px] ${accentColor} uppercase tracking-[0.3em] mb-3`}>{isEn ? bibleBooks.find(b => b.id === res.book)?.eng : bibleBooks.find(b => b.id === res.book)?.name} {res.chapter}:{res.verse}</p>
                   <p className="text-[16px] font-medium leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity">{res.text}</p>
                 </button>
               ))}
@@ -283,82 +261,43 @@ export default function AppPage() {
             <div className="flex items-center gap-6">
               <button onClick={() => setOpenUI(null)} className="active:scale-90 transition-transform"><span className="material-icons text-3xl">arrow_back</span></button>
               <h2 className="text-[20px] font-bold">참조 구절</h2>
-              <div className="ml-auto flex items-center gap-6 text-zinc-600">
-                <span className="material-icons text-2xl">translate</span>
-                <span className="material-icons text-2xl">history</span>
-              </div>
             </div>
-
             <div className={`flex gap-4 border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-50'}`}>
               {['book', 'chapter', 'version'].map((tab) => (
-                <button 
-                  key={tab}
-                  onClick={() => setPickerTab(tab as any)} 
-                  className={`pb-3 text-sm font-bold tracking-tight transition-all border-b-2 uppercase ${pickerTab === tab ? `border-current ${accentColor}` : 'text-zinc-500 border-transparent'}`}
-                >
-                  {tab}
-                </button>
+                <button key={tab} onClick={() => setPickerTab(tab as any)} className={`pb-3 text-sm font-bold tracking-tight transition-all border-b-2 uppercase ${pickerTab === tab ? `border-current ${accentColor}` : 'text-zinc-500 border-transparent'}`}>{tab}</button>
               ))}
             </div>
-
             <div className="relative group">
               <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-zinc-400 transition-colors">search</span>
-              <input 
-                type="text"
-                placeholder="검색"
-                value={bookSearch}
-                onChange={(e) => setBookSearch(e.target.value)}
-                className={`w-full ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} border-none rounded-full py-4 pl-12 pr-6 text-base font-medium placeholder:text-zinc-600 focus:ring-1 focus:ring-zinc-700 transition-all`}
-              />
+              <input type="text" placeholder="검색" value={bookSearch} onChange={(e) => setBookSearch(e.target.value)} className={`w-full ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} border-none rounded-full py-4 pl-12 pr-6 text-base font-medium placeholder:text-zinc-600 focus:ring-1 focus:ring-zinc-700 transition-all`} />
             </div>
           </div>
-
           <div className="flex-1 overflow-y-auto px-6 pb-24 no-scrollbar">
             {pickerTab === 'book' && (
               <div className="flex flex-col">
                 {filteredBooks.map((b) => (
-                  <button 
-                    key={b.id} 
-                    onClick={() => { setBook(b); setPickerTab('chapter'); setBookSearch(''); }}
-                    className="flex items-center justify-between py-5 group active:opacity-50 transition-all"
-                  >
-                    <span className={`text-[17px] font-medium tracking-tight ${book.id === b.id ? accentColor + ' font-bold' : 'text-zinc-500'}`}>
-                      {isEn ? b.eng : b.name}
-                    </span>
-                    <span className={`text-[11px] font-black uppercase tracking-widest ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'}`}>
-                      {isEn ? b.name : b.eng}
-                    </span>
+                  <button key={b.id} onClick={() => { setBook(b); setPickerTab('chapter'); setBookSearch(''); }} className="flex items-center justify-between py-5 group active:opacity-50 transition-all">
+                    <span className={`text-[17px] font-medium tracking-tight ${book.id === b.id ? accentColor + ' font-bold' : 'text-zinc-500'}`}>{isEn ? b.eng : b.name}</span>
+                    <span className={`text-[11px] font-black uppercase tracking-widest ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'}`}>{isEn ? b.name : b.eng}</span>
                   </button>
                 ))}
               </div>
             )}
-
             {pickerTab === 'chapter' && (
               <div className="flex flex-col gap-10">
                 <h3 className="text-xl font-bold">{isEn ? book.eng : book.name}</h3>
                 <div className="grid grid-cols-5 gap-3">
                   <button className={`${isDarkMode ? 'bg-zinc-900 text-zinc-600' : 'bg-slate-50 text-slate-300'} aspect-square rounded-lg flex items-center justify-center font-bold text-[14px]`}>Intro</button>
                   {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
-                    <button 
-                      key={c} 
-                      onClick={() => { setChapter(c); setOpenUI(null); }}
-                      className={`aspect-square rounded-lg flex items-center justify-center font-bold text-[17px] transition-all ${chapter === c ? (isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white') : (isDarkMode ? 'bg-zinc-900 text-zinc-500' : 'bg-slate-50 text-slate-400')}`}
-                    >
-                      {c}
-                    </button>
+                    <button key={c} onClick={() => { setChapter(c); setOpenUI(null); }} className={`aspect-square rounded-lg flex items-center justify-center font-bold text-[17px] transition-all ${chapter === c ? (isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white') : (isDarkMode ? 'bg-zinc-900 text-zinc-500' : 'bg-slate-50 text-slate-400')}`}>{c}</button>
                   ))}
                 </div>
               </div>
             )}
-
             {pickerTab === 'version' && (
               <div className="flex flex-col gap-2">
                 {bibleVersions.map((v) => (
-                  <button 
-                    key={v.code} 
-                    onClick={() => { setVersion(v); setPickerTab('book'); }}
-                    className={`flex items-center justify-between py-6 px-6 rounded-2xl transition-all ${version.code === v.code ? (isDarkMode ? 'bg-zinc-900 text-brand-yellow border border-brand-yellow/20' : 'bg-slate-50 text-brand-purple border border-brand-purple/20') : 'text-zinc-500 hover:opacity-70'}`}
-                  >
+                  <button key={v.code} onClick={() => { setVersion(v); setPickerTab('book'); }} className={`flex items-center justify-between py-6 px-6 rounded-2xl transition-all ${version.code === v.code ? (isDarkMode ? 'bg-zinc-900 text-brand-yellow border border-brand-yellow/20' : 'bg-slate-50 text-brand-purple border border-brand-purple/20') : 'text-zinc-500 hover:opacity-70'}`}>
                     <span className="text-lg font-bold tracking-tight">{v.name}</span>
                     {version.code === v.code && <span className="material-icons text-inherit">check_circle</span>}
                   </button>
@@ -368,11 +307,7 @@ export default function AppPage() {
           </div>
         </div>
       )}
-
-      <style jsx global>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+      <style jsx global>{` .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
     </div>
   )
 }

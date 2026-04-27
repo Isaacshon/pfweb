@@ -73,14 +73,14 @@ export default function CommunityPage() {
   if (view === 'selection') {
     return (
       <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-500">
-        <div className="flex-1 flex overflow-hidden pb-24"> {/* pb-24 to avoid NavBar area */}
-          {/* Left: Meditation */}
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden pb-24">
+          {/* Left/Top: Meditation */}
           <button 
             onClick={() => { setActiveTab('meditation'); setView('feed'); }}
             className="flex-1 bg-brand-purple relative group transition-all duration-700 hover:flex-[1.4] flex items-center justify-center overflow-hidden"
           >
             <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
-            <h2 className="text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110" 
+            <h2 className="text-5xl md:text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110" 
                 style={{ 
                   textShadow: `
                     -2px -2px 0 #fcd34d,  
@@ -90,18 +90,18 @@ export default function CommunityPage() {
                      0px 0px 20px rgba(252,211,77,0.4)
                   `
                 }}>
-              묵상
+              MEDITATION
             </h2>
-            <span className="absolute bottom-20 text-[11px] text-white/60 font-black uppercase tracking-[0.6em] animate-pulse">Meditation</span>
+            <span className="absolute bottom-16 text-[9px] text-white/40 font-black uppercase tracking-[0.8em] animate-pulse">Select Channel</span>
           </button>
 
-          {/* Right: Prayer */}
+          {/* Right/Bottom: Prayer */}
           <button 
             onClick={() => { setActiveTab('prayer'); setView('feed'); }}
             className="flex-1 bg-brand-yellow relative group transition-all duration-700 hover:flex-[1.4] flex items-center justify-center overflow-hidden"
           >
             <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
-            <h2 className="text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110"
+            <h2 className="text-5xl md:text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110"
                 style={{ 
                   textShadow: `
                     -2px -2px 0 #6d28d9,  
@@ -111,13 +111,12 @@ export default function CommunityPage() {
                      0px 0px 20px rgba(109,40,217,0.3)
                   `
                 }}>
-              기도
+              PRAYER
             </h2>
-            <span className="absolute bottom-20 text-black/30 font-black uppercase tracking-[0.6em] animate-pulse">Prayer</span>
+            <span className="absolute bottom-16 text-black/10 font-black uppercase tracking-[0.8em] animate-pulse">Select Channel</span>
           </button>
         </div>
 
-        {/* Floating Category Label Overlay */}
         <div className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none z-[60]">
           <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center">
             <span className="material-icons text-white text-xl">groups</span>
@@ -136,7 +135,7 @@ export default function CommunityPage() {
             <span className="material-icons text-xl">arrow_back</span>
           </button>
           <h1 className="text-xl font-black font-plus-jakarta tracking-tight">
-            {activeTab === 'meditation' ? 'Meditation Feed' : 'Prayer Feed'}
+            {activeTab === 'meditation' ? 'Meditation' : 'Prayer'}
           </h1>
         </div>
       </header>
@@ -160,10 +159,10 @@ export default function CommunityPage() {
                     </div>
                   )}
                   <div className="flex flex-col -space-y-1">
-                    <p className={`font-bold text-sm tracking-tight ${p.isAnonymous ? 'text-zinc-500 italic' : ''}`}>
-                      {p.isAnonymous ? '익명의 공동체원' : p.user}
+                    <p className={`font-bold text-sm tracking-tight ${p.isAnonymous ? 'text-zinc-500 italic font-medium' : ''}`}>
+                      {p.isAnonymous ? 'Anonymous Member' : p.user}
                     </p>
-                    <p className="text-[10px] text-zinc-500">{p.date}</p>
+                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight">{p.date}</p>
                   </div>
                 </div>
               </div>
