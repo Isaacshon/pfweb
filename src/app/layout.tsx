@@ -4,6 +4,12 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "PassionFruits - Radiant, communal, and effortlessly organized.",
   description: "Join a radiant community dedicated to holistic wellness, creative connection, and effortlessly organized lifestyles.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "PassionFruits",
+  },
 };
 
 import { LanguageProvider } from "@/context/LanguageContext";
@@ -22,7 +28,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#6d28d9" />
+        <link rel="apple-touch-icon" href="/images/IMG_6847.PNG" />
+        <link rel="manifest" href="/manifest.json" />
+        
         {/* Pretendard Font */}
         <link
           rel="stylesheet"
