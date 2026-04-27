@@ -319,18 +319,18 @@ export default function CommunityPage() {
 
           {/* Left: Meditation */}
           <button onClick={() => navigateToFeed('meditation')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex flex-col items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(154, 120, 180, 0.85)' }}>
-            <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white mb-6">MEDITATION</h2>
-            <div className="w-16 h-16 border border-white/20 rounded-2xl flex items-center justify-center animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+            <div className="w-16 h-16 border border-white/20 rounded-2xl flex items-center justify-center animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.1)] mb-6" style={{ animationDuration: '4s' }}>
               <span className="material-icons text-white/40 text-3xl">auto_stories</span>
             </div>
+            <h2 className="text-xl md:text-3xl font-extralight tracking-[0.2em] md:tracking-[0.4em] text-white/90">MEDITATION</h2>
           </button>
 
           {/* Right: Prayer */}
           <button onClick={() => navigateToFeed('prayer')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex flex-col items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(255, 251, 189, 0.85)' }}>
-            <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white mb-6">PRAYER</h2>
-            <div className="w-16 h-16 border border-white/20 rounded-full flex items-center justify-center rotate-12 animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+            <div className="w-16 h-16 border border-white/20 rounded-full flex items-center justify-center rotate-12 animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.1)] mb-6" style={{ animationDuration: '4.5s' }}>
               <span className="material-icons text-white/40 text-3xl">volunteer_activism</span>
             </div>
+            <h2 className="text-xl md:text-3xl font-extralight tracking-[0.2em] md:tracking-[0.4em] text-white/90">PRAYER</h2>
           </button>
         </div>
         {notification && <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-500"><div className="bg-white/10 backdrop-blur-xl border border-white/20 px-6 py-3 rounded-full text-white text-xs font-bold shadow-2xl">{notification}</div></div>}
