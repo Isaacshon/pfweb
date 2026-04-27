@@ -4,12 +4,17 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 
 const bibleVersions = [
-  { name: '개역한글', code: 'KRV', lang: 'ko' },
-  { name: '새번역', code: 'RNKSV', lang: 'ko' },
-  { name: 'ESV', code: 'ESV', lang: 'en' },
-  { name: 'NIV', code: 'NIV', lang: 'en' },
-  { name: 'KJV', code: 'KJV', lang: 'en' },
+  { name: '개역개정', code: 'nkrv', lang: 'ko', local: true },
+  { name: '현대인', code: 'klb', lang: 'ko', local: true },
+  { name: '중국어', code: 'cn', lang: 'zh', local: true },
+  { name: '스페인어', code: 'es', lang: 'es', local: true },
+  { name: 'ESV', code: 'ESV', lang: 'en', local: false },
+  { name: 'NIV', code: 'NIV', lang: 'en', local: false },
+  { name: 'KJV', code: 'KJV', lang: 'en', local: false },
 ]
+
+const KOREAN_ABBRS = ["창", "출", "레", "민", "신", "수", "삿", "룻", "삼상", "삼하", "왕상", "왕하", "대상", "대하", "스", "느", "에", "욥", "시", "잠", "전", "아", "사", "렘", "애", "겔", "단", "호", "욜", "암", "옵", "욘", "미", "나", "합", "습", "학", "슥", "말", "마", "막", "눅", "요", "행", "롬", "고전", "고후", "갈", "엡", "빌", "골", "살전", "살후", "딤전", "딤후", "딛", "몬", "히", "약", "벧전", "벧후", "요일", "요이", "요삼", "유", "계"];
+
 
 const bibleBooks = [
   { id: 1, name: "창세기", eng: "Genesis" }, { id: 2, name: "출애굽기", eng: "Exodus" }, { id: 3, name: "레위기", eng: "Leviticus" }, { id: 4, name: "민수기", eng: "Numbers" }, { id: 5, name: "신명기", eng: "Deuteronomy" },
@@ -29,12 +34,14 @@ const bibleBooks = [
 
 export default function AppPage() {
   const { isDarkMode, toggleTheme } = useTheme()
-  const [version, setVersion] = useState(bibleVersions[3]) 
+  const [version, setVersion] = useState(bibleVersions[0]) 
   const [book, setBook] = useState(bibleBooks[42]) 
   const [chapter, setChapter] = useState(1)
   const [verses, setVerses] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [maxChapters, setMaxChapters] = useState(21)
+  const [localBibles, setLocalBibles] = useState<Record<string, any>>({})
+
 
   const [fontSize, setFontSize] = useState(20)
   const [lineHeight, setLineHeight] = useState(1.85)
@@ -85,36 +92,119 @@ export default function AppPage() {
     return text.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim()
   }
 
-  const fetchChapter = useCallback(async (vCode: string, bId: number, cNum: number) => {
+  const fetchChapter = useCallback(async (vCode: string, bId: number, cNum: number, isLocal: boolean) => {
     setIsLoading(true)
     try {
-      const res = await fetch(`https://bolls.life/get-chapter/${vCode}/${bId}/${cNum}/`)
-      const data = await res.json()
-      if (Array.isArray(data)) {
-        setVerses(data.map(v => ({ ...v, text: cleanText(v.text) })))
+      if (isLocal) {
+        let bibleData = localBibles[vCode]
+        if (!bibleData) {
+          const res = await fetch(`/bible/bible_${vCode}.json`)
+          bibleData = await res.json()
+          setLocalBibles(prev => ({ ...prev, [vCode]: bibleData }))
+        }
+
+        const abbr = KOREAN_ABBRS[bId - 1]
+        const result: any[] = []
+        // We need to filter keys like "창1:1", "창1:2"
+        // Some verses might not exist, we'll try to find up to 200 verses
+        for (let i = 1; i <= 200; i++) {
+          const key = `${abbr}${cNum}:${i}`
+          if (bibleData[key]) {
+            result.push({ verse: i, text: bibleData[key] })
+          } else if (i > 1) {
+            // Stop if we found verses and then a missing one
+            break
+          }
+        }
+        setVerses(result)
+      } else {
+        const res = await fetch(`https://bolls.life/get-chapter/${vCode}/${bId}/${cNum}/`)
+        const data = await res.json()
+        if (Array.isArray(data)) {
+          setVerses(data.map(v => ({ ...v, text: cleanText(v.text) })))
+        }
       }
     } catch (err) { console.error(err) }
     finally { setIsLoading(false) }
-  }, [])
+  }, [localBibles])
 
-  const fetchBookInfo = useCallback(async (vCode: string, bId: number) => {
+  const fetchBookInfo = useCallback(async (vCode: string, bId: number, isLocal: boolean) => {
     try {
-      const res = await fetch(`https://bolls.life/get-books/${vCode}/`)
-      const data = await res.json()
-      const currentBook = data.find((b: any) => b.bookid === bId)
-      if (currentBook) return currentBook.chapters
+      if (isLocal) {
+        let bibleData = localBibles[vCode]
+        if (!bibleData) {
+          const res = await fetch(`/bible/bible_${vCode}.json`)
+          bibleData = await res.json()
+          setLocalBibles(prev => ({ ...prev, [vCode]: bibleData }))
+        }
+        
+        const abbr = KOREAN_ABBRS[bId - 1]
+        let maxC = 0
+        // Find max chapter by scanning keys
+        const keys = Object.keys(bibleData)
+        keys.forEach(k => {
+          if (k.startsWith(abbr)) {
+            const match = k.match(/:/)
+            if (match) {
+              const cPart = k.substring(abbr.length, match.index)
+              const c = parseInt(cPart)
+              if (c > maxC) maxC = c
+            }
+          }
+        })
+        return maxC
+      } else {
+        const res = await fetch(`https://bolls.life/get-books/${vCode}/`)
+        const data = await res.json()
+        const currentBook = data.find((b: any) => b.bookid === bId)
+        if (currentBook) return currentBook.chapters
+      }
     } catch (err) { console.error(err) }
     return 0
-  }, [])
+  }, [localBibles])
+
 
   const performGlobalSearch = useCallback(async (query: string) => {
     if (!query || query.length < 2) return
     try {
-      const res = await fetch(`https://bolls.life/search/${version.code}/?search=${encodeURIComponent(query)}`)
-      const data = await res.json()
-      if (Array.isArray(data)) setSearchResults(data.map(v => ({ ...v, text: cleanText(v.text) })))
+      if (version.local) {
+        let bibleData = localBibles[version.code]
+        if (!bibleData) {
+          const res = await fetch(`/bible/bible_${version.code}.json`)
+          bibleData = await res.json()
+          setLocalBibles(prev => ({ ...prev, [version.code]: bibleData }))
+        }
+        
+        const results: any[] = []
+        const keys = Object.keys(bibleData)
+        for (const key of keys) {
+          const text = bibleData[key]
+          if (text.includes(query)) {
+            const match = key.match(/^([^\d]+)(\d+):(\d+)$/)
+            if (match) {
+              const [_, abbr, c, v] = match
+              const bIndex = KOREAN_ABBRS.indexOf(abbr)
+              if (bIndex !== -1) {
+                results.push({
+                  book: bIndex + 1,
+                  chapter: parseInt(c),
+                  verse: parseInt(v),
+                  text: text
+                })
+              }
+            }
+          }
+          if (results.length >= 50) break
+        }
+        setSearchResults(results)
+      } else {
+        const res = await fetch(`https://bolls.life/search/${version.code}/?search=${encodeURIComponent(query)}`)
+        const data = await res.json()
+        if (Array.isArray(data)) setSearchResults(data.map(v => ({ ...v, text: cleanText(v.text) })))
+      }
     } catch (err) { console.error(err) }
-  }, [version.code])
+  }, [version, localBibles])
+
 
   const goToNextChapter = useCallback(async () => {
     if (chapter < maxChapters) {
@@ -144,17 +234,18 @@ export default function AppPage() {
 
   useEffect(() => { 
     async function initBook() {
-      const m = await fetchBookInfo(version.code, book.id)
+      const m = await fetchBookInfo(version.code, book.id, version.local || false)
       setMaxChapters(m)
     }
     initBook()
-  }, [version.code, book.id, fetchBookInfo])
+  }, [version.code, book.id, fetchBookInfo, version.local])
 
   useEffect(() => { 
-    fetchChapter(version.code, book.id, chapter)
+    fetchChapter(version.code, book.id, chapter, version.local || false)
     const content = document.getElementById('bible-content')
     if (content) content.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [version.code, book.id, chapter, fetchChapter])
+  }, [version.code, book.id, chapter, fetchChapter, version.local])
+
 
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   
@@ -194,8 +285,10 @@ export default function AppPage() {
           </span>
           <span className={`w-1 h-1 rounded-full ${accentBg}`}></span>
           <span className={`font-plus-jakarta font-black text-[16px] tracking-tight ${accentColor}`}>{chapter}장</span>
+          <span className={`font-plus-jakarta font-black text-[12px] opacity-30 ml-1 uppercase`}>{version.name}</span>
           <span className={`material-icons ${isDarkMode ? 'text-brand-yellow/20' : 'text-brand-purple/20'} text-lg`}>expand_more</span>
         </button>
+
 
         <button onClick={() => setOpenUI(openUI === 'search' ? null : 'search')} className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'search' ? accentColor : 'text-slate-300'}`}>
           <span className="material-icons">search</span>

@@ -15,7 +15,7 @@ const navItems = [
 
 export function AppNavBar() {
   const pathname = usePathname()
-  const { isDarkMode } = useTheme()
+  const { isDarkMode, mounted } = useTheme()
   const [isScanOpen, setIsScanOpen] = useState(false)
   
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -23,10 +23,9 @@ export function AppNavBar() {
   const [hasVibrated, setHasVibrated] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
 
-  const TRIGGER_THRESHOLD = 90 
-  const MAX_PULL = 140
+  const TRIGGER_THRESHOLD = 60 // Lowered for better responsiveness
+  const MAX_PULL = 120
 
-  // Tutorial Check
   useEffect(() => {
     const tutorialSeen = localStorage.getItem('pf_tutorial_scan_seen')
     if (!tutorialSeen) {
@@ -50,13 +49,12 @@ export function AppNavBar() {
     const diff = touchStart - currentY
     
     if (diff > 0) {
-      // Elastic resistance
-      const dampenedDiff = Math.min(diff * 0.75, MAX_PULL)
+      const dampenedDiff = Math.min(diff * 0.8, MAX_PULL)
       setPullDistance(dampenedDiff)
 
       if (dampenedDiff >= TRIGGER_THRESHOLD && !hasVibrated) {
         if (window.navigator.vibrate) {
-          window.navigator.vibrate([60, 40, 60]) // Stronger haptic as requested
+          window.navigator.vibrate([40, 30, 40])
         }
         setHasVibrated(true)
       }
@@ -73,26 +71,23 @@ export function AppNavBar() {
     setHasVibrated(false)
   }
 
+  if (!mounted) return null // Prevent hydration flash
+
   const activeColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
   const activeBg = isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'
   const bgColor = isDarkMode ? '#050505' : '#ffffff'
   const borderColor = isDarkMode ? '#18181b' : '#f8fafc'
 
-  // --- Liquid Droplet Path Calculation ---
-  // We use Cubic Bezier to create a bulbous "liquid" peak in the center
-  const peakY = 20 - pullDistance
-  const cp1X = 140
-  const cp2X = 260
-  // Control points move closer to center as we pull to make it look like a droplet forming
-  const dynamicCp1X = 140 + (pullDistance * 0.3)
-  const dynamicCp2X = 260 - (pullDistance * 0.3)
+  const peakY = 15 - (pullDistance * 0.8)
+  const dynamicCp1X = 130 + (pullDistance * 0.4)
+  const dynamicCp2X = 270 - (pullDistance * 0.4)
   
   const svgPath = `
-    M 0 20 
-    L ${dynamicCp1X - 60} 20
-    C ${dynamicCp1X} 20, ${dynamicCp1X + 20} ${peakY}, 200 ${peakY}
-    C ${dynamicCp2X - 20} ${peakY}, ${dynamicCp2X} 20, ${dynamicCp2X + 60} 20
-    L 400 20 L 400 120 L 0 120 Z
+    M 0 15 
+    L ${dynamicCp1X - 70} 15
+    C ${dynamicCp1X - 20} 15, ${dynamicCp1X} ${peakY}, 200 ${peakY}
+    C ${dynamicCp2X} ${peakY}, ${dynamicCp2X + 20} 15, ${dynamicCp2X + 70} 15
+    L 400 15 L 400 120 L 0 120 Z
   `
 
   return (
@@ -103,10 +98,9 @@ export function AppNavBar() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* The "Liquid Droplet" Stretch Base */}
         <svg 
           viewBox="0 0 400 120" 
-          className="absolute bottom-0 w-full h-[160px] pointer-events-none drop-shadow-2xl transition-colors duration-500"
+          className="absolute bottom-0 w-full h-[140px] pointer-events-none drop-shadow-2xl transition-colors duration-500"
           preserveAspectRatio="none"
         >
           <path 
@@ -114,11 +108,11 @@ export function AppNavBar() {
             fill={bgColor} 
             stroke={borderColor}
             strokeWidth="0.5"
-            className="transition-all duration-100 ease-out"
+            className="transition-all duration-75 ease-out"
           />
         </svg>
 
-        <nav className="relative flex justify-around items-center h-24 px-4 pb-6 pointer-events-auto">
+        <nav className="relative flex justify-around items-center h-20 px-4 pb-4 pointer-events-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.path
             return (
@@ -129,35 +123,36 @@ export function AppNavBar() {
                   isActive ? activeColor : 'text-zinc-500 opacity-60'
                 }`}
                 style={{ 
-                  transform: `translateY(${isActive ? -pullDistance * 0.1 : 0}px)`,
-                  filter: isActive && pullDistance > 20 ? `blur(${pullDistance * 0.02}px)` : 'none'
+                  transform: `translateY(${isActive ? -pullDistance * 0.05 : 0}px)`,
                 }}
               >
-                <span className="material-icons text-[26px]">
+                <span className="material-icons text-[24px]">
                   {item.icon}
                 </span>
-                <span className="font-plus-jakarta font-black text-[9px] uppercase tracking-widest leading-none">{item.label}</span>
+                <span className="font-plus-jakarta font-black text-[8px] uppercase tracking-widest leading-none">{item.label}</span>
                 {isActive && (
-                  <span className={`absolute -bottom-2 w-1 h-1 rounded-full ${activeBg}`}></span>
+                  <span className={`absolute -bottom-1 w-1 h-1 rounded-full ${activeBg}`}></span>
                 )}
               </Link>
             )
           })}
         </nav>
 
-        {/* Liquid Indicator Dot */}
-        <div 
-          className={`absolute left-1/2 -translate-x-1/2 w-2 h-2 rounded-full transition-all duration-300 ${activeBg} shadow-lg`}
+        {/* Liquid Indicator Dot - Now Clickable as a fallback! */}
+        <button 
+          onPointerDown={(e) => { e.preventDefault(); setIsScanOpen(true); }}
+          onClick={() => setIsScanOpen(true)}
+          className={`absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full transition-all duration-300 ${activeBg} shadow-lg z-[80] cursor-pointer active:scale-150`}
           style={{ 
-            bottom: `${60 + pullDistance * 0.6}px`,
-            opacity: pullDistance / TRIGGER_THRESHOLD,
-            transform: `translateX(-50%) scale(${1 + pullDistance * 0.02})`,
-            boxShadow: `0 0 ${pullDistance * 0.5}px ${isDarkMode ? 'rgba(252,211,77,0.5)' : 'rgba(109,40,217,0.5)'}`
+            bottom: `${48 + pullDistance * 0.7}px`,
+            opacity: mounted ? Math.max(0.6, pullDistance / TRIGGER_THRESHOLD) : 0,
+            transform: `translateX(-50%) scale(${1 + pullDistance * 0.03})`,
+            boxShadow: `0 0 ${25 + pullDistance * 0.5}px ${isDarkMode ? 'rgba(252,211,77,0.6)' : 'rgba(109,40,217,0.6)'}`
           }}
-        ></div>
+        ></button>
+
       </div>
 
-      {/* First-time Tutorial Popup (Korean Restored) */}
       {showTutorial && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center px-8 pb-40 bg-black/40 backdrop-blur-sm animate-in fade-in duration-500" onClick={closeTutorial}>
           <div className={`p-10 rounded-[48px] ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border shadow-2xl w-full max-w-sm space-y-8 animate-in slide-in-from-bottom-10 duration-700`} onClick={e => e.stopPropagation()}>
@@ -172,7 +167,7 @@ export function AppNavBar() {
               <div className="space-y-2">
                 <h2 className="text-2xl font-black font-plus-jakarta tracking-tight">Swipe Up to Scan</h2>
                 <p className="text-sm text-zinc-500 leading-relaxed font-medium">
-                  하단 메뉴바를 위로 밀어 올리면<br/>언제 어디서든 QR 스캔이 시작됩니다.
+                  하단 메뉴바를 위로 밀어 올리거나<br/>중앙의 버튼을 누르면 스캔이 시작됩니다.
                 </p>
               </div>
               <button 

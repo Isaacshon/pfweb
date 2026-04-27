@@ -23,6 +23,7 @@ const initialPosts = [
     content: "Your heart is a very important element. Psalm 37:4 says, 'Delight yourself in the Lord, and he will give you the desires of your heart.' God wants to align your passion with His purpose.",
     date: "42 min ago",
     reactions: { Like: 5, Praying: 12, Comforting: 8, Insight: 2, Check: 3 },
+    userReaction: null,
     comments: [
       { id: 101, user: "Blessed Member", text: "Truly inspiring meditation. Thank you for sharing!", date: "10 min ago" }
     ]
@@ -38,6 +39,7 @@ const initialPosts = [
     content: "Dear Lord, I feel overwhelmed by the burdens of this week. I come to You seeking the rest You promised. Please restore my soul and give me the strength to face tomorrow with a peaceful heart.",
     date: "1h ago",
     reactions: { Like: 12, Praying: 52, Comforting: 8, Insight: 0, Check: 1 },
+    userReaction: 'Praying',
     comments: []
   },
 ]
@@ -47,7 +49,6 @@ export default function CommunityPage() {
   const [view, setView] = useState<'selection' | 'feed'>('selection')
   const [activeTab, setActiveTab] = useState<'meditation' | 'prayer'>('meditation')
   const [posts, setPosts] = useState<any[]>([])
-  const [userReactions, setUserReactions] = useState<Record<number, string | null>>({})
   const [notification, setNotification] = useState<string | null>(null)
   
   const [expandedId, setExpandedId] = useState<number | null>(null)
@@ -58,42 +59,54 @@ export default function CommunityPage() {
   const [isLoaded, setIsLoaded] = useState(false)
   const currentUserName = "Isaac Shon"
 
+  // Load from DB
   useEffect(() => {
-    const savedPosts = localStorage.getItem('pf_db_posts')
-    const savedReactions = localStorage.getItem('pf_db_user_reactions')
-    if (savedPosts) setPosts(JSON.parse(savedPosts))
-    else setPosts(initialPosts)
-    if (savedReactions) setUserReactions(JSON.parse(savedReactions))
+    const savedPosts = localStorage.getItem('pf_db_posts_v2')
+    if (savedPosts) {
+      setPosts(JSON.parse(savedPosts))
+    } else {
+      setPosts(initialPosts)
+    }
     setIsLoaded(true)
   }, [])
 
+  // Save to DB
   useEffect(() => {
     if (!isLoaded) return
-    localStorage.setItem('pf_db_posts', JSON.stringify(posts))
-    localStorage.setItem('pf_db_user_reactions', JSON.stringify(userReactions))
-  }, [posts, userReactions, isLoaded])
+    localStorage.setItem('pf_db_posts_v2', JSON.stringify(posts))
+  }, [posts, isLoaded])
 
   const showNotify = useCallback((msg: string) => {
     setNotification(msg)
     setTimeout(() => setNotification(null), 2500)
   }, [])
 
+  // Navigation & Native Back Button
   useEffect(() => {
-    if (view === 'selection') window.history.replaceState({ pf_view: 'selection' }, '')
+    if (view === 'selection') {
+      window.history.replaceState({ pf_view: 'selection' }, '')
+    }
+
     const handlePopState = (e: PopStateEvent) => {
-      if (view === 'feed') setView('selection')
-      else if (view === 'selection') {
+      if (view === 'feed') {
+        setView('selection')
+      } else if (view === 'selection') {
         const now = Date.now()
         if (now - lastBackPress < 2000) {
           showNotify("Exiting...")
-          setTimeout(() => { if (window.confirm("Exit App?")) window.close() }, 500)
+          setTimeout(() => {
+            if (window.confirm("앱을 종료하시겠습니까?")) {
+              window.close()
+            }
+          }, 500)
         } else {
           setLastBackPress(now)
-          showNotify("Press back again to exit")
+          showNotify("한 번 더 누르면 종료됩니다")
           window.history.pushState({ pf_view: 'selection' }, '')
         }
       }
     }
+
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [view, lastBackPress, showNotify])
@@ -105,23 +118,24 @@ export default function CommunityPage() {
   }
 
   const handleReaction = (postId: number, reactionLabel: string) => {
-    setUserReactions(prev => {
-      const current = prev[postId]
-      const next = current === reactionLabel ? null : reactionLabel
-      setPosts(list => list.map(p => {
-        if (p.id === postId) {
-          const updated = { ...p.reactions }
-          if (current) (updated as any)[current] = Math.max(0, (updated as any)[current] - 1)
-          if (next) {
-            (updated as any)[next] = ((updated as any)[next] || 0) + 1
-            if (p.type === 'prayer') showNotify("한 명이 당신을 위해 함께 기도합니다.")
-          }
-          return { ...p, reactions: updated }
+    setPosts(list => list.map(p => {
+      if (p.id === postId) {
+        const current = p.userReaction
+        const next = current === reactionLabel ? null : reactionLabel
+        
+        const updatedReactions = { ...p.reactions }
+        if (current) {
+          updatedReactions[current] = Math.max(0, (updatedReactions[current] || 0) - 1)
         }
-        return p
-      }))
-      return { ...prev, [postId]: next }
-    })
+        if (next) {
+          updatedReactions[next] = (updatedReactions[next] || 0) + 1
+          if (p.type === 'prayer') showNotify("한 명이 당신을 위해 함께 기도합니다.")
+        }
+        
+        return { ...p, userReaction: next, reactions: updatedReactions }
+      }
+      return p
+    }))
     setPickerPostId(null)
   }
 
@@ -136,6 +150,7 @@ export default function CommunityPage() {
       }
       return p
     }))
+    showNotify("댓글이 등록되었습니다.")
   }
 
   const addNewPost = (title: string, content: string, type: 'meditation' | 'prayer') => {
@@ -145,23 +160,28 @@ export default function CommunityPage() {
       user: currentUserName,
       avatar: "/images/PF app logo iphone.png",
       isAnonymous: false,
-      verse: "Community Shared",
+      verse: "오늘의 묵상",
       title,
       content,
-      date: "Just now",
+      date: "방금 전",
       reactions: { Like: 0, Praying: 0, Comforting: 0, Insight: 0, Check: 0 },
+      userReaction: null,
       comments: []
     }
     setPosts([newPost, ...posts])
     setIsWriteModalOpen(false)
-    showNotify("Post published!")
+    showNotify("포스트가 게시되었습니다!")
   }
 
+  // --- Long Press Logic ---
   const longPressTimer = useRef<any>(null)
   const isLongPressing = useRef(false)
+  const pointerStartPos = useRef({ x: 0, y: 0 })
 
-  const startLongPress = (postId: number) => {
+  const handlePointerDown = (postId: number, e: React.PointerEvent) => {
     isLongPressing.current = false
+    pointerStartPos.current = { x: e.clientX, y: e.clientY }
+    
     longPressTimer.current = setTimeout(() => {
       isLongPressing.current = true
       setPickerPostId(postId)
@@ -169,13 +189,23 @@ export default function CommunityPage() {
     }, 500)
   }
 
-  const endLongPress = (postId: number, e: any) => {
+  const handlePointerUp = (postId: number, e: React.PointerEvent) => {
     clearTimeout(longPressTimer.current)
-    if (!isLongPressing.current && pickerPostId !== postId) {
+    
+    // Check if the pointer moved too much (drag instead of press)
+    const moveDist = Math.sqrt(
+      Math.pow(e.clientX - pointerStartPos.current.x, 2) + 
+      Math.pow(e.clientY - pointerStartPos.current.y, 2)
+    )
+
+    if (!isLongPressing.current && moveDist < 10) {
+      // If it wasn't a long press and not a drag, toggle Like
       handleReaction(postId, 'Like')
     }
-    // Prevent default to avoid context menu
-    if (isLongPressing.current) e.preventDefault()
+  }
+
+  const handlePointerCancel = () => {
+    clearTimeout(longPressTimer.current)
   }
 
   const sharePost = (post: any) => {
@@ -184,7 +214,7 @@ export default function CommunityPage() {
       navigator.share({ title: post.title, text: text, url: window.location.href }).catch(() => {})
     } else {
       navigator.clipboard.writeText(text)
-      showNotify("Link copied!")
+      showNotify("링크가 복사되었습니다!")
     }
   }
 
@@ -221,77 +251,73 @@ export default function CommunityPage() {
           <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border px-6 py-3 rounded-full shadow-2xl flex items-center gap-3`}><span className={`material-icons text-lg ${accentColor}`}>auto_awesome</span><p className="text-sm font-bold tracking-tight">{notification}</p></div>
         </div>
       )}
-
       <header className="px-6 pt-16 pb-4 flex items-center justify-between sticky top-0 z-40 bg-inherit/80 backdrop-blur-md border-b border-zinc-500/10">
         <div className="flex items-center gap-4">
           <button onClick={() => window.history.back()} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">arrow_back</span></button>
           <h1 className="text-xl font-black tracking-tight">{activeTab.toUpperCase()}</h1>
         </div>
       </header>
-
       <section className="flex flex-col">
         {filteredPosts.map((p) => {
-          const userActiveReaction = userReactions[p.id]
+          const userActiveReaction = p.userReaction
           const isPickerOpen = pickerPostId === p.id
           const totalReactions = Object.values(p.reactions).reduce((a: any, b: any) => (a as number) + (b as number), 0) as number
           const isExpanded = expandedId === p.id
-
           return (
             <div key={p.id} className="flex flex-col border-b border-zinc-500/5">
               <div className="px-6 py-4 flex items-center gap-3">
                 {p.isAnonymous ? ( <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-100'}`}><span className="material-icons text-[18px] text-zinc-500">visibility_off</span></div> ) : ( <img src={p.avatar} className="w-8 h-8 rounded-full border border-zinc-500/10" alt="" /> )}
-                <div><p className="font-bold text-sm">{p.isAnonymous ? 'Anonymous Member' : p.user}</p><p className="text-[10px] text-zinc-500 uppercase font-black">{p.date}</p></div>
+                <div><p className="font-bold text-sm">{p.isAnonymous ? '익명 멤버' : p.user}</p><p className="text-[10px] text-zinc-500 uppercase font-black">{p.date}</p></div>
               </div>
-
-              <div onClick={() => setExpandedId(isExpanded ? null : p.id)} className="px-6 py-6 cursor-pointer select-none">
+              <div onClick={() => setExpandedId(isExpanded ? null : p.id)} className="px-6 py-2 cursor-pointer select-none active:opacity-60 transition-opacity">
                 <h3 className="text-2xl font-black tracking-tighter leading-tight mb-2">{p.title}</h3>
                 <p className={`text-[10px] font-black uppercase tracking-widest ${accentColor}`}>{p.verse}</p>
               </div>
-
               <div className="px-6 py-4 flex items-center justify-between relative">
                 <div className="flex items-center gap-6">
                   {totalReactions > 0 && (
-                    <div className="flex items-center mr-4">
+                    <div className="flex items-center mr-2">
                       <div className={`w-6 h-6 rounded-full border-2 ${isDarkMode ? 'border-black' : 'border-white'} ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} flex items-center justify-center mr-2 shadow-sm`}><span className="material-icons text-[12px] text-blue-500">thumb_up</span></div>
                       <span className="text-[12px] font-black opacity-30">{totalReactions}</span>
                     </div>
                   )}
-                  <button onClick={() => setExpandedId(isExpanded ? null : p.id)} className="material-icons text-[22px] text-zinc-400">chat_bubble_outline</button>
-                  {p.type !== 'prayer' && <button onClick={() => sharePost(p)} className="material-icons text-[22px] text-zinc-400">send</button>}
+                  <button onClick={() => { setExpandedId(p.id); setTimeout(() => { document.getElementById(`comment-input-${p.id}`)?.focus() }, 300) }} className={`material-icons text-[24px] ${isExpanded ? accentColor : 'text-zinc-400'}`}>chat_bubble_outline</button>
+                  {p.type !== 'prayer' && <button onClick={() => sharePost(p)} className="material-icons text-[24px] text-zinc-400">send</button>}
                 </div>
-
                 <div className="relative">
                   <button 
-                    onMouseDown={() => startLongPress(p.id)} onMouseUp={(e) => endLongPress(p.id, e)} onTouchStart={() => startLongPress(p.id)} onTouchEnd={(e) => endLongPress(p.id, e)}
+                    onPointerDown={(e) => handlePointerDown(p.id, e)}
+                    onPointerUp={(e) => handlePointerUp(p.id, e)}
+                    onPointerCancel={handlePointerCancel}
                     onContextMenu={(e) => e.preventDefault()}
-                    className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${userActiveReaction ? accentBg + ' text-white scale-105 shadow-lg' : (isDarkMode ? 'bg-zinc-900' : 'bg-slate-50')}`}
+                    className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${userActiveReaction ? (isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white') + ' scale-105 shadow-xl' : (isDarkMode ? 'bg-zinc-900 text-zinc-500' : 'bg-slate-50 text-slate-400')}`}
                   >
-                    {userActiveReaction ? userActiveReaction.toUpperCase() : 'REACT'}
+                    {userActiveReaction ? userActiveReaction.toUpperCase() : '공감하기'}
                   </button>
                   {isPickerOpen && (
-                    <div className={`absolute bottom-full right-0 mb-4 flex items-center gap-2 p-2 px-3 rounded-[32px] shadow-2xl border animate-in slide-in-from-bottom-4 duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`}>
+                    <div className={`absolute bottom-full right-0 mb-6 flex items-center gap-3 p-3 px-4 rounded-[40px] shadow-2xl border animate-in slide-in-from-bottom-6 zoom-in duration-300 z-50 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`}>
                       {reactionTypes.map((rt) => (
                         <button key={rt.label} onClick={() => handleReaction(p.id, rt.label)} className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-150 active:scale-90"><span className={`material-icons text-2xl ${rt.color}`}>{rt.icon}</span></button>
                       ))}
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Collapsible Section */}
-              <div className={`overflow-hidden transition-all duration-700 ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+              </div>
+              <div className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                 <div className="px-6 py-8 space-y-10 border-t border-zinc-500/5 bg-zinc-500/5">
-                  <p className="text-[17px] leading-relaxed font-medium tracking-tight opacity-90">{p.content}</p>
+                  <p className="text-[17px] leading-relaxed font-medium tracking-tight opacity-90 whitespace-pre-wrap">{p.content}</p>
                   <div className="space-y-6 pt-10 border-t border-zinc-500/10">
-                    <p className="text-[11px] font-black uppercase tracking-widest opacity-30">Real Name Comments</p>
+                    <p className="text-[11px] font-black uppercase tracking-widest opacity-30">실명 댓글</p>
                     <div className="flex flex-col gap-6">
                       {p.comments.map((c: any) => (
                         <div key={c.id} className="flex flex-col gap-1"><div className="flex items-center gap-2"><span className="text-xs font-black">{c.user}</span><span className="text-[9px] opacity-30">{c.date}</span></div><p className="text-sm opacity-80">{c.text}</p></div>
                       ))}
+                      {p.comments.length === 0 && <p className="text-xs opacity-20 py-4">첫 댓글을 남겨보세요.</p>}
                     </div>
-                    <div className="flex items-center gap-3 pt-4">
-                      <input id={`comment-input-${p.id}`} type="text" placeholder={`Comment as ${currentUserName}...`} onKeyDown={(e) => { if (e.key === 'Enter') { addComment(p.id, (e.target as any).value); (e.target as any).value = ''; } }} className={`flex-1 h-14 px-6 rounded-2xl text-sm font-medium outline-none ${isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 border'}`} />
-                      <button onClick={() => { const inp = document.getElementById(`comment-input-${p.id}`) as HTMLInputElement; addComment(p.id, inp.value); inp.value = ''; }} className={`w-14 h-14 rounded-2xl flex items-center justify-center ${accentBg} text-white transition-all active:scale-90`}><span className="material-icons text-xl">send</span></button>
+                    <div className="flex items-center gap-3 pt-6">
+                      <input id={`comment-input-${p.id}`} type="text" placeholder={`댓글을 입력하세요...`} onKeyDown={(e) => { if (e.key === 'Enter') { addComment(p.id, (e.target as any).value); (e.target as any).value = ''; } }} className={`flex-1 h-14 px-6 rounded-2xl text-sm font-medium outline-none transition-all focus:ring-2 ${isDarkMode ? 'bg-zinc-900 text-white focus:ring-brand-yellow/20' : 'bg-white text-zinc-900 border focus:ring-brand-purple/10'}`} />
+                      <button onClick={() => { const inp = document.getElementById(`comment-input-${p.id}`) as HTMLInputElement; addComment(p.id, inp.value); inp.value = ''; }} className={`w-14 h-14 rounded-2xl flex items-center justify-center ${accentBg} text-white transition-all shadow-lg active:scale-90`}><span className="material-icons text-xl">send</span></button>
                     </div>
                   </div>
                 </div>
@@ -300,20 +326,14 @@ export default function CommunityPage() {
           )
         })}
       </section>
-
       <button onClick={() => setIsWriteModalOpen(true)} className={`fixed bottom-28 right-6 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-90 z-40 ${accentBg} text-white`}><span className="material-icons text-3xl">add</span></button>
-
       {isWriteModalOpen && (
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-end animate-in fade-in duration-300">
           <div className={`w-full max-w-md mx-auto p-8 rounded-t-[48px] animate-in slide-in-from-bottom-10 duration-500 ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`}>
-            <div className="flex justify-between items-center mb-10"><h2 className="text-xl font-black uppercase tracking-tight">New {activeTab}</h2><button onClick={() => setIsWriteModalOpen(false)} className="material-icons opacity-40">close</button></div>
-            <input id="new-post-title" type="text" placeholder="TITLE" className="w-full text-2xl font-black mb-6 bg-transparent outline-none placeholder:opacity-10 uppercase tracking-tighter" />
-            <textarea id="new-post-content" placeholder="Share your radiant thoughts..." className="w-full h-40 bg-transparent outline-none resize-none mb-10 placeholder:opacity-10 text-lg font-medium" />
-            <button onClick={() => { 
-              const title = (document.getElementById('new-post-title') as HTMLInputElement).value;
-              const content = (document.getElementById('new-post-content') as HTMLTextAreaElement).value;
-              if (title && content) addNewPost(title, content, activeTab);
-            }} className={`w-full py-5 rounded-3xl font-black uppercase tracking-widest text-xs ${accentBg} text-white shadow-xl`}>Publish Now</button>
+            <div className="flex justify-between items-center mb-10"><h2 className="text-xl font-black uppercase tracking-tight">새 {activeTab === 'meditation' ? '묵상' : '기도'} 쓰기</h2><button onClick={() => setIsWriteModalOpen(false)} className="material-icons opacity-40">close</button></div>
+            <input id="new-post-title" type="text" placeholder="제목을 입력하세요" className="w-full text-2xl font-black mb-6 bg-transparent outline-none placeholder:opacity-10 uppercase tracking-tighter" />
+            <textarea id="new-post-content" placeholder="당신의 빛나는 생각을 나누어주세요..." className="w-full h-40 bg-transparent outline-none resize-none mb-10 placeholder:opacity-10 text-lg font-medium" />
+            <button onClick={() => { const title = (document.getElementById('new-post-title') as HTMLInputElement).value; const content = (document.getElementById('new-post-content') as HTMLTextAreaElement).value; if (title && content) addNewPost(title, content, activeTab); }} className={`w-full py-5 rounded-3xl font-black uppercase tracking-widest text-xs ${accentBg} text-white shadow-xl`}>게시하기</button>
           </div>
         </div>
       )}
