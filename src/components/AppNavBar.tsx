@@ -9,7 +9,6 @@ import { useTheme } from '@/context/ThemeContext'
 const navItems = [
   { label: 'Home', icon: 'home', path: '/app' },
   { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
-  { label: 'Scan', icon: 'keyboard_arrow_up', path: '/app/scan', isElevated: true },
   { label: 'Community', icon: 'groups', path: '/app/community' },
   { label: 'My', icon: 'person', path: '/app/profile' },
 ]
@@ -22,9 +21,23 @@ export function AppNavBar() {
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [pullDistance, setPullDistance] = useState(0)
   const [hasVibrated, setHasVibrated] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(false)
 
   const TRIGGER_THRESHOLD = 90 
-  const MAX_PULL = 120
+  const MAX_PULL = 130
+
+  // Tutorial Check
+  useEffect(() => {
+    const tutorialSeen = localStorage.getItem('pf_tutorial_scan_seen')
+    if (!tutorialSeen) {
+      setShowTutorial(true)
+    }
+  }, [])
+
+  const closeTutorial = () => {
+    localStorage.setItem('pf_tutorial_scan_seen', 'true')
+    setShowTutorial(false)
+  }
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientY)
@@ -37,14 +50,11 @@ export function AppNavBar() {
     const diff = touchStart - currentY
     
     if (diff > 0) {
-      // Elastic resistance
       const dampenedDiff = Math.min(diff * 0.7, MAX_PULL)
       setPullDistance(dampenedDiff)
 
-      // Intense Haptic at Threshold
       if (dampenedDiff >= TRIGGER_THRESHOLD && !hasVibrated) {
         if (window.navigator.vibrate) {
-          // Strong triple pulse for "Heavy" feeling
           window.navigator.vibrate([50, 30, 50])
         }
         setHasVibrated(true)
@@ -55,6 +65,7 @@ export function AppNavBar() {
   const handleTouchEnd = () => {
     if (pullDistance >= TRIGGER_THRESHOLD) {
       setIsScanOpen(true)
+      if (showTutorial) closeTutorial()
     }
     setTouchStart(null)
     setPullDistance(0)
@@ -62,21 +73,25 @@ export function AppNavBar() {
   }
 
   const activeColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
-  const activeBorder = isDarkMode ? 'border-brand-yellow' : 'border-brand-purple'
+  const activeBg = isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'
   const bgColor = isDarkMode ? '#050505' : '#ffffff'
   const borderColor = isDarkMode ? '#18181b' : '#f8fafc'
 
-  // SVG Path for "Gummy" stretch
   const curveY = 20 - pullDistance * 0.8
-  const svgPath = `M 0 20 Q 200 ${curveY} 400 20 L 400 80 L 0 80 Z`
+  const svgPath = `M 0 20 Q 200 ${curveY} 400 20 L 400 120 L 0 120 Z`
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none max-w-md mx-auto md:max-w-none">
-        {/* The "Gummy" Base Layer */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 z-[60] max-w-md mx-auto md:max-w-none"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* The "Gummy" Stretch Base */}
         <svg 
-          viewBox="0 0 400 80" 
-          className="absolute bottom-0 w-full h-[100px] pointer-events-none drop-shadow-2xl transition-colors duration-500"
+          viewBox="0 0 400 120" 
+          className="absolute bottom-0 w-full h-[140px] pointer-events-none drop-shadow-2xl transition-colors duration-500"
           preserveAspectRatio="none"
         >
           <path 
@@ -88,70 +103,78 @@ export function AppNavBar() {
           />
         </svg>
 
-        <nav className="relative flex justify-around items-center h-20 px-2 pb-2 pointer-events-auto">
+        <nav className="relative flex justify-around items-center h-24 px-4 pb-6 pointer-events-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.path
-            
-            if (item.isElevated) {
-              return (
-                <div 
-                  key={item.label}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onClick={() => setIsScanOpen(true)}
-                  className="relative -top-8 flex flex-col items-center group"
-                >
-                  <div 
-                    className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} rounded-full w-14 h-14 flex items-center justify-center border shadow-2xl transition-all duration-75 ease-out relative z-10`}
-                    style={{
-                      transform: `translateY(${-pullDistance}px) scale(${1 + pullDistance * 0.0015})`,
-                      boxShadow: pullDistance >= TRIGGER_THRESHOLD 
-                        ? `0 0 40px ${isDarkMode ? 'rgba(252,211,77,0.3)' : 'rgba(109,40,217,0.2)'}` 
-                        : ''
-                    }}
-                  >
-                    {/* Glowing Core */}
-                    <div 
-                      className={`absolute inset-0 rounded-full blur-2xl transition-opacity duration-300 ${isDarkMode ? 'bg-brand-yellow/30' : 'bg-brand-purple/20'}`}
-                      style={{ opacity: pullDistance / TRIGGER_THRESHOLD }}
-                    ></div>
-
-                    <div className="absolute inset-2">
-                      <div className={`absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 ${activeBorder} rounded-tl-sm opacity-40`}></div>
-                      <div className={`absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 ${activeBorder} rounded-tr-sm opacity-40`}></div>
-                      <div className={`absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 ${activeBorder} rounded-bl-sm opacity-40`}></div>
-                      <div className={`absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 ${activeBorder} rounded-br-sm opacity-40`}></div>
-                    </div>
-
-                    <div className={`flex flex-col items-center gap-0 ${activeColor}`}>
-                      <span className="material-icons text-[14px]">expand_less</span>
-                      <span className="text-[7px] font-black uppercase tracking-[0.2em] -mt-1">Scan</span>
-                    </div>
-                  </div>
-                </div>
-              )
-            }
-
             return (
               <Link
                 key={item.label}
                 href={item.path}
-                className={`flex flex-col items-center gap-1 transition-all active:scale-90 duration-200 min-w-[50px] ${
+                className={`flex flex-col items-center gap-1 transition-all active:scale-90 duration-200 min-w-[60px] relative ${
                   isActive ? activeColor : 'text-zinc-500 opacity-60'
                 }`}
+                style={{ transform: `translateY(${-pullDistance * 0.2}px)` }}
               >
-                <span className="material-icons text-[24px]">
+                <span className="material-icons text-[26px]">
                   {item.icon}
                 </span>
-                <span className="font-plus-jakarta font-black text-[8px] uppercase tracking-widest leading-none">{item.label}</span>
+                <span className="font-plus-jakarta font-black text-[9px] uppercase tracking-widest leading-none">{item.label}</span>
+                {isActive && (
+                  <span className={`absolute -bottom-2 w-1 h-1 rounded-full ${activeBg}`}></span>
+                )}
               </Link>
             )
           })}
         </nav>
+
+        {/* Swipe Indicator (Glow when pulling) */}
+        <div 
+          className={`absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full transition-all duration-300 ${activeBg}`}
+          style={{ 
+            opacity: pullDistance / TRIGGER_THRESHOLD,
+            transform: `translateX(-50%) translateY(${-pullDistance * 0.5}px) scaleX(${1 + pullDistance * 0.01})`
+          }}
+        ></div>
       </div>
 
+      {/* First-time Tutorial Popup */}
+      {showTutorial && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center px-8 pb-40 bg-black/40 backdrop-blur-sm animate-in fade-in duration-500" onClick={closeTutorial}>
+          <div className={`p-10 rounded-[48px] ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border shadow-2xl w-full max-w-sm space-y-8 animate-in slide-in-from-bottom-10 duration-700`} onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col items-center text-center gap-6">
+              <div className="relative w-24 h-32 flex items-center justify-center">
+                <div className={`absolute bottom-0 w-full h-8 rounded-2xl ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-100'}`}></div>
+                <div className="absolute bottom-4 animate-bounce-slow">
+                  <span className={`material-icons text-5xl ${activeColor}`}>touch_app</span>
+                </div>
+                <div className={`absolute top-0 w-1 h-12 rounded-full ${activeBg} animate-pulse`}></div>
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black font-plus-jakarta tracking-tight">Swipe Up to Scan</h2>
+                <p className="text-sm text-zinc-500 leading-relaxed font-medium">
+                  하단 메뉴바를 위로 밀어 올리면<br/>언제 어디서든 QR 스캔이 시작됩니다.
+                </p>
+              </div>
+              <button 
+                onClick={closeTutorial}
+                className={`w-full py-5 rounded-[24px] font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl active:scale-95 transition-all`}
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ScanOverlay isOpen={isScanOpen} onClose={() => setIsScanOpen(false)} />
+
+      <style jsx global>{`
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+        .animate-bounce-slow { animation: bounce-slow 2s infinite ease-in-out; }
+      `}</style>
     </>
   )
 }
