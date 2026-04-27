@@ -114,7 +114,9 @@ export default function CommunityPage() {
     }
 
     const handlePopState = (e: PopStateEvent) => {
-      if (view === 'feed') {
+      if (isCommentsOpen) {
+        setIsCommentsOpen(false)
+      } else if (view === 'feed') {
         setView('selection')
       } else if (view === 'selection') {
         const now = Date.now()
@@ -273,6 +275,7 @@ export default function CommunityPage() {
   const openComments = (postId: number) => {
     setActiveCommentsPostId(postId)
     setIsCommentsOpen(true)
+    window.history.pushState({ pf_view: 'comments' }, '')
   }
 
   const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-white'
@@ -394,7 +397,12 @@ export default function CommunityPage() {
       {isCommentsOpen && activePost && (
         <CommentsSheet 
           isOpen={isCommentsOpen}
-          onClose={() => setIsCommentsOpen(false)}
+          onClose={() => {
+            setIsCommentsOpen(false)
+            if (window.history.state?.pf_view === 'comments') {
+              window.history.back()
+            }
+          }}
           comments={activePost.comments}
           onAddComment={(text) => addComment(activePost.id, text)}
           onToggleLike={(commentId) => toggleCommentLike(activePost.id, commentId)}
