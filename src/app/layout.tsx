@@ -22,13 +22,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="h-full overflow-hidden">
+    <html lang="ko" className="h-full">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#6d28d9" />
+        <meta name="theme-color" content="#9a78b4" />
         <link rel="apple-touch-icon" href="/images/PF app logo iphone.png" />
         <link rel="manifest" href="/manifest.json" />
         
@@ -47,7 +47,7 @@ export default function RootLayout({
         />
         <DynamicFavicon />
       </head>
-      <body className="h-full overflow-hidden overscroll-none select-none">
+      <body className="h-full overscroll-none select-none">
         <ThemeProvider>
           <LanguageProvider>
             {children}

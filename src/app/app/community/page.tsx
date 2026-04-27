@@ -313,11 +313,11 @@ export default function CommunityPage() {
     return (
       <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-700 bg-black font-pretendard">
         <div className="flex-1 flex overflow-hidden pb-24"> 
-          <button onClick={() => navigateToFeed('meditation')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(109, 64, 217, 0.85)' }}>
+          <button onClick={() => navigateToFeed('meditation')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(154, 120, 180, 0.85)' }}>
             <div className="absolute top-20 left-10 w-16 h-16 border-2 border-white/20 rounded-full animate-pulse"></div>
             <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white">MEDITATION</h2>
           </button>
-          <button onClick={() => navigateToFeed('prayer')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(252, 211, 77, 0.85)' }}>
+          <button onClick={() => navigateToFeed('prayer')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(255, 251, 189, 0.85)' }}>
             <div className="absolute top-32 right-12 w-12 h-12 border-2 border-white/30 rotate-45 animate-pulse"></div>
             <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white">PRAYER</h2>
           </button>

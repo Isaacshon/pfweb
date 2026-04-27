@@ -169,7 +169,7 @@ export function AppNavBar() {
               height: '6px',
               width: `${16 + pullDistance * 0.2}px`,
               opacity: mounted ? Math.max(0.6, pullDistance / TRIGGER_THRESHOLD) : 0,
-              boxShadow: `0 0 ${25 + pullDistance * 0.5}px ${isDarkMode ? 'rgba(252,211,77,0.6)' : 'rgba(109,40,217,0.6)'}`
+              boxShadow: `0 0 ${25 + pullDistance * 0.5}px ${isDarkMode ? 'rgba(255,251,189,0.6)' : 'rgba(154,120,180,0.6)'}`
             }}
           ></div>
         </div>
