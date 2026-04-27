@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 
 const bibleVersions = [
   { name: '개역개정', code: 'KRV' },
@@ -27,7 +27,7 @@ const bibleBooks = [
 ]
 
 export default function AppPage() {
-  // Core Data State
+  // Core State
   const [version, setVersion] = useState(bibleVersions[0])
   const [book, setBook] = useState(bibleBooks[42])
   const [chapter, setChapter] = useState(1)
@@ -35,11 +35,10 @@ export default function AppPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [maxChapters, setMaxChapters] = useState(21)
 
-  // Reading Settings State
+  // UI State
   const [fontSize, setFontSize] = useState(20)
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const [isSearching, setIsSearching] = useState(false)
+  const [openPicker, setOpenPicker] = useState<string | null>(null) // 'book', 'chapter', 'version', 'settings', 'search'
   const [searchQuery, setSearchQuery] = useState('')
 
   const fetchChapter = useCallback(async (vCode: string, bId: number, cNum: number) => {
@@ -48,11 +47,8 @@ export default function AppPage() {
       const res = await fetch(`https://bolls.life/get-chapter/${vCode}/${bId}/${cNum}/`)
       const data = await res.json()
       if (Array.isArray(data)) setVerses(data)
-    } catch (err) {
-      console.error('Fetch error:', err)
-    } finally {
-      setIsLoading(false)
-    }
+    } catch (err) { console.error(err) }
+    finally { setIsLoading(false) }
   }, [])
 
   const fetchBookInfo = useCallback(async (vCode: string, bId: number) => {
@@ -61,9 +57,7 @@ export default function AppPage() {
       const data = await res.json()
       const currentBook = data.find((b: any) => b.bookid === bId)
       if (currentBook) setMaxChapters(currentBook.chapters)
-    } catch (err) {
-      console.error('Book info error:', err)
-    }
+    } catch (err) { console.error(err) }
   }, [])
 
   useEffect(() => { fetchBookInfo(version.code, book.id) }, [version.code, book.id, fetchBookInfo])
@@ -72,99 +66,134 @@ export default function AppPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [version.code, book.id, chapter, fetchChapter])
 
+  const togglePicker = (picker: string) => {
+    setOpenPicker(openPicker === picker ? null : picker)
+  }
+
   return (
-    <div className={`min-h-screen flex flex-col pt-0 pb-32 transition-colors duration-300 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-white text-brand-dark'}`}>
+    <div className={`min-h-screen flex flex-col pt-0 pb-32 transition-all duration-700 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-white text-brand-dark'}`}>
       
-      {/* Enhanced Sticky Header */}
-      <div className={`sticky top-0 z-50 px-6 py-4 flex flex-col gap-4 border-b transition-all ${isDarkMode ? 'bg-zinc-950/90 border-zinc-800' : 'bg-white/95 border-slate-50'} backdrop-blur-md`}>
-        <div className="flex items-center gap-3">
-          {/* Menu / Settings Trigger */}
+      {/* Interactive Minimalist Header */}
+      <div className={`sticky top-0 z-50 px-6 py-5 flex flex-col gap-4 transition-all ${isDarkMode ? 'bg-zinc-950/80' : 'bg-white/80'} backdrop-blur-xl`}>
+        <div className="flex items-center justify-between gap-1">
+          
+          {/* Settings Icon - Smooth & Minimal */}
           <button 
-            onClick={() => { setShowSettings(!showSettings); setIsSearching(false); }}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${showSettings ? 'bg-brand-purple text-white' : 'hover:bg-slate-50'}`}
+            onClick={() => togglePicker('settings')}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${openPicker === 'settings' ? 'bg-brand-purple text-white rotate-90' : 'text-slate-400 hover:bg-slate-100/50'}`}
           >
-            <span className="material-symbols-outlined text-[24px]">settings</span>
+            <span className="material-symbols-outlined text-[20px] font-light">tune</span>
           </button>
 
-          {/* Book & Chapter Selectors */}
-          <div className="flex-1 flex items-center gap-2 overflow-hidden">
-            <select 
-              value={book.id}
-              onChange={(e) => {
-                const selected = bibleBooks.find(b => b.id === Number(e.target.value))
-                if (selected) { setBook(selected); setChapter(1); }
-              }}
-              className="bg-transparent font-plus-jakarta font-black text-lg focus:outline-none cursor-pointer max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap"
+          {/* Custom Selectors */}
+          <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-zinc-900/50 p-1 rounded-full px-2">
+            <button 
+              onClick={() => togglePicker('book')}
+              className={`px-3 py-1.5 rounded-full text-sm font-black transition-all active:scale-95 ${openPicker === 'book' ? 'bg-brand-purple text-white shadow-lg' : 'text-brand-dark dark:text-zinc-300'}`}
             >
-              {bibleBooks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-
-            <select 
-              value={chapter}
-              onChange={(e) => setChapter(Number(e.target.value))}
-              className="bg-transparent font-plus-jakarta font-black text-lg text-brand-purple focus:outline-none cursor-pointer"
+              {book.name}
+            </button>
+            <button 
+              onClick={() => togglePicker('chapter')}
+              className={`px-3 py-1.5 rounded-full text-sm font-black transition-all active:scale-95 ${openPicker === 'chapter' ? 'bg-brand-purple text-white shadow-lg' : 'text-brand-purple'}`}
             >
-              {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+              {chapter}
+            </button>
+            <button 
+              onClick={() => togglePicker('version')}
+              className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 ${openPicker === 'version' ? 'bg-brand-purple text-white shadow-lg' : 'text-slate-400'}`}
+            >
+              {version.code}
+            </button>
           </div>
 
-          {/* Version Selector */}
-          <select 
-            value={version.code}
-            onChange={(e) => {
-              const selected = bibleVersions.find(v => v.code === e.target.value)
-              if (selected) setVersion(selected)
-            }}
-            className={`text-[10px] font-black px-2 py-1 rounded-md focus:outline-none cursor-pointer uppercase tracking-widest ${isDarkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-slate-50 text-slate-400'}`}
-          >
-            {bibleVersions.map(v => <option key={v.code} value={v.code}>{v.code}</option>)}
-          </select>
-
-          {/* Search Trigger */}
+          {/* Search Icon */}
           <button 
-            onClick={() => { setIsSearching(!isSearching); setShowSettings(false); }}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isSearching ? 'bg-brand-purple text-white' : 'hover:bg-slate-50'}`}
+            onClick={() => togglePicker('search')}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${openPicker === 'search' ? 'bg-brand-purple text-white shadow-lg' : 'text-slate-400 hover:bg-slate-100/50'}`}
           >
-            <span className="material-symbols-outlined text-[24px]">search</span>
+            <span className="material-symbols-outlined text-[20px] font-light">search</span>
           </button>
         </div>
 
-        {/* Expandable Settings Panel */}
-        {showSettings && (
-          <div className={`p-4 rounded-2xl flex flex-col gap-5 animate-in slide-in-from-top-2 duration-200 ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'}`}>
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Reading Mode</span>
+        {/* Picker Overlays (Interactive UI) */}
+        {openPicker === 'book' && (
+          <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            {bibleBooks.map(b => (
               <button 
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-xs transition-all ${isDarkMode ? 'bg-brand-purple text-white' : 'bg-white text-brand-dark shadow-sm'}`}
+                key={b.id}
+                onClick={() => { setBook(b); setChapter(1); setOpenPicker(null); }}
+                className={`px-5 py-2 rounded-2xl whitespace-nowrap font-bold text-xs transition-all active:scale-90 ${book.id === b.id ? 'bg-brand-purple text-white' : 'bg-slate-100 dark:bg-zinc-900 text-slate-500'}`}
               >
-                <span className="material-symbols-outlined text-sm">{isDarkMode ? 'dark_mode' : 'light_mode'}</span>
-                {isDarkMode ? 'Dark' : 'Light'}
+                {b.name}
               </button>
+            ))}
+          </div>
+        )}
+
+        {openPicker === 'chapter' && (
+          <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
+              <button 
+                key={c}
+                onClick={() => { setChapter(c); setOpenPicker(null); }}
+                className={`w-10 h-10 rounded-2xl shrink-0 font-black text-sm transition-all active:scale-90 ${chapter === c ? 'bg-brand-purple text-white' : 'bg-slate-100 dark:bg-zinc-900 text-slate-500'}`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {openPicker === 'version' && (
+          <div className="flex gap-2 overflow-x-auto no-scrollbar py-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            {bibleVersions.map(v => (
+              <button 
+                key={v.code}
+                onClick={() => { setVersion(v); setOpenPicker(null); }}
+                className={`px-5 py-2 rounded-2xl whitespace-nowrap font-black text-[10px] uppercase tracking-widest transition-all active:scale-90 ${version.code === v.code ? 'bg-brand-purple text-white' : 'bg-slate-100 dark:bg-zinc-900 text-slate-500'}`}
+              >
+                {v.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Settings Panel */}
+        {openPicker === 'settings' && (
+          <div className={`p-6 rounded-[32px] flex flex-col gap-6 animate-in fade-in slide-in-from-top-4 duration-500 ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50 shadow-inner'}`}>
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Display Mode</span>
+              <div className="flex bg-white dark:bg-zinc-800 p-1 rounded-full shadow-sm">
+                <button onClick={() => setIsDarkMode(false)} className={`px-4 py-1.5 rounded-full text-[10px] font-black transition-all ${!isDarkMode ? 'bg-brand-purple text-white' : 'text-slate-400'}`}>LIGHT</button>
+                <button onClick={() => setIsDarkMode(true)} className={`px-4 py-1.5 rounded-full text-[10px] font-black transition-all ${isDarkMode ? 'bg-brand-purple text-white' : 'text-slate-400'}`}>DARK</button>
+              </div>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Font Size</span>
-              <div className="flex items-center gap-4">
-                <button onClick={() => setFontSize(Math.max(14, fontSize - 2))} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">-</button>
-                <span className="font-bold text-sm min-w-[30px] text-center">{fontSize}</span>
-                <button onClick={() => setFontSize(Math.min(32, fontSize + 2))} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">+</button>
+              <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Text Size</span>
+              <div className="flex items-center gap-6">
+                <button onClick={() => setFontSize(Math.max(14, fontSize - 2))} className="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm active:scale-75 transition-all text-brand-purple">
+                  <span className="material-symbols-outlined text-lg">remove</span>
+                </button>
+                <span className="font-space-grotesk font-black text-lg min-w-[30px] text-center">{fontSize}</span>
+                <button onClick={() => setFontSize(Math.min(32, fontSize + 2))} className="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm active:scale-75 transition-all text-brand-purple">
+                  <span className="material-symbols-outlined text-lg">add</span>
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Expandable Search Panel */}
-        {isSearching && (
-          <div className="animate-in slide-in-from-top-2 duration-200">
+        {/* Search Panel */}
+        {openPicker === 'search' && (
+          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
             <input 
               type="text"
-              placeholder="Search scripture..."
+              placeholder="Type to search word..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-brand-purple/20 transition-all ${isDarkMode ? 'bg-zinc-800 text-white border-zinc-700' : 'bg-slate-50 text-brand-dark border-slate-100'}`}
+              className={`w-full py-4 px-6 rounded-2xl font-bold text-sm focus:outline-none focus:ring-4 transition-all ${isDarkMode ? 'bg-zinc-900 text-white focus:ring-brand-purple/10' : 'bg-slate-50 text-brand-dark focus:ring-brand-purple/10'}`}
               autoFocus
             />
           </div>
@@ -172,22 +201,23 @@ export default function AppPage() {
       </div>
 
       {/* Main Content */}
-      <main className="px-8 mt-10 flex flex-col gap-8">
+      <main className="px-8 mt-12 flex flex-col gap-10">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className={`w-8 h-8 border-4 border-t-brand-purple rounded-full animate-spin ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}></div>
+          <div className="flex flex-col items-center justify-center py-32 gap-6">
+            <div className={`w-10 h-10 border-[3px] border-t-brand-purple rounded-full animate-spin ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}></div>
+            <p className="font-black text-[10px] text-slate-400 uppercase tracking-[0.3em] animate-pulse">Eternal Word</p>
           </div>
         ) : (
           verses.map((v: any) => {
             const isMatch = searchQuery && v.text.toLowerCase().includes(searchQuery.toLowerCase())
             return (
-              <div key={v.verse} className={`flex items-start gap-5 group transition-opacity ${searchQuery && !isMatch ? 'opacity-30' : 'opacity-100'}`}>
-                <span className={`font-space-grotesk font-black text-[12px] mt-2 shrink-0 w-6 text-center transition-colors ${isDarkMode ? 'text-zinc-700 group-hover:text-zinc-500' : 'text-brand-purple/20 group-hover:text-brand-purple/40'}`}>
+              <div key={v.verse} className={`flex items-start gap-6 group transition-all duration-500 ${searchQuery && !isMatch ? 'opacity-20 scale-95 blur-[1px]' : 'opacity-100 scale-100'}`}>
+                <span className={`font-space-grotesk font-black text-[11px] mt-2.5 shrink-0 w-6 text-center transition-colors ${isDarkMode ? 'text-zinc-800 group-hover:text-brand-purple/40' : 'text-slate-200 group-hover:text-brand-purple/40'}`}>
                   {v.verse}
                 </span>
                 <p 
                   style={{ fontSize: `${fontSize}px` }}
-                  className={`font-medium leading-[1.8] tracking-tight transition-all ${isMatch ? 'bg-brand-yellow/30 text-brand-dark rounded px-1' : ''}`}
+                  className={`font-medium leading-[1.85] tracking-tight transition-all duration-500 ${isMatch ? 'text-brand-purple font-bold scale-[1.02] origin-left' : ''}`}
                 >
                   {v.text}
                 </p>
@@ -197,27 +227,29 @@ export default function AppPage() {
         )}
         
         {!isLoading && verses.length > 0 && (
-          <div className={`flex justify-between items-center mt-12 pt-8 border-t ${isDarkMode ? 'border-zinc-800' : 'border-slate-50'}`}>
+          <div className="flex justify-between items-center mt-20 pt-10 border-t border-slate-100 dark:border-zinc-900">
             <button 
               disabled={chapter === 1}
               onClick={() => setChapter(c => Math.max(1, c - 1))}
-              className="flex items-center gap-2 text-slate-400 hover:text-brand-purple disabled:opacity-20 transition-colors"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-slate-300 hover:text-brand-purple hover:bg-slate-50 dark:hover:bg-zinc-900 disabled:opacity-20 transition-all active:scale-75"
             >
-              <span className="material-symbols-outlined">chevron_left</span>
-              <span className="font-bold text-[11px] uppercase tracking-widest">Prev</span>
+              <span className="material-symbols-outlined text-3xl">chevron_left</span>
             </button>
+            <div className="flex flex-col items-center">
+              <span className="font-black text-[10px] text-slate-300 uppercase tracking-widest">{book.name}</span>
+              <span className="font-space-grotesk font-black text-xl text-brand-purple">{chapter}</span>
+            </div>
             <button 
               disabled={chapter === maxChapters}
               onClick={() => setChapter(c => Math.min(maxChapters, c + 1))}
-              className="flex items-center gap-2 text-slate-400 hover:text-brand-purple disabled:opacity-20 transition-colors"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-slate-300 hover:text-brand-purple hover:bg-slate-50 dark:hover:bg-zinc-900 disabled:opacity-20 transition-all active:scale-75"
             >
-              <span className="font-bold text-[11px] uppercase tracking-widest">Next</span>
-              <span className="material-symbols-outlined">chevron_right</span>
+              <span className="material-symbols-outlined text-3xl">chevron_right</span>
             </button>
           </div>
         )}
 
-        <div className="h-32" />
+        <div className="h-40" />
       </main>
     </div>
   )
