@@ -27,7 +27,8 @@ const bibleBooks = [
 ]
 
 export default function AppPage() {
-  const [version, setVersion] = useState(bibleVersions[0])
+  // Default to NIV
+  const [version, setVersion] = useState(bibleVersions[3])
   const [book, setBook] = useState(bibleBooks[42])
   const [chapter, setChapter] = useState(1)
   const [verses, setVerses] = useState<any[]>([])
@@ -37,7 +38,7 @@ export default function AppPage() {
   // Typography Settings
   const [fontSize, setFontSize] = useState(20)
   const [lineHeight, setLineHeight] = useState(1.85)
-  const [verseGap, setVerseGap] = useState(40)
+  const [verseGap, setVerseGap] = useState(30)
 
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [openUI, setOpenUI] = useState<string | null>(null)
@@ -124,7 +125,7 @@ export default function AppPage() {
         </button>
       </header>
 
-      {/* Bible Text Container (Scrollable Area) */}
+      {/* Bible Text Container */}
       <div id="bible-content" className="flex-1 overflow-y-auto px-10 pt-10 pb-32 no-scrollbar">
         {isLoading ? (
           <div className="flex items-center justify-center py-40">
@@ -134,7 +135,6 @@ export default function AppPage() {
           <div className="flex flex-col" style={{ gap: `${verseGap}px` }}>
             {verses.map((v: any) => (
               <div key={v.verse} className="flex flex-col gap-2 group">
-                {/* Verse Number in Brand Purple */}
                 <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-brand-purple/60' : 'text-brand-purple/30'}`}>
                   {v.verse}
                 </span>
@@ -161,7 +161,7 @@ export default function AppPage() {
         )}
       </div>
 
-      {/* Overlays (Settings, Search, Picker) - Unchanged but ensured Material Icons */}
+      {/* Settings Modal */}
       {openUI === 'settings' && (
         <div className="fixed inset-0 z-50 bg-black/5" onClick={() => setOpenUI(null)}>
           <div 
@@ -194,9 +194,9 @@ export default function AppPage() {
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Verse Spacing</span>
                 <div className="flex items-center gap-6">
-                  <button onClick={() => setVerseGap(Math.max(10, verseGap - 5))} className="text-brand-purple font-black">-</button>
+                  <button onClick={() => setVerseGap(Math.max(0, verseGap - 5))} className="text-brand-purple font-black">-</button>
                   <span className="font-space-grotesk font-black text-sm">{verseGap}</span>
-                  <button onClick={() => setVerseGap(Math.min(80, verseGap + 5))} className="text-brand-purple font-black">+</button>
+                  <button onClick={() => setVerseGap(Math.min(100, verseGap + 5))} className="text-brand-purple font-black">+</button>
                 </div>
               </div>
               <div className="flex justify-between items-center border-t border-slate-100 dark:border-zinc-800 pt-4">
@@ -214,6 +214,7 @@ export default function AppPage() {
         </div>
       )}
 
+      {/* Other Overlays (Search, Picker) - Unchanged */}
       {openUI === 'search' && (
         <div className={`fixed inset-0 z-50 flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
           <div className="px-8 pt-16 pb-8 flex flex-col gap-8">

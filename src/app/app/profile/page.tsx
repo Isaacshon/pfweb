@@ -1,132 +1,71 @@
 "use client"
 
-import React, { useState } from 'react'
-import { AppTopBar } from '@/components/AppTopBar'
-import { BentoCard } from '@/components/BentoCard'
-
-const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const currentWeek = [
-  { day: 'Sun', date: 24, attended: true, posted: true },
-  { day: 'Mon', date: 25, attended: false, posted: true },
-  { day: 'Tue', date: 26, attended: false, posted: false },
-  { day: 'Wed', date: 27, attended: true, posted: false },
-  { day: 'Thu', date: 28, attended: false, posted: false },
-  { day: 'Fri', date: 29, attended: false, posted: true },
-  { day: 'Sat', date: 30, attended: false, posted: false },
-]
+import React from 'react'
+import Image from 'next/image'
 
 export default function ProfilePage() {
-  const [selectedDay, setSelectedDay] = useState(24)
-
   return (
-    <div className="pt-20 px-6 flex flex-col gap-8 pb-32">
-      <AppTopBar showAvatar={false} title="My Page" />
-
-      {/* Mini Profile */}
-      <section className="flex items-center gap-6">
-        <div className="relative">
-          <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl">
-            <img 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGBk-s3e5-CkM-06tGpRCTClqyVW52WKD-29XTaNv577WmrlZQCAPTlKPY-QWTxgOGwpj3G8fJRwKuh2YRsjF7DUb92l3e3COMG71DiOU05QMLnPOxn261jmv20mBmoeIo3pUAoON0REhmO5oBdMFCuRKR-C0H9iYk8UCNdEZ3IuC2-_hHwuI_HZKG2crAHYtSXJs-5QdXIIZPYjrf0WjfGxYLz8mxrPqNgfA2ydvOCr0UiW_avBayLYNLn4QJkrntrexXuTQbNuM" 
-              alt="Profile" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <button className="absolute bottom-0 right-0 w-7 h-7 bg-brand-purple text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
-            <span className="material-symbols-outlined text-[14px]">settings</span>
-          </button>
+    <div className="min-h-screen bg-white pb-32">
+      {/* Profile Header */}
+      <section className="px-6 pt-20 pb-12 flex flex-col items-center text-center">
+        <div className="relative w-32 h-32 rounded-[48px] overflow-hidden border-4 border-slate-50 shadow-xl mb-6">
+          <Image 
+            src="/images/pf-character.png" 
+            alt="Test Account" 
+            fill 
+            className="object-cover scale-110"
+          />
         </div>
-        <div>
-          <h1 className="font-plus-jakarta font-black text-2xl text-brand-dark leading-tight">Sarah Jenkins</h1>
-          <p className="text-brand-purple font-black text-[10px] uppercase tracking-widest mt-1">Faith Journey Day 412</p>
+        <h1 className="text-3xl font-black font-plus-jakarta tracking-tight mb-2">Test Account</h1>
+        <p className="text-brand-purple font-bold text-sm uppercase tracking-widest">PassionFruits Member</p>
+      </section>
+
+      {/* Stats Grid */}
+      <section className="px-6 grid grid-cols-2 gap-4 mb-12">
+        <div className="bg-slate-50 p-6 rounded-[40px] flex flex-col gap-1">
+          <span className="material-icons text-brand-purple mb-2">auto_stories</span>
+          <p className="text-2xl font-black font-space-grotesk">12</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Meditations</p>
+        </div>
+        <div className="bg-slate-50 p-6 rounded-[40px] flex flex-col gap-1">
+          <span className="material-icons text-brand-yellow mb-2">event_available</span>
+          <p className="text-2xl font-black font-space-grotesk">85%</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Attendance</p>
         </div>
       </section>
 
-      {/* Spiritual Calendar */}
-      <section className="flex flex-col gap-4">
-        <div className="flex justify-between items-center px-1">
-          <h2 className="font-bold text-[18px] text-brand-dark">Activity Calendar</h2>
-          <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">October 2026</span>
-        </div>
-        
-        <BentoCard className="flex flex-col gap-6">
-          <div className="flex justify-between items-center">
-            {currentWeek.map((d) => (
-              <button 
-                key={d.date}
-                onClick={() => setSelectedDay(d.date)}
-                className="flex flex-col items-center gap-2 group"
-              >
-                <span className="font-bold text-[10px] text-slate-400 uppercase tracking-tight">{d.day}</span>
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
-                  selectedDay === d.date ? 'bg-brand-purple text-white shadow-lg' : 'bg-slate-50 text-brand-dark hover:bg-slate-100'
-                }`}>
-                  <span className="font-black text-sm">{d.date}</span>
-                </div>
-                {/* Activity Dots */}
-                <div className="flex gap-1">
-                  {d.attended && <div className="w-1.5 h-1.5 rounded-full bg-brand-yellow"></div>}
-                  {d.posted && <div className="w-1.5 h-1.5 rounded-full bg-brand-purple"></div>}
-                </div>
-              </button>
+      {/* Activity Calendar Placeholder */}
+      <section className="px-6 mb-12">
+        <h2 className="text-xl font-black font-plus-jakarta mb-6">Weekly Activity</h2>
+        <div className="bg-white border border-slate-100 rounded-[40px] p-8 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <div key={i} className="flex flex-col items-center gap-4">
+                <span className="text-[10px] font-black text-slate-300 uppercase">{day}</span>
+                <div className={`w-3 h-3 rounded-full ${i % 2 === 0 ? 'bg-brand-purple' : 'bg-slate-100'}`}></div>
+              </div>
             ))}
           </div>
-
-          {/* Activity Legend & Detail */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-brand-yellow"></div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Services</span>
-              </div>
-              <p className="font-bold text-brand-dark">2 Attended</p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Meditations</span>
-              </div>
-              <p className="font-bold text-brand-dark">3 Posted</p>
-            </div>
-          </div>
-        </BentoCard>
+          <p className="text-center text-xs text-slate-400 font-medium">You attended 4 services and shared 3 meditations this week!</p>
+        </div>
       </section>
 
-      {/* Achievement / Stats */}
-      <BentoCard className="bg-brand-dark text-white flex justify-between items-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-          <span className="material-symbols-outlined text-[60px]" style={{ fontVariationSettings: "'FILL' 1" }}>trophy</span>
-        </div>
-        <div>
-          <p className="font-black text-[10px] text-brand-purple uppercase tracking-widest mb-1">Weekly Goal</p>
-          <h3 className="font-bold text-[18px]">7 Day Streak!</h3>
-          <div className="w-32 h-1.5 bg-white/10 rounded-full mt-3 overflow-hidden">
-            <div className="w-[85%] h-full bg-brand-yellow"></div>
+      {/* Settings List */}
+      <section className="px-6 flex flex-col gap-2">
+        <button className="flex items-center justify-between p-6 bg-slate-50 rounded-[32px] group active:scale-[0.98] transition-all">
+          <div className="flex items-center gap-4">
+            <span className="material-icons text-slate-400 group-hover:text-brand-purple transition-colors">person_outline</span>
+            <span className="font-black text-sm">Account Settings</span>
           </div>
-        </div>
-        <button className="bg-white/10 hover:bg-white/20 p-3 rounded-2xl transition-colors">
-          <span className="material-symbols-outlined text-white">chevron_right</span>
+          <span className="material-icons text-slate-200">chevron_right</span>
         </button>
-      </BentoCard>
-
-      {/* Quick Menu */}
-      <section className="flex flex-col gap-4">
-        <h2 className="font-bold text-[18px] text-brand-dark px-1">Settings</h2>
-        <div className="flex flex-col gap-3">
-          {['Profile Settings', 'Notification Preferences', 'Giving History'].map((item) => (
-            <BentoCard key={item} className="flex items-center justify-between group hover:bg-slate-50 transition-colors" padding={false}>
-              <div className="p-4 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-[#f8f9ff] flex items-center justify-center text-slate-400 group-hover:text-brand-purple transition-colors">
-                  <span className="material-symbols-outlined">
-                    {item.includes('Profile') ? 'person' : item.includes('Notification') ? 'notifications' : 'payments'}
-                  </span>
-                </div>
-                <span className="font-bold text-[15px] text-brand-dark">{item}</span>
-              </div>
-              <span className="material-symbols-outlined text-slate-200 mr-4">chevron_right</span>
-            </BentoCard>
-          ))}
-        </div>
+        <button className="flex items-center justify-between p-6 bg-slate-50 rounded-[32px] group active:scale-[0.98] transition-all">
+          <div className="flex items-center gap-4">
+            <span className="material-icons text-slate-400 group-hover:text-brand-purple transition-colors">notifications_none</span>
+            <span className="font-black text-sm">Notification Prefs</span>
+          </div>
+          <span className="material-icons text-slate-200">chevron_right</span>
+        </button>
       </section>
     </div>
   )

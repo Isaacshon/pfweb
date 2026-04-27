@@ -1,136 +1,110 @@
 "use client"
 
 import React, { useState } from 'react'
-import { AppTopBar } from '@/components/AppTopBar'
-import { BentoCard } from '@/components/BentoCard'
+import Image from 'next/image'
 
 const trendingVerses = [
-  { ref: 'Psalm 46:10', count: 124, text: '"Be still, and know that I am God..."', color: 'bg-brand-purple' },
-  { ref: 'John 3:16', count: 98, text: '"For God so loved the world..."', color: 'bg-brand-yellow' },
-  { ref: 'Philippians 4:13', count: 75, text: '"I can do all things through him..."', color: 'bg-brand-purple-light' },
+  { rank: 1, verse: "Psalm 23:1", text: "The Lord is my shepherd; I shall not want.", count: 124 },
+  { rank: 2, verse: "Philippians 4:13", text: "I can do all things through Christ who strengthens me.", count: 98 },
+  { rank: 3, verse: "Romans 8:28", text: "And we know that in all things God works for the good...", count: 85 },
 ]
 
-const feedItems = [
-  {
-    id: 1,
-    author: 'Grace Lee',
-    date: 'Oct 24',
-    verse: 'Psalm 46:10',
-    content: 'Finding quiet moments today before the rush begins. Reminded that peace isn\'t the absence of chaos.',
-    likes: 24,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBBMTb8pUv1Rr1LduuF0Pnfoiwpmwc1hFm3YDj6LNrrZgIaXycMU_d7MouA86MbueQPp9ERmD3cwVf4XXOCDkBkdbI9VMRNzQUbmhA146OEFcG1FLq4kgsQF-5WGymtiGqHiROX1Hh3KhZBvAkzRGUY7z2MUjVa-Amv9x7UdMpoI0hkO9c3NXSStiDA6MsHp8cKuMl3swaWKMxKP_cAgyqaDir__PWzgZW4HIdI9bEzvTi0J1gQHvm3FWQ13keOpB2c_KIo1HZBxIA'
+const recentMeditations = [
+  { 
+    id: 1, 
+    user: "Test Account", 
+    avatar: "/images/pf-character.png",
+    verse: "John 3:16", 
+    content: "Today I felt the immense love of God through this verse. It's a reminder that we are never alone.",
+    date: "2h ago"
   },
-  {
-    id: 2,
-    author: 'David Kim',
-    date: 'Oct 23',
-    verse: 'Psalm 23:1',
-    content: 'Reflecting on provision today. Sometimes what we think we need isn\'t what we actually need.',
-    likes: 42,
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBX8I8RwMI6OsNqBYCnqHCOg8eGrhTpT6c7JJOLjEGQXEiZc4GgEnNLGZds6CBlGyoV-2SMRkVZcAn4OB-z0NBv5Hkzqzebz-gdjCgzgixQ1cZvKFE4NS7mF-USyIeXKBvBpcLcS4Xa-8jDL5sR6pAU5bW3-cdLYcVtj3-JClsZ3wGsjLcrSI46fnC81P6-pgSzDEF_4BY-zpt2XjVe8v8oEoFOrAPVDVpLxqQNvgRk5Nfmm57W0z5KjkBYZfv4mB4iuQBFGdXeTtk'
-  }
+  { 
+    id: 2, 
+    user: "Test Account", 
+    avatar: "/images/pf-character.png",
+    verse: "Matthew 5:14", 
+    content: "Being the light of the world is a call to action. How can I shine today?",
+    date: "5h ago"
+  },
 ]
 
 export default function CommunityPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [trendFilter, setTrendFilter] = useState('Weekly')
 
   return (
-    <div className="pt-20 px-6 flex flex-col gap-8 pb-32">
-      <AppTopBar title="Community" />
+    <div className="min-h-screen bg-white pb-32">
+      {/* Header */}
+      <header className="px-6 pt-16 pb-8">
+        <h1 className="text-4xl font-black font-plus-jakarta tracking-tight mb-2">Community</h1>
+        <p className="text-slate-400 font-medium">Connect through the Word</p>
+      </header>
 
-      {/* Search Header */}
-      <section className="flex flex-col gap-4">
+      {/* Search Bar */}
+      <div className="px-6 mb-10">
         <div className="relative">
           <input 
             type="text"
-            placeholder="Search users or verses..."
+            placeholder="Search meditations or users..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-100 rounded-full py-4 px-12 font-bold text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-purple/20 transition-all shadow-sm"
+            className="w-full bg-slate-50 border-none rounded-2xl py-4 pl-12 pr-6 font-medium focus:ring-2 focus:ring-brand-purple/20 transition-all"
           />
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">search</span>
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-brand-purple">
-              <span className="material-symbols-outlined text-sm">close</span>
-            </button>
-          )}
+          <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">search</span>
         </div>
-      </section>
+      </div>
 
-      {/* Trending Verses Section */}
-      <section className="flex flex-col gap-4">
-        <div className="flex justify-between items-end px-1">
-          <h2 className="font-plus-jakarta font-black text-2xl text-brand-dark tracking-tighter">Trending</h2>
-          <div className="flex gap-2 bg-slate-100 p-1 rounded-full">
-            {['Weekly', 'Monthly', 'Yearly'].map(f => (
-              <button 
-                key={f}
-                onClick={() => setTrendFilter(f)}
-                className={`px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-widest transition-all ${
-                  trendFilter === f ? 'bg-white text-brand-purple shadow-sm' : 'text-slate-400'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+      {/* Trending Section */}
+      <section className="px-6 mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-black font-plus-jakarta">Trending Verses</h2>
+          <select className="bg-transparent font-bold text-brand-purple text-sm focus:outline-none">
+            <option>This Week</option>
+            <option>This Month</option>
+            <option>This Year</option>
+          </select>
         </div>
-
-        <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6">
-          {trendingVerses.map((trend) => (
-            <div key={trend.ref} className="flex-[0_0_280px] min-w-0">
-              <BentoCard className={`${trend.color} text-white h-[180px] flex flex-col justify-between relative overflow-hidden`}>
-                <div className="absolute -top-4 -right-4 opacity-10">
-                  <span className="material-symbols-outlined text-[80px]" style={{ fontVariationSettings: "'FILL' 1" }}>format_quote</span>
-                </div>
-                <div className="relative z-10">
-                  <p className="font-medium italic text-[15px] leading-relaxed line-clamp-3 mb-2">{trend.text}</p>
-                  <p className="font-black text-[10px] uppercase tracking-[0.2em]">{trend.ref}</p>
-                </div>
-                <div className="flex items-center gap-2 relative z-10">
-                  <span className="bg-white/20 px-2 py-1 rounded-md font-black text-[10px]">{trend.count} Posts</span>
-                </div>
-              </BentoCard>
+        <div className="flex flex-col gap-4">
+          {trendingVerses.map((v) => (
+            <div key={v.rank} className="bg-white border border-slate-100 p-5 rounded-[32px] flex items-center gap-5 shadow-sm active:scale-[0.98] transition-transform">
+              <div className="w-12 h-12 rounded-2xl bg-brand-yellow/10 flex items-center justify-center font-black text-brand-yellow text-lg">
+                {v.rank}
+              </div>
+              <div className="flex-1">
+                <p className="font-black text-sm mb-1">{v.verse}</p>
+                <p className="text-xs text-slate-400 line-clamp-1">{v.text}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-black text-brand-purple text-xs">{v.count}</p>
+                <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Shared</p>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Social Feed */}
-      <section className="flex flex-col gap-4">
-        <h2 className="font-bold text-[18px] text-brand-dark px-1">Recent Reflections</h2>
-        {feedItems.map((post) => (
-          <BentoCard key={post.id} className="flex flex-col gap-4 group hover:bg-slate-50 transition-colors">
-            <div className="flex justify-between items-start">
+      {/* Recent Meditations */}
+      <section className="px-6">
+        <h2 className="text-xl font-black font-plus-jakarta mb-6">Recent Meditations</h2>
+        <div className="flex flex-col gap-8">
+          {recentMeditations.map((m) => (
+            <div key={m.id} className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <img src={post.avatar} className="w-10 h-10 rounded-full object-cover" alt={post.author} />
-                <div>
-                  <p className="font-bold text-[15px] text-brand-dark leading-none">{post.author}</p>
-                  <p className="text-[12px] text-slate-400 mt-1">{post.date} • {post.verse}</p>
+                <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-brand-purple/10">
+                  <Image src={m.avatar} alt={m.user} fill className="object-cover" />
                 </div>
+                <div>
+                  <p className="font-black text-sm">{m.user}</p>
+                  <p className="text-[10px] text-brand-purple font-bold uppercase tracking-widest">{m.verse}</p>
+                </div>
+                <span className="ml-auto text-[10px] font-bold text-slate-300 uppercase">{m.date}</span>
               </div>
-              <button className="text-slate-200 hover:text-brand-purple transition-colors">
-                <span className="material-symbols-outlined text-[20px]">share</span>
-              </button>
+              <p className="text-[15px] leading-relaxed text-slate-600 font-medium bg-slate-50 p-6 rounded-[32px] rounded-tl-none">
+                "{m.content}"
+              </p>
             </div>
-            <p className="text-[15px] text-slate-600 leading-relaxed line-clamp-3">{post.content}</p>
-            <div className="flex items-center gap-4 pt-2 border-t border-slate-100/50">
-              <button className="flex items-center gap-2 text-slate-300 hover:text-brand-purple transition-colors">
-                <span className="material-symbols-outlined text-[18px]">favorite</span>
-                <span className="font-black text-[12px]">{post.likes}</span>
-              </button>
-            </div>
-          </BentoCard>
-        ))}
+          ))}
+        </div>
       </section>
-
-      {/* Floating Action Button */}
-      <div className="fixed bottom-28 right-6 z-40">
-        <button className="bg-brand-purple text-white rounded-full w-14 h-14 shadow-xl shadow-brand-purple/30 hover:scale-110 active:scale-95 transition-all flex items-center justify-center">
-          <span className="material-symbols-outlined text-[28px]">edit_square</span>
-        </button>
-      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import { ScanOverlay } from './ScanOverlay'
 
 const navItems = [
@@ -55,19 +56,26 @@ export function AppNavBar() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 onClick={() => setIsScanOpen(true)}
-                className="relative -top-6 cursor-pointer"
+                className="relative -top-8 cursor-pointer"
               >
                 <div 
-                  className="bg-brand-purple text-white rounded-full w-16 h-16 flex items-center justify-center shadow-[0_15px_30px_rgba(109,40,217,0.3)] border-[6px] border-white transition-all duration-300 active:scale-90"
+                  className="bg-white rounded-full w-20 h-20 flex items-center justify-center shadow-[0_15px_40px_rgba(109,40,217,0.2)] border-[4px] border-white overflow-hidden transition-all duration-300 active:scale-90"
                   style={{
                     transform: isSwiping && touchStart && currentY 
                       ? `translateY(${Math.max(-40, currentY - touchStart)}px)` 
                       : 'translateY(0)'
                   }}
                 >
-                  <span className="font-space-grotesk font-black text-[22px] tracking-tighter">PF</span>
+                  <div className="relative w-full h-full">
+                    <Image 
+                      src="/images/pf-character.png" 
+                      alt="PF Character" 
+                      fill 
+                      className="object-cover scale-125"
+                    />
+                  </div>
                 </div>
-                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] font-black text-brand-purple/40 uppercase tracking-[0.2em] text-center w-full">Scan</span>
+                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] font-black text-brand-purple uppercase tracking-[0.2em] text-center w-full">Scan</span>
               </div>
             )
           }
