@@ -72,32 +72,56 @@ export default function CommunityPage() {
 
   if (view === 'selection') {
     return (
-      <div className="fixed inset-0 z-[70] flex overflow-hidden">
+      <div className="fixed inset-0 z-[999] flex overflow-hidden animate-in fade-in duration-500">
         {/* Left: Meditation */}
         <button 
           onClick={() => { setActiveTab('meditation'); setView('feed'); }}
-          className="flex-1 bg-brand-purple relative group transition-all duration-700 hover:flex-[1.2] flex items-center justify-center overflow-hidden"
+          className="flex-1 bg-brand-purple relative group transition-all duration-700 hover:flex-[1.4] flex items-center justify-center overflow-hidden"
         >
           <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
-          <h2 className="text-6xl font-black font-plus-jakarta tracking-tighter text-white transform -rotate-90 md:rotate-0 transition-transform duration-700 group-hover:scale-110" 
-              style={{ WebkitTextStroke: '3px #fcd34d' }}>
+          <h2 className="text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110" 
+              style={{ 
+                textShadow: `
+                  -2px -2px 0 #fcd34d,  
+                   2px -2px 0 #fcd34d,
+                  -2px  2px 0 #fcd34d,
+                   2px  2px 0 #fcd34d,
+                   0px 0px 20px rgba(252,211,77,0.4)
+                `
+              }}>
             묵상
           </h2>
-          <span className="absolute bottom-12 text-[10px] text-white/40 font-black uppercase tracking-[0.5em] group-hover:opacity-100 opacity-0 transition-opacity">Meditation</span>
+          <span className="absolute bottom-20 text-[11px] text-white/60 font-black uppercase tracking-[0.6em] animate-pulse">Meditation</span>
         </button>
 
         {/* Right: Prayer */}
         <button 
           onClick={() => { setActiveTab('prayer'); setView('feed'); }}
-          className="flex-1 bg-brand-yellow relative group transition-all duration-700 hover:flex-[1.2] flex items-center justify-center overflow-hidden"
+          className="flex-1 bg-brand-yellow relative group transition-all duration-700 hover:flex-[1.4] flex items-center justify-center overflow-hidden"
         >
           <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
-          <h2 className="text-6xl font-black font-plus-jakarta tracking-tighter text-white transform rotate-90 md:rotate-0 transition-transform duration-700 group-hover:scale-110"
-              style={{ WebkitTextStroke: '3px #6d28d9' }}>
+          <h2 className="text-7xl font-black font-plus-jakarta tracking-tighter text-white transition-all duration-700 group-hover:scale-110"
+              style={{ 
+                textShadow: `
+                  -2px -2px 0 #6d28d9,  
+                   2px -2px 0 #6d28d9,
+                  -2px  2px 0 #6d28d9,
+                   2px  2px 0 #6d28d9,
+                   0px 0px 20px rgba(109,40,217,0.3)
+                `
+              }}>
             기도
           </h2>
-          <span className="absolute bottom-12 text-black/20 font-black uppercase tracking-[0.5em] group-hover:opacity-100 opacity-0 transition-opacity">Prayer</span>
+          <span className="absolute bottom-20 text-black/30 font-black uppercase tracking-[0.6em] animate-pulse">Prayer</span>
         </button>
+
+        {/* Overlay Branding */}
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none">
+          <div className="w-8 h-8 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center">
+            <span className="material-icons text-white text-sm">groups</span>
+          </div>
+          <p className="text-[10px] text-white font-black uppercase tracking-[0.4em] opacity-40">Choose Channel</p>
+        </div>
       </div>
     )
   }
@@ -186,13 +210,6 @@ export default function CommunityPage() {
                     <p className="text-[18px] leading-relaxed font-medium tracking-tight opacity-90">
                       {p.content}
                     </p>
-                  </div>
-                  <div className={`p-8 rounded-[40px] ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'} border space-y-4`}>
-                    <span className="material-icons text-zinc-300">format_quote</span>
-                    <p className={`text-[16px] italic font-medium leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-slate-600'}`}>
-                      {p.content.split('. ')[0]}.
-                    </p>
-                    <p className={`text-[12px] font-black uppercase tracking-widest ${accentColor}`}>{p.verse}</p>
                   </div>
                 </div>
               </div>
