@@ -129,7 +129,7 @@ export default function CommunityPage() {
         }
         if (next) {
           updatedReactions[next] = (updatedReactions[next] || 0) + 1
-          if (p.type === 'prayer') showNotify("한 명이 당신을 위해 함께 기도합니다.")
+          showNotify("한 명이 당신을 위해 함께 기도합니다.")
         }
         
         return { ...p, userReaction: next, reactions: updatedReactions }
@@ -274,35 +274,37 @@ export default function CommunityPage() {
                 <p className={`text-[10px] font-black uppercase tracking-widest ${accentColor}`}>{p.verse}</p>
               </div>
               <div className="px-6 py-4 flex items-center justify-between relative">
-                <div className="flex items-center gap-6">
-                  {totalReactions > 0 && (
-                    <div className="flex items-center mr-2">
-                      <div className={`w-6 h-6 rounded-full border-2 ${isDarkMode ? 'border-black' : 'border-white'} ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} flex items-center justify-center mr-2 shadow-sm`}><span className="material-icons text-[12px] text-blue-500">thumb_up</span></div>
-                      <span className="text-[12px] font-black opacity-30">{totalReactions}</span>
-                    </div>
-                  )}
+                <div className="flex items-center gap-8">
+                  <div className="relative">
+                    <button 
+                      onPointerDown={(e) => handlePointerDown(p.id, e)}
+                      onPointerUp={(e) => handlePointerUp(p.id, e)}
+                      onPointerCancel={handlePointerCancel}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className={`flex items-center gap-2.5 px-4 py-2 rounded-full transition-all active:scale-95 ${userActiveReaction ? (isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white') : (isDarkMode ? 'bg-zinc-900 text-zinc-500' : 'bg-slate-100 text-slate-400')}`}
+                    >
+                      <span className="material-icons text-[22px]">
+                        {userActiveReaction ? reactionTypes.find(r => r.label === userActiveReaction)?.icon : 'thumb_up_off_alt'}
+                      </span>
+                      {totalReactions > 0 && <span className="text-sm font-black tracking-tight">{totalReactions}</span>}
+                    </button>
+                    {isPickerOpen && (
+                      <div className={`absolute bottom-full left-0 mb-4 flex items-center gap-3 p-3 px-4 rounded-[40px] shadow-2xl border animate-in slide-in-from-bottom-6 zoom-in duration-300 z-50 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`}>
+                        {reactionTypes.map((rt) => (
+                          <button key={rt.label} onClick={() => handleReaction(p.id, rt.label)} className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-150 active:scale-90"><span className={`material-icons text-2xl ${rt.color}`}>{rt.icon}</span></button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
                   <button onClick={() => { setExpandedId(p.id); setTimeout(() => { document.getElementById(`comment-input-${p.id}`)?.focus() }, 300) }} className={`material-icons text-[24px] ${isExpanded ? accentColor : 'text-zinc-400'}`}>chat_bubble_outline</button>
-                  {p.type !== 'prayer' && <button onClick={() => sharePost(p)} className="material-icons text-[24px] text-zinc-400">send</button>}
-                </div>
-                <div className="relative">
-                  <button 
-                    onPointerDown={(e) => handlePointerDown(p.id, e)}
-                    onPointerUp={(e) => handlePointerUp(p.id, e)}
-                    onPointerCancel={handlePointerCancel}
-                    onContextMenu={(e) => e.preventDefault()}
-                    className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${userActiveReaction ? (isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white') + ' scale-105 shadow-xl' : (isDarkMode ? 'bg-zinc-900 text-zinc-500' : 'bg-slate-50 text-slate-400')}`}
-                  >
-                    {userActiveReaction ? userActiveReaction.toUpperCase() : '공감하기'}
-                  </button>
-                  {isPickerOpen && (
-                    <div className={`absolute bottom-full right-0 mb-6 flex items-center gap-3 p-3 px-4 rounded-[40px] shadow-2xl border animate-in slide-in-from-bottom-6 zoom-in duration-300 z-50 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`}>
-                      {reactionTypes.map((rt) => (
-                        <button key={rt.label} onClick={() => handleReaction(p.id, rt.label)} className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-150 active:scale-90"><span className={`material-icons text-2xl ${rt.color}`}>{rt.icon}</span></button>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
+                {p.type !== 'prayer' && (
+                  <button onClick={() => sharePost(p)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10 text-zinc-400 active:scale-90 transition-transform">
+                    <span className="material-icons text-xl">send</span>
+                  </button>
+                )}
               </div>
               <div className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                 <div className="px-6 py-8 space-y-10 border-t border-zinc-500/5 bg-zinc-500/5">
