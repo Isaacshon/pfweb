@@ -46,6 +46,44 @@ export default function AppPage() {
   const [bookSearch, setBookSearch] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
 
+  // --- Persistence Logic ---
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    const savedVersion = localStorage.getItem('pf_bible_version')
+    const savedBook = localStorage.getItem('pf_bible_book')
+    const savedChapter = localStorage.getItem('pf_bible_chapter')
+    const savedFontSize = localStorage.getItem('pf_bible_fontsize')
+    const savedLineHeight = localStorage.getItem('pf_bible_lineheight')
+    const savedVerseGap = localStorage.getItem('pf_bible_versegap')
+
+    if (savedVersion) {
+      const v = bibleVersions.find(v => v.code === savedVersion)
+      if (v) setVersion(v)
+    }
+    if (savedBook) {
+      const b = bibleBooks.find(b => b.id === parseInt(savedBook))
+      if (b) setBook(b)
+    }
+    if (savedChapter) setChapter(parseInt(savedChapter))
+    if (savedFontSize) setFontSize(parseInt(savedFontSize))
+    if (savedLineHeight) setLineHeight(parseFloat(savedLineHeight))
+    if (savedVerseGap) setVerseGap(parseInt(savedVerseGap))
+    
+    setIsLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isLoaded) return
+    localStorage.setItem('pf_bible_version', version.code)
+    localStorage.setItem('pf_bible_book', book.id.toString())
+    localStorage.setItem('pf_bible_chapter', chapter.toString())
+    localStorage.setItem('pf_bible_fontsize', fontSize.toString())
+    localStorage.setItem('pf_bible_lineheight', lineHeight.toString())
+    localStorage.setItem('pf_bible_versegap', verseGap.toString())
+  }, [version.code, book.id, chapter, fontSize, lineHeight, verseGap, isLoaded])
+  // -------------------------
+
   const isEn = version.lang === 'en'
 
   const cleanText = (text: string) => {
