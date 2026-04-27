@@ -227,7 +227,9 @@ export default function CommunityPage() {
                   </div>
 
                   <button onClick={(e) => { e.stopPropagation(); setExpandedId(p.id); }} className="material-icons text-[22px] text-zinc-400">chat_bubble_outline</button>
-                  <button onClick={(e) => { e.stopPropagation(); sharePost(p); }} className="material-icons text-[22px] text-zinc-400">send</button>
+                  {p.type !== 'prayer' && (
+                    <button onClick={(e) => { e.stopPropagation(); sharePost(p); }} className="material-icons text-[22px] text-zinc-400">send</button>
+                  )}
                 </div>
 
                 {/* FB Style Reaction Button */}
