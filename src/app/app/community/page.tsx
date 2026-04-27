@@ -313,17 +313,24 @@ export default function CommunityPage() {
     return (
       <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-700 bg-black font-pretendard">
         <div className="flex-1 flex overflow-hidden pb-24 relative"> 
-          {/* Sacred Cross Elements */}
+          {/* Sacred Cross Elements - Lengthened Horizontal Bar */}
           <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10 z-20" />
-          <div className="absolute left-[35%] right-[35%] top-[28%] h-px bg-white/40 z-20 shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
+          <div className="absolute left-[30%] right-[30%] top-[28%] h-px bg-white/40 z-20 shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
 
-          <button onClick={() => navigateToFeed('meditation')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(154, 120, 180, 0.85)' }}>
-            <div className="absolute top-20 left-10 w-16 h-16 border-2 border-white/20 rounded-full animate-pulse"></div>
-            <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white">MEDITATION</h2>
+          {/* Left: Meditation */}
+          <button onClick={() => navigateToFeed('meditation')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex flex-col items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(154, 120, 180, 0.85)' }}>
+            <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white mb-6">MEDITATION</h2>
+            <div className="w-16 h-16 border border-white/20 rounded-2xl flex items-center justify-center animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+              <span className="material-icons text-white/40 text-3xl">auto_stories</span>
+            </div>
           </button>
-          <button onClick={() => navigateToFeed('prayer')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(255, 251, 189, 0.85)' }}>
-            <div className="absolute top-32 right-12 w-12 h-12 border-2 border-white/30 rotate-45 animate-pulse"></div>
-            <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white">PRAYER</h2>
+
+          {/* Right: Prayer */}
+          <button onClick={() => navigateToFeed('prayer')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex flex-col items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(255, 251, 189, 0.85)' }}>
+            <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white mb-6">PRAYER</h2>
+            <div className="w-16 h-16 border border-white/20 rounded-full flex items-center justify-center rotate-12 animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+              <span className="material-icons text-white/40 text-3xl">volunteer_activism</span>
+            </div>
           </button>
         </div>
         {notification && <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-500"><div className="bg-white/10 backdrop-blur-xl border border-white/20 px-6 py-3 rounded-full text-white text-xs font-bold shadow-2xl">{notification}</div></div>}
