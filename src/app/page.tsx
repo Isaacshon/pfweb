@@ -207,7 +207,7 @@ export default function Home() {
             transition-all duration-[600ms] delay-[300ms]
             ${landed ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
           `}>
-            <Link href="/conference" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-brand-yellow text-brand-dark rounded-full font-black text-base md:text-lg uppercase shadow-[0_10px_30px_rgba(255,221,0,0.3)] hover:scale-105 transition-transform active:scale-95 text-center">
+            <Link href="/conference" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-brand-yellow text-brand-dark rounded-full font-black text-base md:text-lg uppercase shadow-[0_10px_30px_rgba(255,251,189,0.3)] hover:scale-105 transition-transform active:scale-95 text-center">
               {t('hero.getStarted')}
             </Link>
             <Link href="/about" className="w-full sm:w-auto px-10 md:px-16 py-4 md:py-6 bg-white/10 backdrop-blur-md text-white border border-white/30 rounded-full font-black text-base md:text-lg uppercase hover:bg-white/20 transition-all text-center">
