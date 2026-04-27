@@ -50,6 +50,7 @@ export default function CommunityPage() {
   const [userReactions, setUserReactions] = useState<Record<number, string | null>>({})
   const [notification, setNotification] = useState<string | null>(null)
   
+  const [expandedId, setExpandedId] = useState<number | null>(null)
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false)
   const [pickerPostId, setPickerPostId] = useState<number | null>(null)
   const [lastBackPress, setLastBackPress] = useState(0)
@@ -57,24 +58,15 @@ export default function CommunityPage() {
   const [isLoaded, setIsLoaded] = useState(false)
   const currentUserName = "Isaac Shon"
 
-  // --- "Database" Initialization (LocalStorage) ---
   useEffect(() => {
     const savedPosts = localStorage.getItem('pf_db_posts')
     const savedReactions = localStorage.getItem('pf_db_user_reactions')
-    
-    if (savedPosts) {
-      setPosts(JSON.parse(savedPosts))
-    } else {
-      setPosts(initialPosts)
-    }
-    
-    if (savedReactions) {
-      setUserReactions(JSON.parse(savedReactions))
-    }
+    if (savedPosts) setPosts(JSON.parse(savedPosts))
+    else setPosts(initialPosts)
+    if (savedReactions) setUserReactions(JSON.parse(savedReactions))
     setIsLoaded(true)
   }, [])
 
-  // Sync DB
   useEffect(() => {
     if (!isLoaded) return
     localStorage.setItem('pf_db_posts', JSON.stringify(posts))
@@ -86,7 +78,6 @@ export default function CommunityPage() {
     setTimeout(() => setNotification(null), 2500)
   }, [])
 
-  // --- Navigation & Back Button ---
   useEffect(() => {
     if (view === 'selection') window.history.replaceState({ pf_view: 'selection' }, '')
     const handlePopState = (e: PopStateEvent) => {
@@ -113,18 +104,14 @@ export default function CommunityPage() {
     window.history.pushState({ pf_view: 'feed' }, '')
   }
 
-  // --- Reaction Logic (Cancel, Switch, Count) ---
   const handleReaction = (postId: number, reactionLabel: string) => {
     setUserReactions(prev => {
       const current = prev[postId]
-      const next = current === reactionLabel ? null : reactionLabel // Toggle off if same, or switch
-      
+      const next = current === reactionLabel ? null : reactionLabel
       setPosts(list => list.map(p => {
         if (p.id === postId) {
           const updated = { ...p.reactions }
-          // Decrement old
           if (current) (updated as any)[current] = Math.max(0, (updated as any)[current] - 1)
-          // Increment new
           if (next) {
             (updated as any)[next] = ((updated as any)[next] || 0) + 1
             if (p.type === 'prayer') showNotify("한 명이 당신을 위해 함께 기도합니다.")
@@ -170,18 +157,34 @@ export default function CommunityPage() {
     showNotify("Post published!")
   }
 
-  // --- Long Press for Picker ---
   const longPressTimer = useRef<any>(null)
+  const isLongPressing = useRef(false)
+
   const startLongPress = (postId: number) => {
+    isLongPressing.current = false
     longPressTimer.current = setTimeout(() => {
+      isLongPressing.current = true
       setPickerPostId(postId)
       if (window.navigator.vibrate) window.navigator.vibrate(50)
-    }, 450)
+    }, 500)
   }
-  const endLongPress = (postId: number) => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current)
-      if (pickerPostId !== postId) handleReaction(postId, 'Like')
+
+  const endLongPress = (postId: number, e: any) => {
+    clearTimeout(longPressTimer.current)
+    if (!isLongPressing.current && pickerPostId !== postId) {
+      handleReaction(postId, 'Like')
+    }
+    // Prevent default to avoid context menu
+    if (isLongPressing.current) e.preventDefault()
+  }
+
+  const sharePost = (post: any) => {
+    const text = `[PassionFruits] ${post.title}\n${post.content}`
+    if (navigator.share) {
+      navigator.share({ title: post.title, text: text, url: window.location.href }).catch(() => {})
+    } else {
+      navigator.clipboard.writeText(text)
+      showNotify("Link copied!")
     }
   }
 
@@ -231,6 +234,7 @@ export default function CommunityPage() {
           const userActiveReaction = userReactions[p.id]
           const isPickerOpen = pickerPostId === p.id
           const totalReactions = Object.values(p.reactions).reduce((a: any, b: any) => (a as number) + (b as number), 0) as number
+          const isExpanded = expandedId === p.id
 
           return (
             <div key={p.id} className="flex flex-col border-b border-zinc-500/5">
@@ -239,7 +243,7 @@ export default function CommunityPage() {
                 <div><p className="font-bold text-sm">{p.isAnonymous ? 'Anonymous Member' : p.user}</p><p className="text-[10px] text-zinc-500 uppercase font-black">{p.date}</p></div>
               </div>
 
-              <div className="px-6 py-6 cursor-pointer">
+              <div onClick={() => setExpandedId(isExpanded ? null : p.id)} className="px-6 py-6 cursor-pointer select-none">
                 <h3 className="text-2xl font-black tracking-tighter leading-tight mb-2">{p.title}</h3>
                 <p className={`text-[10px] font-black uppercase tracking-widest ${accentColor}`}>{p.verse}</p>
               </div>
@@ -252,16 +256,17 @@ export default function CommunityPage() {
                       <span className="text-[12px] font-black opacity-30">{totalReactions}</span>
                     </div>
                   )}
-                  <button className="material-icons text-[22px] text-zinc-400">chat_bubble_outline</button>
-                  {p.type !== 'prayer' && <button className="material-icons text-[22px] text-zinc-400">send</button>}
+                  <button onClick={() => setExpandedId(isExpanded ? null : p.id)} className="material-icons text-[22px] text-zinc-400">chat_bubble_outline</button>
+                  {p.type !== 'prayer' && <button onClick={() => sharePost(p)} className="material-icons text-[22px] text-zinc-400">send</button>}
                 </div>
 
                 <div className="relative">
                   <button 
-                    onMouseDown={() => startLongPress(p.id)} onMouseUp={() => endLongPress(p.id)} onTouchStart={() => startLongPress(p.id)} onTouchEnd={() => endLongPress(p.id)}
+                    onMouseDown={() => startLongPress(p.id)} onMouseUp={(e) => endLongPress(p.id, e)} onTouchStart={() => startLongPress(p.id)} onTouchEnd={(e) => endLongPress(p.id, e)}
+                    onContextMenu={(e) => e.preventDefault()}
                     className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${userActiveReaction ? accentBg + ' text-white scale-105 shadow-lg' : (isDarkMode ? 'bg-zinc-900' : 'bg-slate-50')}`}
                   >
-                    {userActiveReaction ? reactionTypes.find(r => r.label === userActiveReaction)?.label : 'REACT'}
+                    {userActiveReaction ? userActiveReaction.toUpperCase() : 'REACT'}
                   </button>
                   {isPickerOpen && (
                     <div className={`absolute bottom-full right-0 mb-4 flex items-center gap-2 p-2 px-3 rounded-[32px] shadow-2xl border animate-in slide-in-from-bottom-4 duration-300 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`}>
@@ -273,17 +278,21 @@ export default function CommunityPage() {
                 </div>
               </div>
 
-              <div className="px-6 py-8 space-y-10 border-t border-zinc-500/5">
-                <p className="text-[17px] leading-relaxed font-medium tracking-tight opacity-90">{p.content}</p>
-                <div className="space-y-6 pt-10 border-t border-zinc-500/10">
-                  <p className="text-[11px] font-black uppercase tracking-widest opacity-30">Real Name Comments</p>
-                  <div className="flex flex-col gap-6">
-                    {p.comments.map((c: any) => (
-                      <div key={c.id} className="flex flex-col gap-1"><div className="flex items-center gap-2"><span className="text-xs font-black">{c.user}</span><span className="text-[9px] opacity-30">{c.date}</span></div><p className="text-sm opacity-80">{c.text}</p></div>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-3 pt-4">
-                    <input type="text" placeholder={`Comment as ${currentUserName}...`} onKeyDown={(e) => { if (e.key === 'Enter') { addComment(p.id, (e.target as any).value); (e.target as any).value = ''; } }} className={`flex-1 h-14 px-6 rounded-2xl text-sm font-medium outline-none ${isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 border'}`} />
+              {/* Collapsible Section */}
+              <div className={`overflow-hidden transition-all duration-700 ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+                <div className="px-6 py-8 space-y-10 border-t border-zinc-500/5 bg-zinc-500/5">
+                  <p className="text-[17px] leading-relaxed font-medium tracking-tight opacity-90">{p.content}</p>
+                  <div className="space-y-6 pt-10 border-t border-zinc-500/10">
+                    <p className="text-[11px] font-black uppercase tracking-widest opacity-30">Real Name Comments</p>
+                    <div className="flex flex-col gap-6">
+                      {p.comments.map((c: any) => (
+                        <div key={c.id} className="flex flex-col gap-1"><div className="flex items-center gap-2"><span className="text-xs font-black">{c.user}</span><span className="text-[9px] opacity-30">{c.date}</span></div><p className="text-sm opacity-80">{c.text}</p></div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-3 pt-4">
+                      <input id={`comment-input-${p.id}`} type="text" placeholder={`Comment as ${currentUserName}...`} onKeyDown={(e) => { if (e.key === 'Enter') { addComment(p.id, (e.target as any).value); (e.target as any).value = ''; } }} className={`flex-1 h-14 px-6 rounded-2xl text-sm font-medium outline-none ${isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 border'}`} />
+                      <button onClick={() => { const inp = document.getElementById(`comment-input-${p.id}`) as HTMLInputElement; addComment(p.id, inp.value); inp.value = ''; }} className={`w-14 h-14 rounded-2xl flex items-center justify-center ${accentBg} text-white transition-all active:scale-90`}><span className="material-icons text-xl">send</span></button>
+                    </div>
                   </div>
                 </div>
               </div>
