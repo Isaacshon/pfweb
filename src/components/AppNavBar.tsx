@@ -72,11 +72,10 @@ export function AppNavBar() {
                   }}
                 >
                   <img 
-                    src="/images/IMG_6847.PNG" 
+                    src="/images/PF app logo.png" 
                     alt="PF Logo" 
-                    className="w-full h-full object-contain scale-100 opacity-80"
+                    className="w-full h-full object-contain scale-100 opacity-90"
                   />
-                  {/* Subtle Indicator Arrow */}
                   <div className={`absolute -top-1 left-1/2 -translate-x-1/2 ${activeColor} animate-bounce`}>
                     <span className="material-icons text-[16px]">expand_less</span>
                   </div>

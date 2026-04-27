@@ -54,7 +54,7 @@ export function ScanOverlay({ isOpen, onClose }: ScanOverlayProps) {
         className="w-full h-full object-cover opacity-60 grayscale-[0.3]"
       />
 
-      {/* Close/Back Button - Explicitly hooked up to onClose */}
+      {/* Close/Back Button */}
       <button 
         onClick={(e) => {
           e.preventDefault();
@@ -87,7 +87,7 @@ export function ScanOverlay({ isOpen, onClose }: ScanOverlayProps) {
       {/* Brand Footer with New Logo */}
       <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-white/5 backdrop-blur-xl p-2 border border-white/10">
-          <img src="/images/IMG_6847.PNG" alt="PF Logo" className="w-full h-full object-contain" />
+          <img src="/images/PF app logo.png" alt="PF Logo" className="w-full h-full object-contain" />
         </div>
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'} animate-pulse`}></div>

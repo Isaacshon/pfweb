@@ -15,7 +15,7 @@ const recentMeditations = [
   { 
     id: 1, 
     user: "Test Account (for test.)", 
-    avatar: "/images/IMG_6847.PNG",
+    avatar: "/images/PF app logo.png",
     verse: "John 3:16 (for test.)", 
     content: "Today I felt the immense love of God through this verse. It's a reminder that we are never alone. (for test.)",
     date: "2h ago",
@@ -24,7 +24,7 @@ const recentMeditations = [
   { 
     id: 2, 
     user: "Test Account (for test.)", 
-    avatar: "/images/IMG_6847.PNG",
+    avatar: "/images/PF app logo.png",
     verse: "Matthew 5:14 (for test.)", 
     content: "Being the light of the world is a call to action. How can I shine today? (for test.)",
     date: "5h ago",
@@ -57,18 +57,17 @@ export default function CommunityPage() {
       <header className="px-8 pt-20 pb-12 flex items-end justify-between">
         <div className="space-y-1">
           <h1 className="text-5xl font-black font-plus-jakarta tracking-tighter">Posts</h1>
-          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em] ml-1">For test.</p>
+          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em] ml-1">PassionFruits</p>
         </div>
         <button className={`w-12 h-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white'} shadow-xl active:scale-90 transition-transform`}>
           <span className="material-icons">add</span>
         </button>
       </header>
 
-      {/* Distilled Post Feed */}
+      {/* Distilled Post Feed with New Avatars */}
       <section className="px-8 flex flex-col gap-16">
         {recentMeditations.map((m) => (
           <div key={m.id} className="flex flex-col gap-6 group">
-            {/* User Info */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10 rounded-2xl overflow-hidden border border-slate-100">
@@ -87,12 +86,10 @@ export default function CommunityPage() {
               </button>
             </div>
 
-            {/* Content Body */}
             <p className={`text-[18px] leading-snug font-medium tracking-tight ${isDarkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
               {m.content}
             </p>
 
-            {/* Reaction Bar (Single Line, Adjusted Size) */}
             <div className="flex items-center justify-between bg-slate-50/10 p-1 rounded-full border border-slate-50/5">
               <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
                 {reactionTypes.map((rt) => (

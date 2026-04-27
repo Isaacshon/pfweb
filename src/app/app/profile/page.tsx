@@ -15,12 +15,12 @@ export default function ProfilePage() {
 
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} pb-32 transition-colors duration-500`}>
-      {/* Profile Header */}
+      {/* Profile Header with Official Logo */}
       <section className="px-8 pt-20 pb-12 flex flex-col items-center text-center">
         <div className={`relative w-32 h-32 rounded-[56px] overflow-hidden border-4 ${isDarkMode ? 'border-zinc-900 shadow-brand-yellow/5' : 'border-slate-50 shadow-brand-purple/5'} shadow-2xl mb-8`}>
           <img 
-            src="/images/IMG_6847.PNG" 
-            alt="Test Account" 
+            src="/images/PF app logo.png" 
+            alt="PassionFruits Account" 
             className="w-full h-full object-contain scale-110"
           />
         </div>
@@ -31,7 +31,7 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Praise Team Mode Toggle (Requested) */}
+      {/* Praise Team Mode Toggle */}
       <section className="px-8 mb-12">
         <button 
           onClick={() => setIsPraiseTeamMode(!isPraiseTeamMode)}
@@ -46,7 +46,7 @@ export default function ProfilePage() {
         </button>
       </section>
 
-      {/* Activity Analytics (Weekly, Monthly, Yearly) */}
+      {/* Activity Analytics */}
       <section className="px-8 mb-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-black font-plus-jakarta tracking-tight">Activity Analysis</h2>

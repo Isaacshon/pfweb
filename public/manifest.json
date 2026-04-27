@@ -1,6 +1,6 @@
 {
   "name": "PassionFruits",
-  "short_name": "PF",
+  "short_name": "PassionFruits",
   "description": "Radiant, communal, and effortlessly organized church community app.",
   "start_url": "/app",
   "display": "standalone",
@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/images/IMG_6847.PNG",
+      "src": "/images/PF app logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/images/IMG_6847.PNG",
+      "src": "/images/PF app logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
