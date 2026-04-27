@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ScanOverlay } from './ScanOverlay'
@@ -23,8 +23,8 @@ export function AppNavBar() {
   const [hasVibrated, setHasVibrated] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
 
-  const TRIGGER_THRESHOLD = 80 // Intentional pull for Samsung Pay feel
-  const MAX_PULL = 180 // Deeper pull for more physical feel
+  const TRIGGER_THRESHOLD = 80 
+  const MAX_PULL = 180 
 
   useEffect(() => {
     const tutorialSeen = localStorage.getItem('pf_tutorial_scan_seen')
@@ -38,9 +38,17 @@ export function AppNavBar() {
     setShowTutorial(false)
   }
 
+  // Robust Haptic Helper
+  const triggerHaptic = useCallback((pattern: number | number[]) => {
+    if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(pattern)
+    }
+  }, [])
+
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientY)
     setHasVibrated(false)
+    triggerHaptic(10) // Light touch start feedback
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -49,14 +57,11 @@ export function AppNavBar() {
     const diff = touchStart - currentY
     
     if (diff > 0) {
-      // 1:1 feel like pulling a card
       const dampenedDiff = Math.min(diff, MAX_PULL)
       setPullDistance(dampenedDiff)
 
       if (dampenedDiff >= TRIGGER_THRESHOLD && !hasVibrated) {
-        if (window.navigator.vibrate) {
-          window.navigator.vibrate([30, 20, 30]) // Sharp physical click
-        }
+        triggerHaptic([40, 20, 40]) // Strong "Click" feedback
         setHasVibrated(true)
       }
     }
@@ -66,6 +71,7 @@ export function AppNavBar() {
     if (pullDistance >= TRIGGER_THRESHOLD) {
       setIsScanOpen(true)
       if (showTutorial) closeTutorial()
+      triggerHaptic(50) // Confirm click
     }
     setTouchStart(null)
     setPullDistance(0)
@@ -79,7 +85,7 @@ export function AppNavBar() {
   const bgColor = isDarkMode ? '#050505' : '#ffffff'
   const borderColor = isDarkMode ? '#18181b' : '#f8fafc'
 
-  // Samsung Pay like liquid path - very subtle and deep
+  // Refined Liquid Path
   const peakY = 15 - (pullDistance * 0.25)
   const dynamicCp1X = 140 + (pullDistance * 0.3)
   const dynamicCp2X = 260 - (pullDistance * 0.3)
@@ -95,76 +101,78 @@ export function AppNavBar() {
   return (
     <>
       <div 
-        className="fixed bottom-0 left-0 right-0 z-[60] max-w-md mx-auto md:max-w-none select-none"
+        className="fixed bottom-0 left-0 right-0 z-[60] flex justify-center pointer-events-none select-none"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Samsung Pay Card Peek (Shows during pull) */}
-        <div 
-          className={`absolute left-4 right-4 h-[200px] rounded-t-[32px] transition-all duration-75 pointer-events-none z-[55] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] flex flex-col items-center pt-6 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'} border-t border-x`}
-          style={{ 
-            bottom: `${-200 + pullDistance}px`,
-            opacity: pullDistance > 0 ? 1 : 0,
-            transform: `scale(${0.9 + (pullDistance / MAX_PULL) * 0.1})`,
-          }}
-        >
-          <div className={`w-12 h-1 rounded-full mb-6 ${isDarkMode ? 'bg-white/10' : 'bg-black/5'}`}></div>
-          <span className={`material-icons text-3xl mb-2 ${activeColor} opacity-40 animate-pulse`}>qr_code_scanner</span>
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-20">Scanner</p>
+        <div className="relative w-full max-w-md pointer-events-auto">
+          {/* Samsung Pay Card Peek */}
+          <div 
+            className={`absolute left-4 right-4 h-[240px] rounded-t-[40px] transition-all duration-75 pointer-events-none z-[55] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] flex flex-col items-center pt-8 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'} border-t border-x`}
+            style={{ 
+              bottom: `${-240 + pullDistance}px`,
+              opacity: pullDistance > 0 ? 1 : 0,
+              transform: `scale(${0.92 + (pullDistance / MAX_PULL) * 0.08})`,
+            }}
+          >
+            <div className={`w-12 h-1.5 rounded-full mb-8 opacity-10 ${isDarkMode ? 'bg-white' : 'bg-black'}`}></div>
+            <span className={`material-icons text-4xl mb-4 ${activeColor} opacity-50 animate-pulse`}>qr_code_scanner</span>
+            <p className="text-[11px] font-black uppercase tracking-[0.5em] opacity-30">Scan Community</p>
+          </div>
+
+          <svg 
+            viewBox="0 0 400 120" 
+            className="absolute bottom-0 w-full h-[140px] pointer-events-none drop-shadow-2xl transition-colors duration-500 z-[60]"
+            preserveAspectRatio="none"
+          >
+            <path 
+              d={svgPath} 
+              fill={bgColor} 
+              stroke={borderColor}
+              strokeWidth="0.5"
+              className="transition-all duration-75 ease-out"
+            />
+          </svg>
+
+          <nav className="relative flex justify-around items-center h-20 px-4 pb-4 z-[70]">
+            {navItems.map((item) => {
+              const isActive = pathname === item.path
+              return (
+                <Link
+                  key={item.label}
+                  href={item.path}
+                  className={`flex flex-col items-center gap-1 transition-all active:scale-90 duration-200 min-w-[60px] relative ${
+                    isActive ? activeColor : 'text-zinc-500 opacity-60'
+                  }`}
+                  style={{ 
+                    transform: `translateY(${isActive ? -pullDistance * 0.05 : 0}px)`,
+                  }}
+                >
+                  <span className="material-icons text-[24px]">
+                    {item.icon}
+                  </span>
+                  <span className="font-plus-jakarta font-black text-[8px] uppercase tracking-widest leading-none">{item.label}</span>
+                  {isActive && (
+                    <span className={`absolute -bottom-1 w-1 h-1 rounded-full ${activeBg}`}></span>
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+
+          {/* Liquid Indicator Dot - Perfect Centering with Fixed Width */}
+          <div 
+            className={`absolute left-1/2 -translate-x-1/2 rounded-full transition-all duration-100 ${activeBg} shadow-xl z-[80] pointer-events-none`}
+            style={{ 
+              bottom: `${52 + pullDistance * 0.8}px`,
+              height: '6px',
+              width: `${16 + pullDistance * 0.2}px`,
+              opacity: mounted ? Math.max(0.6, pullDistance / TRIGGER_THRESHOLD) : 0,
+              boxShadow: `0 0 ${25 + pullDistance * 0.5}px ${isDarkMode ? 'rgba(252,211,77,0.6)' : 'rgba(109,40,217,0.6)'}`
+            }}
+          ></div>
         </div>
-
-        <svg 
-          viewBox="0 0 400 120" 
-          className="absolute bottom-0 w-full h-[140px] pointer-events-none drop-shadow-2xl transition-colors duration-500 z-[60]"
-          preserveAspectRatio="none"
-        >
-          <path 
-            d={svgPath} 
-            fill={bgColor} 
-            stroke={borderColor}
-            strokeWidth="0.5"
-            className="transition-all duration-75 ease-out"
-          />
-        </svg>
-
-        <nav className="relative flex justify-around items-center h-20 px-4 pb-4 pointer-events-auto z-[70]">
-          {navItems.map((item) => {
-            const isActive = pathname === item.path
-            return (
-              <Link
-                key={item.label}
-                href={item.path}
-                className={`flex flex-col items-center gap-1 transition-all active:scale-90 duration-200 min-w-[60px] relative ${
-                  isActive ? activeColor : 'text-zinc-500 opacity-60'
-                }`}
-                style={{ 
-                  transform: `translateY(${isActive ? -pullDistance * 0.05 : 0}px)`,
-                }}
-              >
-                <span className="material-icons text-[24px]">
-                  {item.icon}
-                </span>
-                <span className="font-plus-jakarta font-black text-[8px] uppercase tracking-widest leading-none">{item.label}</span>
-                {isActive && (
-                  <span className={`absolute -bottom-1 w-1 h-1 rounded-full ${activeBg}`}></span>
-                )}
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Liquid Indicator Dot - Now purely a visual handle for swiping */}
-        <div 
-          className={`absolute left-1/2 -translate-x-1/2 w-4 h-1.5 rounded-full transition-all duration-300 ${activeBg} shadow-lg z-[80]`}
-          style={{ 
-            bottom: `${52 + pullDistance * 0.8}px`,
-            opacity: mounted ? Math.max(0.6, pullDistance / TRIGGER_THRESHOLD) : 0,
-            transform: `translateX(-50%) scale(${1 + pullDistance * 0.02})`,
-            width: `${16 + pullDistance * 0.1}px`,
-            boxShadow: `0 0 ${25 + pullDistance * 0.5}px ${isDarkMode ? 'rgba(252,211,77,0.6)' : 'rgba(109,40,217,0.6)'}`
-          }}
-        ></div>
       </div>
 
       {showTutorial && (
