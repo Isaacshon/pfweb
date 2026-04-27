@@ -107,8 +107,9 @@ export default function AppPage() {
       const res = await fetch(`https://bolls.life/get-books/${vCode}/`)
       const data = await res.json()
       const currentBook = data.find((b: any) => b.bookid === bId)
-      if (currentBook) setMaxChapters(currentBook.chapters)
+      if (currentBook) return currentBook.chapters
     } catch (err) { console.error(err) }
+    return 0
   }, [])
 
   const performGlobalSearch = useCallback(async (query: string) => {
@@ -120,18 +121,68 @@ export default function AppPage() {
     } catch (err) { console.error(err) }
   }, [version.code])
 
-  useEffect(() => { fetchBookInfo(version.code, book.id) }, [version.code, book.id, fetchBookInfo])
+  // Cross-Book Navigation Logic
+  const goToNextChapter = useCallback(async () => {
+    if (chapter < maxChapters) {
+      setChapter(c => c + 1)
+    } else {
+      const currentIdx = bibleBooks.findIndex(b => b.id === book.id)
+      if (currentIdx < bibleBooks.length - 1) {
+        setBook(bibleBooks[currentIdx + 1])
+        setChapter(1)
+      }
+    }
+  }, [chapter, maxChapters, book.id])
+
+  const goToPrevChapter = useCallback(async () => {
+    if (chapter > 1) {
+      setChapter(c => c - 1)
+    } else {
+      const currentIdx = bibleBooks.findIndex(b => b.id === book.id)
+      if (currentIdx > 0) {
+        const prevBook = bibleBooks[currentIdx - 1]
+        const prevMax = await fetchBookInfo(version.code, prevBook.id)
+        setBook(prevBook)
+        setChapter(prevMax || 1)
+      }
+    }
+  }, [chapter, book.id, version.code, fetchBookInfo])
+
+  useEffect(() => { 
+    async function initBook() {
+      const m = await fetchBookInfo(version.code, book.id)
+      setMaxChapters(m)
+    }
+    initBook()
+  }, [version.code, book.id, fetchBookInfo])
+
   useEffect(() => { 
     fetchChapter(version.code, book.id, chapter)
     const content = document.getElementById('bible-content')
     if (content) content.scrollTo({ top: 0, behavior: 'smooth' })
   }, [version.code, book.id, chapter, fetchChapter])
 
+  // --- Swipe Gesture Logic ---
+  const [touchStartX, setTouchStartX] = useState<number | null>(null)
+  
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStartX(e.targetTouches[0].clientX)
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return
+    const touchEndX = e.changedTouches[0].clientX
+    const diff = touchStartX - touchEndX
+    
+    if (Math.abs(diff) > 100) { // Threshold for swipe
+      if (diff > 0) goToNextChapter()
+      else goToPrevChapter()
+    }
+    setTouchStartX(null)
+  }
+  // ---------------------------
+
   const filteredBooks = useMemo(() => {
     return bibleBooks.filter(b => b.name.includes(bookSearch) || b.eng.toLowerCase().includes(bookSearch.toLowerCase()))
   }, [bookSearch])
 
-  // Dynamic Theme Logic
   const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
   const accentBg = isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'
   const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-white'
@@ -140,7 +191,6 @@ export default function AppPage() {
   return (
     <div className={`h-full flex flex-col transition-colors duration-500 ${bgColor} ${textColor}`}>
       
-      {/* Header with Dynamic Book Naming */}
       <header className={`shrink-0 h-20 px-6 flex items-center justify-between z-40 border-b ${isDarkMode ? 'bg-[#050505]/80 border-zinc-900' : 'bg-white/80 border-slate-50'} backdrop-blur-sm`}>
         <button onClick={() => setOpenUI(openUI === 'settings' ? null : 'settings')} className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'settings' ? accentColor : 'text-slate-300'}`}>
           <span className="material-icons">tune</span>
@@ -160,8 +210,12 @@ export default function AppPage() {
         </button>
       </header>
 
-      {/* Bible Text Container */}
-      <div id="bible-content" className="flex-1 overflow-y-auto px-10 pt-10 pb-32 no-scrollbar">
+      <div 
+        id="bible-content" 
+        className="flex-1 overflow-y-auto px-10 pt-10 pb-32 no-scrollbar outline-none"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {isLoading ? (
           <div className="flex items-center justify-center py-40">
             <div className={`w-2 h-2 rounded-full ${accentBg} animate-ping`}></div>
@@ -182,14 +236,13 @@ export default function AppPage() {
         )}
         
         {!isLoading && verses.length > 0 && (
-          <div className="flex justify-between items-center mt-20">
-            <button onClick={() => setChapter(c => Math.max(1, c - 1))} className={`text-slate-200 hover:${accentColor} transition-all`} disabled={chapter === 1}><span className="material-icons text-4xl">chevron_left</span></button>
-            <button onClick={() => setChapter(c => Math.min(maxChapters, c + 1))} className={`text-slate-200 hover:${accentColor} transition-all`} disabled={chapter === maxChapters}><span className="material-icons text-4xl">chevron_right</span></button>
+          <div className="flex justify-between items-center mt-20 opacity-20 hover:opacity-100 transition-opacity">
+            <button onClick={goToPrevChapter} className={`text-slate-400 hover:${accentColor} transition-all`}><span className="material-icons text-4xl">chevron_left</span></button>
+            <button onClick={goToNextChapter} className={`text-slate-400 hover:${accentColor} transition-all`}><span className="material-icons text-4xl">chevron_right</span></button>
           </div>
         )}
       </div>
 
-      {/* Settings Modal */}
       {openUI === 'settings' && (
         <div className="fixed inset-0 z-50 bg-black/5" onClick={() => setOpenUI(null)}>
           <div className={`absolute bottom-28 left-6 right-6 p-8 rounded-[40px] shadow-2xl border transition-all animate-in slide-in-from-bottom-4 duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`} onClick={e => e.stopPropagation()}>
@@ -203,7 +256,6 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Global Search Overlay */}
       {openUI === 'search' && (
         <div className={`fixed inset-0 z-50 flex flex-col transition-all ${bgColor} ${textColor}`}>
           <div className="px-8 pt-16 pb-8 flex flex-col gap-8">
@@ -225,7 +277,6 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* REFERENCE PICKER UI (Linguistic Sync) */}
       {openUI === 'picker' && (
         <div className={`fixed inset-0 z-[100] transition-all duration-300 flex flex-col animate-in fade-in ${bgColor} ${textColor}`}>
           <div className="px-6 pt-16 pb-6 flex flex-col gap-6">
