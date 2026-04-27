@@ -71,16 +71,10 @@ export function AppNavBar() {
                       : 'translateY(0)'
                   }}
                 >
-                  {/* Using direct img tag for better reliability in PWA environments */}
                   <img 
-                    src="/images/pf-character.png" 
-                    alt="PF Character" 
+                    src="/images/IMG_6847.PNG" 
+                    alt="PF Logo" 
                     className="w-full h-full object-contain scale-110"
-                    onError={(e) => {
-                      // Fallback if image fails to load
-                      const target = e.target as HTMLImageElement;
-                      target.src = "https://placehold.co/200x200?text=PF";
-                    }}
                   />
                 </div>
                 <span className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.2em] text-center w-full ${activeColor}`}>Scan</span>

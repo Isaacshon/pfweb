@@ -11,7 +11,7 @@ const services = [
   {
     id: 1,
     category: 'Sunday Worship',
-    title: '1st Service (Korean)',
+    title: '1st Service (for test.)',
     time: '09:00 AM',
     location: 'Main Sanctuary',
     image: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800'
@@ -19,7 +19,7 @@ const services = [
   {
     id: 2,
     category: 'Sunday Worship',
-    title: '2nd Service (Bilingual)',
+    title: '2nd Service (for test.)',
     time: '11:00 AM',
     location: 'Main Sanctuary',
     image: 'https://images.unsplash.com/photo-1544427928-c49cdfebf139?auto=format&fit=crop&q=80&w=800'
@@ -27,7 +27,7 @@ const services = [
   {
     id: 3,
     category: 'Wednesday Service',
-    title: 'Midweek Revival',
+    title: 'Midweek Revival (for test.)',
     time: '07:30 PM',
     location: 'Fellowship Hall',
     image: 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&q=80&w=800'
@@ -40,12 +40,13 @@ export default function ServicePage() {
 
   return (
     <div className="pt-20 px-6 flex flex-col gap-8 pb-32">
-      <AppTopBar title="Service" />
+      {/* Removed Avatar and Notification Icons as requested */}
+      <AppTopBar title="Service" showAvatar={false} showNotifications={false} />
 
       {/* Hero Intro */}
       <section className="flex flex-col gap-2">
         <h1 className="font-plus-jakarta font-black text-4xl text-brand-dark tracking-tighter">Worship</h1>
-        <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Connect with God today</p>
+        <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Connect with God (for test.)</p>
       </section>
 
       {/* Horizontal Category Tabs */}
@@ -86,12 +87,12 @@ export default function ServicePage() {
                     {service.title}
                   </h3>
                   <div className="flex items-center gap-2 text-white/70 text-sm">
-                    <span className="material-symbols-outlined text-sm">location_on</span>
-                    <span>{service.location}</span>
+                    <span className="material-icons text-sm">location_on</span>
+                    <span>{service.location} (for test.)</span>
                   </div>
                   
                   <button className="mt-4 w-full bg-white text-brand-dark py-3 rounded-full font-black text-[12px] uppercase tracking-widest active:scale-95 transition-transform">
-                    Join Online
+                    Join (for test.)
                   </button>
                 </div>
               </BentoCard>
@@ -102,14 +103,14 @@ export default function ServicePage() {
 
       {/* Quick Links Section */}
       <section className="flex flex-col gap-4">
-        <h2 className="font-bold text-[18px] text-brand-dark">More Ways to Worship</h2>
+        <h2 className="font-bold text-[18px] text-brand-dark">More Ways (for test.)</h2>
         <div className="grid grid-cols-2 gap-4">
           <BentoCard className="flex flex-col items-center justify-center gap-3 bg-[#dee9fc]">
-            <span className="material-symbols-outlined text-brand-purple text-3xl">play_circle</span>
+            <span className="material-icons text-brand-purple text-3xl">play_circle</span>
             <span className="font-black text-[10px] uppercase tracking-widest text-brand-purple">Sermons</span>
           </BentoCard>
           <BentoCard className="flex flex-col items-center justify-center gap-3 bg-[#ebddff]">
-            <span className="material-symbols-outlined text-brand-purple text-3xl">favorite</span>
+            <span className="material-icons text-brand-purple text-3xl">favorite</span>
             <span className="font-black text-[10px] uppercase tracking-widest text-brand-purple">Giving</span>
           </BentoCard>
         </div>

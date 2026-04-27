@@ -54,25 +54,25 @@ export function ScanOverlay({ isOpen, onClose }: ScanOverlayProps) {
         className="w-full h-full object-cover opacity-60 grayscale-[0.3]"
       />
 
-      {/* Close Button */}
+      {/* Close/Back Button - Explicitly hooked up to onClose */}
       <button 
-        onClick={onClose}
-        className="absolute top-16 right-8 w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
+        className="absolute top-16 right-8 w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform cursor-pointer"
       >
         <span className="material-icons">close</span>
       </button>
 
       {/* QR Scanning UI */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        {/* The Scanning Box (QR Focus) */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <div className="relative w-64 h-64">
-          {/* Corner Guides */}
           <div className={`absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 ${accentColor} rounded-tl-3xl ${glowColor}`}></div>
           <div className={`absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 ${accentColor} rounded-tr-3xl ${glowColor}`}></div>
           <div className={`absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 ${accentColor} rounded-bl-3xl ${glowColor}`}></div>
           <div className={`absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 ${accentColor} rounded-br-3xl ${glowColor}`}></div>
-          
-          {/* Scanning Line Animation */}
           <div className={`absolute top-0 left-0 right-0 h-1 ${isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'} animate-scan-move opacity-50`}></div>
         </div>
 
@@ -84,13 +84,13 @@ export function ScanOverlay({ isOpen, onClose }: ScanOverlayProps) {
         </div>
       </div>
 
-      {/* Brand Footer with Character Logo */}
+      {/* Brand Footer with New Logo */}
       <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-white/5 backdrop-blur-xl p-2 border border-white/10">
-          <img src="/images/pf-character.png" alt="PF Character" className="w-full h-full object-contain" />
+          <img src="/images/IMG_6847.PNG" alt="PF Logo" className="w-full h-full object-contain" />
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-brand-yellow animate-pulse"></div>
+          <div className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'} animate-pulse`}></div>
           <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em]">Scanner Ready</span>
         </div>
       </div>
