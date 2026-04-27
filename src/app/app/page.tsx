@@ -37,7 +37,7 @@ export default function AppPage() {
   // Typography Settings
   const [fontSize, setFontSize] = useState(20)
   const [lineHeight, setLineHeight] = useState(1.85)
-  const [verseGap, setVerseGap] = useState(40) // New: Vertical gap between verses
+  const [verseGap, setVerseGap] = useState(40)
 
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [openUI, setOpenUI] = useState<string | null>(null)
@@ -134,7 +134,8 @@ export default function AppPage() {
           <div className="flex flex-col" style={{ gap: `${verseGap}px` }}>
             {verses.map((v: any) => (
               <div key={v.verse} className="flex flex-col gap-2 group">
-                <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'}`}>
+                {/* Verse Number in Brand Purple */}
+                <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-brand-purple/60' : 'text-brand-purple/30'}`}>
                   {v.verse}
                 </span>
                 <p 
@@ -160,7 +161,7 @@ export default function AppPage() {
         )}
       </div>
 
-      {/* Settings Modal (Added Verse Spacing Control) */}
+      {/* Overlays (Settings, Search, Picker) - Unchanged but ensured Material Icons */}
       {openUI === 'settings' && (
         <div className="fixed inset-0 z-50 bg-black/5" onClick={() => setOpenUI(null)}>
           <div 
@@ -190,7 +191,6 @@ export default function AppPage() {
                   <button onClick={() => setLineHeight(Math.min(2.5, lineHeight + 0.1))} className="text-brand-purple font-black">+</button>
                 </div>
               </div>
-              {/* New: Verse Spacing Control */}
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Verse Spacing</span>
                 <div className="flex items-center gap-6">
@@ -214,7 +214,6 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Other Overlays (Search, Picker) - Same as before */}
       {openUI === 'search' && (
         <div className={`fixed inset-0 z-50 flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
           <div className="px-8 pt-16 pb-8 flex flex-col gap-8">
