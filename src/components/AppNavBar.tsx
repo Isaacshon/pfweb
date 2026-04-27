@@ -23,8 +23,8 @@ export function AppNavBar() {
   const [hasVibrated, setHasVibrated] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
 
-  const TRIGGER_THRESHOLD = 60 // Lowered for better responsiveness
-  const MAX_PULL = 120
+  const TRIGGER_THRESHOLD = 80 // Intentional pull for Samsung Pay feel
+  const MAX_PULL = 180 // Deeper pull for more physical feel
 
   useEffect(() => {
     const tutorialSeen = localStorage.getItem('pf_tutorial_scan_seen')
@@ -49,12 +49,13 @@ export function AppNavBar() {
     const diff = touchStart - currentY
     
     if (diff > 0) {
-      const dampenedDiff = Math.min(diff * 0.8, MAX_PULL)
+      // 1:1 feel like pulling a card
+      const dampenedDiff = Math.min(diff, MAX_PULL)
       setPullDistance(dampenedDiff)
 
       if (dampenedDiff >= TRIGGER_THRESHOLD && !hasVibrated) {
         if (window.navigator.vibrate) {
-          window.navigator.vibrate([40, 30, 40])
+          window.navigator.vibrate([30, 20, 30]) // Sharp physical click
         }
         setHasVibrated(true)
       }
@@ -71,36 +72,51 @@ export function AppNavBar() {
     setHasVibrated(false)
   }
 
-  if (!mounted) return null // Prevent hydration flash
+  if (!mounted) return null
 
   const activeColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
   const activeBg = isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'
   const bgColor = isDarkMode ? '#050505' : '#ffffff'
   const borderColor = isDarkMode ? '#18181b' : '#f8fafc'
 
-  const peakY = 15 - (pullDistance * 0.8)
-  const dynamicCp1X = 130 + (pullDistance * 0.4)
-  const dynamicCp2X = 270 - (pullDistance * 0.4)
+  // Samsung Pay like liquid path - very subtle and deep
+  const peakY = 15 - (pullDistance * 0.25)
+  const dynamicCp1X = 140 + (pullDistance * 0.3)
+  const dynamicCp2X = 260 - (pullDistance * 0.3)
   
   const svgPath = `
     M 0 15 
-    L ${dynamicCp1X - 70} 15
+    L ${dynamicCp1X - 60} 15
     C ${dynamicCp1X - 20} 15, ${dynamicCp1X} ${peakY}, 200 ${peakY}
-    C ${dynamicCp2X} ${peakY}, ${dynamicCp2X + 20} 15, ${dynamicCp2X + 70} 15
+    C ${dynamicCp2X} ${peakY}, ${dynamicCp2X + 20} 15, ${dynamicCp2X + 60} 15
     L 400 15 L 400 120 L 0 120 Z
   `
 
   return (
     <>
       <div 
-        className="fixed bottom-0 left-0 right-0 z-[60] max-w-md mx-auto md:max-w-none"
+        className="fixed bottom-0 left-0 right-0 z-[60] max-w-md mx-auto md:max-w-none select-none"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
+        {/* Samsung Pay Card Peek (Shows during pull) */}
+        <div 
+          className={`absolute left-4 right-4 h-[200px] rounded-t-[32px] transition-all duration-75 pointer-events-none z-[55] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] flex flex-col items-center pt-6 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'} border-t border-x`}
+          style={{ 
+            bottom: `${-200 + pullDistance}px`,
+            opacity: pullDistance > 0 ? 1 : 0,
+            transform: `scale(${0.9 + (pullDistance / MAX_PULL) * 0.1})`,
+          }}
+        >
+          <div className={`w-12 h-1 rounded-full mb-6 ${isDarkMode ? 'bg-white/10' : 'bg-black/5'}`}></div>
+          <span className={`material-icons text-3xl mb-2 ${activeColor} opacity-40 animate-pulse`}>qr_code_scanner</span>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-20">Scanner</p>
+        </div>
+
         <svg 
           viewBox="0 0 400 120" 
-          className="absolute bottom-0 w-full h-[140px] pointer-events-none drop-shadow-2xl transition-colors duration-500"
+          className="absolute bottom-0 w-full h-[140px] pointer-events-none drop-shadow-2xl transition-colors duration-500 z-[60]"
           preserveAspectRatio="none"
         >
           <path 
@@ -112,7 +128,7 @@ export function AppNavBar() {
           />
         </svg>
 
-        <nav className="relative flex justify-around items-center h-20 px-4 pb-4 pointer-events-auto">
+        <nav className="relative flex justify-around items-center h-20 px-4 pb-4 pointer-events-auto z-[70]">
           {navItems.map((item) => {
             const isActive = pathname === item.path
             return (
@@ -138,19 +154,18 @@ export function AppNavBar() {
           })}
         </nav>
 
-        {/* Liquid Indicator Dot - Now Clickable as a fallback! */}
+        {/* Liquid Indicator Dot - Samsung Pay Handle */}
         <button 
           onPointerDown={(e) => { e.preventDefault(); setIsScanOpen(true); }}
           onClick={() => setIsScanOpen(true)}
-          className={`absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full transition-all duration-300 ${activeBg} shadow-lg z-[80] cursor-pointer active:scale-150`}
+          className={`absolute left-1/2 -translate-x-1/2 w-4 h-1.5 rounded-full transition-all duration-300 ${activeBg} shadow-lg z-[80] cursor-pointer active:scale-x-150`}
           style={{ 
-            bottom: `${48 + pullDistance * 0.7}px`,
+            bottom: `${52 + pullDistance * 0.8}px`,
             opacity: mounted ? Math.max(0.6, pullDistance / TRIGGER_THRESHOLD) : 0,
-            transform: `translateX(-50%) scale(${1 + pullDistance * 0.03})`,
-            boxShadow: `0 0 ${25 + pullDistance * 0.5}px ${isDarkMode ? 'rgba(252,211,77,0.6)' : 'rgba(109,40,217,0.6)'}`
+            transform: `translateX(-50%) scale(${1 + pullDistance * 0.02})`,
+            width: `${16 + pullDistance * 0.1}px`
           }}
         ></button>
-
       </div>
 
       {showTutorial && (
@@ -165,9 +180,9 @@ export function AppNavBar() {
                 <div className={`absolute top-0 w-1 h-12 rounded-full ${activeBg} animate-pulse`}></div>
               </div>
               <div className="space-y-2">
-                <h2 className="text-2xl font-black font-plus-jakarta tracking-tight">Swipe Up to Scan</h2>
+                <h2 className="text-2xl font-black font-plus-jakarta tracking-tight">Pull Up like a Card</h2>
                 <p className="text-sm text-zinc-500 leading-relaxed font-medium">
-                  하단 메뉴바를 위로 밀어 올리거나<br/>중앙의 버튼을 누르면 스캔이 시작됩니다.
+                  삼성페이처럼 하단 바를 위로 밀어 올리면<br/>스캔 카드가 나타납니다.
                 </p>
               </div>
               <button 
