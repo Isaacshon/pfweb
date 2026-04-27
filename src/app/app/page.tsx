@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext'
 
 const bibleVersions = [
   { name: '개역한글', code: 'KRV', lang: 'ko' },
-  { name: '개역개정', code: 'NKRV', lang: 'ko' },
+  { name: '새번역', code: 'RNKSV', lang: 'ko' },
   { name: 'ESV', code: 'ESV', lang: 'en' },
   { name: 'NIV', code: 'NIV', lang: 'en' },
   { name: 'KJV', code: 'KJV', lang: 'en' },
