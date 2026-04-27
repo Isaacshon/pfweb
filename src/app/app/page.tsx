@@ -290,6 +290,17 @@ export default function AppPage() {
     clearTimeout(longPressTimer.current)
   }
 
+  // Remove highlight logic
+  const removeHighlight = (verseNum: number) => {
+    const key = `${book.id}_${chapter}_${verseNum}`
+    setHighlights(prev => {
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
+    setActiveMenuVerse(null)
+  }
+
   const toggleHighlight = (num: number, color: string) => {
     const key = `${book.id}_${chapter}_${num}`
     setHighlights(prev => ({
@@ -390,60 +401,98 @@ export default function AppPage() {
 
                   {/* Context Menu (Floating Menu) - Exact Match to Reference */}
                   {activeMenuVerse === v.verse && (
-                    <div className={`absolute ${v.verse <= 2 ? 'top-full mt-4' : '-top-20'} left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_20px_60px_rgba(0,0,0,0.25)] z-[300] animate-in zoom-in-95 duration-200 border border-slate-100/50 overflow-visible`}>
-                      <div className="flex items-center gap-3 px-4 py-3 min-w-max">
-                        {/* Close Button - Far Left */}
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setActiveMenuVerse(null); }}
-                          className="w-9 h-9 rounded-full bg-brand-purple flex items-center justify-center shrink-0 active:scale-90 transition-transform shadow-md"
-                        >
-                          <span className="material-icons text-white text-[20px]">close</span>
-                        </button>
+                    <div className={`absolute ${v.verse <= 2 ? 'top-full mt-4' : '-top-24'} left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_20px_60px_rgba(0,0,0,0.25)] z-[300] animate-in zoom-in-95 duration-200 border border-slate-100/50 overflow-visible`}>
+                      {highlightColor ? (
+                        /* Case 1: Already Highlighted (Edit Menu) */
+                        <div className="flex items-center gap-8 px-8 py-3.5 min-w-max">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); removeHighlight(v.verse); }}
+                            className="text-slate-800 font-black text-[15px] active:scale-90 transition-transform"
+                          >
+                            삭제
+                          </button>
+                          
+                          <div className="relative flex items-center justify-center">
+                            <div 
+                              className="w-10 h-10 rounded-full border-[3px] border-white shadow-lg shrink-0"
+                              style={{ backgroundColor: highlightColor }}
+                            ></div>
+                            <div 
+                              className="absolute w-[54px] h-[54px] rounded-full border-2 opacity-30"
+                              style={{ borderColor: highlightColor }}
+                            ></div>
+                          </div>
 
-                        {/* Direct Color Choices */}
-                        <div className="flex gap-2.5">
                           <button 
-                            onClick={(e) => { e.stopPropagation(); setSelectedColor('#fffbbd'); toggleHighlight(v.verse, '#fffbbd'); }} 
-                            className={`w-9 h-9 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#fffbbd' ? 'ring-2 ring-brand-yellow/50 ring-offset-2' : ''}`}
-                          ></button>
+                            onClick={(e) => { e.stopPropagation(); openNoteModal(v.verse); }}
+                            className="text-slate-800 font-black text-[15px] active:scale-90 transition-transform"
+                          >
+                            메모
+                          </button>
+                          
                           <button 
-                            onClick={(e) => { e.stopPropagation(); setSelectedColor('#9a78b4'); toggleHighlight(v.verse, '#9a78b4'); }} 
-                            className={`w-9 h-9 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#9a78b4' ? 'ring-2 ring-brand-purple/50 ring-offset-2' : ''}`}
-                          ></button>
+                            onClick={(e) => { e.stopPropagation(); setActiveMenuVerse(null); }}
+                            className="text-slate-800 font-black text-[15px] active:scale-90 transition-transform"
+                          >
+                            공유
+                          </button>
                         </div>
+                      ) : (
+                        /* Case 2: New Highlight (Original Menu) */
+                        <div className="flex items-center gap-3 px-4 py-3 min-w-max">
+                          {/* Close Button - Far Left */}
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setActiveMenuVerse(null); }}
+                            className="w-9 h-9 rounded-full bg-brand-purple flex items-center justify-center shrink-0 active:scale-90 transition-transform shadow-md"
+                          >
+                            <span className="material-icons text-white text-[20px]">close</span>
+                          </button>
 
-                        <div className="w-px h-6 bg-slate-100 mx-1"></div>
+                          {/* Direct Color Choices */}
+                          <div className="flex gap-2.5">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setSelectedColor('#fffbbd'); toggleHighlight(v.verse, '#fffbbd'); }} 
+                              className={`w-9 h-9 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#fffbbd' ? 'ring-2 ring-brand-yellow/50 ring-offset-2' : ''}`}
+                            ></button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setSelectedColor('#9a78b4'); toggleHighlight(v.verse, '#9a78b4'); }} 
+                              className={`w-9 h-9 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#9a78b4' ? 'ring-2 ring-brand-purple/50 ring-offset-2' : ''}`}
+                            ></button>
+                          </div>
 
-                        {/* Actions */}
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); toggleHighlight(v.verse, selectedColor); }} 
-                          className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
-                        >
-                          <span className="material-icons text-[26px]">draw</span>
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); openNoteModal(v.verse); }} 
-                          className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
-                        >
-                          <span className="material-icons text-[26px]">sticky_note_2</span>
-                        </button>
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation();
-                            navigator.clipboard.writeText(v.text); 
-                            setActiveMenuVerse(null); 
-                          }} 
-                          className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
-                        >
-                          <span className="material-icons text-[26px]">content_copy</span>
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setActiveMenuVerse(null); }} 
-                          className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
-                        >
-                          <span className="material-icons text-[26px]">share</span>
-                        </button>
-                      </div>
+                          <div className="w-px h-6 bg-slate-100 mx-1"></div>
+
+                          {/* Actions */}
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); toggleHighlight(v.verse, selectedColor); }} 
+                            className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
+                          >
+                            <span className="material-icons text-[26px]">draw</span>
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); openNoteModal(v.verse); }} 
+                            className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
+                          >
+                            <span className="material-icons text-[26px]">sticky_note_2</span>
+                          </button>
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(v.text); 
+                              setActiveMenuVerse(null); 
+                            }} 
+                            className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
+                          >
+                            <span className="material-icons text-[26px]">content_copy</span>
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setActiveMenuVerse(null); }} 
+                            className="w-11 h-11 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
+                          >
+                            <span className="material-icons text-[26px]">share</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
