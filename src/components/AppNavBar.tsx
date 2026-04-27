@@ -154,18 +154,17 @@ export function AppNavBar() {
           })}
         </nav>
 
-        {/* Liquid Indicator Dot - Samsung Pay Handle */}
-        <button 
-          onPointerDown={(e) => { e.preventDefault(); setIsScanOpen(true); }}
-          onClick={() => setIsScanOpen(true)}
-          className={`absolute left-1/2 -translate-x-1/2 w-4 h-1.5 rounded-full transition-all duration-300 ${activeBg} shadow-lg z-[80] cursor-pointer active:scale-x-150`}
+        {/* Liquid Indicator Dot - Now purely a visual handle for swiping */}
+        <div 
+          className={`absolute left-1/2 -translate-x-1/2 w-4 h-1.5 rounded-full transition-all duration-300 ${activeBg} shadow-lg z-[80]`}
           style={{ 
             bottom: `${52 + pullDistance * 0.8}px`,
             opacity: mounted ? Math.max(0.6, pullDistance / TRIGGER_THRESHOLD) : 0,
             transform: `translateX(-50%) scale(${1 + pullDistance * 0.02})`,
-            width: `${16 + pullDistance * 0.1}px`
+            width: `${16 + pullDistance * 0.1}px`,
+            boxShadow: `0 0 ${25 + pullDistance * 0.5}px ${isDarkMode ? 'rgba(252,211,77,0.6)' : 'rgba(109,40,217,0.6)'}`
           }}
-        ></button>
+        ></div>
       </div>
 
       {showTutorial && (
