@@ -98,8 +98,12 @@ export default function CommunityPage() {
   }, [])
 
   const triggerPush = (title: string, body: string) => {
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(title, { body, icon: "/images/PF app logo iphone.png" })
+    try {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, { body, icon: "/images/PF app logo iphone.png" })
+      }
+    } catch (err) {
+      console.error("Push error:", err)
     }
   }
 
@@ -169,12 +173,38 @@ export default function CommunityPage() {
       if (p.id === postId) {
         return {
           ...p,
-          comments: [...p.comments, { id: Date.now(), user: currentUserName, text, date: "Just now", isAuthor: p.user === currentUserName }]
+          comments: [...p.comments, { 
+            id: Date.now(), 
+            user: currentUserName, 
+            text, 
+            date: "Just now", 
+            isAuthor: p.user === currentUserName,
+            likes: 0,
+            userLiked: false
+          }]
         }
       }
       return p
     }))
     showNotify("댓글이 등록되었습니다.")
+  }
+
+  const toggleCommentLike = (postId: number, commentId: number) => {
+    setPosts(list => list.map(p => {
+      if (p.id === postId) {
+        return {
+          ...p,
+          comments: p.comments.map((c: any) => {
+            if (c.id === commentId) {
+              const liked = !c.userLiked
+              return { ...c, userLiked: liked, likes: (c.likes || 0) + (liked ? 1 : -1) }
+            }
+            return c
+          })
+        }
+      }
+      return p
+    }))
   }
 
   const addNewPost = (title: string, content: string, type: 'meditation' | 'prayer') => {
@@ -367,6 +397,7 @@ export default function CommunityPage() {
           onClose={() => setIsCommentsOpen(false)}
           comments={activePost.comments}
           onAddComment={(text) => addComment(activePost.id, text)}
+          onToggleLike={(commentId) => toggleCommentLike(activePost.id, commentId)}
           authorName={activePost.user}
         />
       )}
