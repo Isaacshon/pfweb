@@ -377,12 +377,6 @@ export default function AppPage() {
           <button onClick={() => setOpenUI(openUI === 'settings' ? null : 'settings')} className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'settings' ? accentColor : 'text-slate-300'}`}>
             <span className="material-icons">tune</span>
           </button>
-          <button 
-            onClick={() => setIsHistoryOpen(true)}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${hasHistory ? (isDarkMode ? 'bg-brand-yellow text-brand-dark shadow-lg shadow-brand-yellow/20' : 'bg-brand-purple text-white shadow-lg shadow-brand-purple/20') : 'bg-slate-100 text-slate-400'}`}
-          >
-            <span className="material-icons text-xl">history_edu</span>
-          </button>
         </div>
 
         <button onClick={() => { setOpenUI('picker'); setPickerTab('book'); }} className="flex items-center gap-2 active:scale-95 transition-all">
