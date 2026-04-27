@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="ko" className="h-full overflow-hidden">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -28,8 +28,8 @@ export default function RootLayout({
           as="style"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
-        {/* Material Symbols */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=add,arrow_back,auto_stories,chevron_left,chevron_right,close,dark_mode,edit_square,expand_more,favorite,format_quote,groups,history,history_edu,home,light_mode,location_on,more_horiz,notifications,payments,person,play_circle,profile,qr_code_scanner,remove,search,settings,share,translate,tune,volunteer_activism,volume_up" />
+        {/* Material Icons */}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
         {/* App Fonts: Plus Jakarta Sans & Space Grotesk */}
         <link 
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" 
@@ -37,7 +37,7 @@ export default function RootLayout({
         />
         <DynamicFavicon />
       </head>
-      <body className="min-h-full flex flex-col overscroll-none select-none">
+      <body className="h-full overflow-hidden overscroll-none select-none bg-white">
         <LanguageProvider>
           {children}
         </LanguageProvider>

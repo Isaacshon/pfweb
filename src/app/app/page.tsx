@@ -84,7 +84,8 @@ export default function AppPage() {
   useEffect(() => { fetchBookInfo(version.code, book.id) }, [version.code, book.id, fetchBookInfo])
   useEffect(() => { 
     fetchChapter(version.code, book.id, chapter)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const content = document.getElementById('bible-content')
+    if (content) content.scrollTo({ top: 0, behavior: 'smooth' })
   }, [version.code, book.id, chapter, fetchChapter])
 
   const filteredBooks = useMemo(() => {
@@ -92,72 +93,102 @@ export default function AppPage() {
   }, [bookSearch])
 
   return (
-    <div className={`min-h-screen flex flex-col pt-safe pb-32 transition-colors duration-500 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-white text-brand-dark'}`}>
+    <div className={`h-full flex flex-col transition-colors duration-500 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-white text-brand-dark'}`}>
       
-      {/* Ultra-Minimal Header */}
-      <header className={`sticky top-0 z-50 flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950/80' : 'bg-white/80'} backdrop-blur-sm`}>
-        <div className="px-6 h-20 flex items-center justify-between">
-          {/* Settings Icon */}
-          <button 
-            onClick={() => setOpenUI(openUI === 'settings' ? null : 'settings')}
-            className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'settings' ? 'text-brand-purple' : 'text-slate-300'}`}
-          >
-            <span className="material-symbols-outlined text-[22px] font-light">tune</span>
-          </button>
+      {/* Strictly Fixed Minimal Header */}
+      <header className={`shrink-0 h-20 px-6 flex items-center justify-between z-40 border-b ${isDarkMode ? 'bg-zinc-950 border-zinc-900' : 'bg-white border-slate-50'}`}>
+        <button 
+          onClick={() => setOpenUI(openUI === 'settings' ? null : 'settings')}
+          className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'settings' ? 'text-brand-purple' : 'text-slate-300'}`}
+        >
+          <span className="material-icons">tune</span>
+        </button>
 
-          {/* Core Navigation - Clean Text Only */}
-          <button 
-            onClick={() => { setOpenUI('picker'); setPickerTab('book'); }}
-            className="flex items-center gap-3 px-4 py-2 group active:scale-95 transition-all"
-          >
-            <span className="font-plus-jakarta font-black text-[17px] tracking-tight group-active:text-brand-purple">{book.name}</span>
-            <span className="w-1 h-1 rounded-full bg-brand-yellow"></span>
-            <span className="font-plus-jakarta font-black text-[17px] tracking-tight text-brand-purple">{chapter}장</span>
-            <span className="material-symbols-outlined text-sm opacity-20 group-hover:opacity-100 transition-opacity">expand_more</span>
-          </button>
+        <button 
+          onClick={() => { setOpenUI('picker'); setPickerTab('book'); }}
+          className="flex items-center gap-2 group active:scale-95 transition-all"
+        >
+          <span className="font-plus-jakarta font-black text-[16px] tracking-tight">{book.name}</span>
+          <span className="w-1 h-1 rounded-full bg-brand-yellow"></span>
+          <span className="font-plus-jakarta font-black text-[16px] tracking-tight text-brand-purple">{chapter}장</span>
+        </button>
 
-          {/* Search Icon */}
-          <button 
-            onClick={() => setOpenUI(openUI === 'search' ? null : 'search')}
-            className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'search' ? 'text-brand-purple' : 'text-slate-300'}`}
-          >
-            <span className="material-symbols-outlined text-[22px] font-light">search</span>
-          </button>
-        </div>
+        <button 
+          onClick={() => setOpenUI(openUI === 'search' ? null : 'search')}
+          className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'search' ? 'text-brand-purple' : 'text-slate-300'}`}
+        >
+          <span className="material-icons">search</span>
+        </button>
       </header>
 
-      {/* Discrete Settings Sheet - No Blur */}
+      {/* Bible Text Container (Scrollable Area) */}
+      <div id="bible-content" className="flex-1 overflow-y-auto px-10 pt-10 pb-32 no-scrollbar">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-40">
+            <div className="w-2 h-2 rounded-full bg-brand-purple animate-ping"></div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-10">
+            {verses.map((v: any) => (
+              <div key={v.verse} className="flex flex-col gap-2 group">
+                <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'}`}>
+                  {v.verse}
+                </span>
+                <p 
+                  style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
+                  className="font-medium tracking-tight"
+                >
+                  {v.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {!isLoading && verses.length > 0 && (
+          <div className="flex justify-between items-center mt-20">
+            <button onClick={() => setChapter(c => Math.max(1, c - 1))} className="text-slate-200 hover:text-brand-purple active:scale-75 transition-all" disabled={chapter === 1}>
+              <span className="material-icons text-4xl">chevron_left</span>
+            </button>
+            <button onClick={() => setChapter(c => Math.min(maxChapters, c + 1))} className="text-slate-200 hover:text-brand-purple active:scale-75 transition-all" disabled={chapter === maxChapters}>
+              <span className="material-icons text-4xl">chevron_right</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Settings Modal (No Blur, High-End Minimalism) */}
       {openUI === 'settings' && (
-        <div className="fixed inset-0 z-[60] bg-black/5" onClick={() => setOpenUI(null)}>
+        <div className="fixed inset-0 z-50 bg-black/5" onClick={() => setOpenUI(null)}>
           <div 
-            className={`absolute bottom-0 left-0 right-0 p-10 rounded-t-[48px] shadow-[0_-20px_60px_rgba(0,0,0,0.1)] border-t transition-transform animate-in slide-in-from-bottom duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`} 
+            className={`absolute bottom-28 left-6 right-6 p-8 rounded-[40px] shadow-2xl border transition-all animate-in slide-in-from-bottom-4 duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`} 
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex flex-col gap-10 max-w-sm mx-auto">
+            <div className="flex flex-col gap-8">
               <div className="flex justify-between items-center">
-                <span className="text-[11px] font-black uppercase tracking-widest opacity-30">Night Mode</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Night Mode</span>
                 <button onClick={() => setIsDarkMode(!isDarkMode)} className={`w-12 h-6 rounded-full relative transition-all ${isDarkMode ? 'bg-brand-purple' : 'bg-slate-200'}`}>
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isDarkMode ? 'left-7' : 'left-1'}`}></div>
                 </button>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[11px] font-black uppercase tracking-widest opacity-30">Text Size</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Text Size</span>
                 <div className="flex items-center gap-6">
-                  <button onClick={() => setFontSize(Math.max(14, fontSize - 2))} className="text-brand-purple font-black opacity-40 hover:opacity-100">-</button>
-                  <span className="font-space-grotesk font-black text-lg">{fontSize}</span>
-                  <button onClick={() => setFontSize(Math.min(32, fontSize + 2))} className="text-brand-purple font-black opacity-40 hover:opacity-100">+</button>
+                  <button onClick={() => setFontSize(Math.max(14, fontSize - 2))} className="text-brand-purple font-black">-</button>
+                  <span className="font-space-grotesk font-black text-sm">{fontSize}</span>
+                  <button onClick={() => setFontSize(Math.min(32, fontSize + 2))} className="text-brand-purple font-black">+</button>
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[11px] font-black uppercase tracking-widest opacity-30">Spacing</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Spacing</span>
                 <div className="flex items-center gap-6">
-                  <button onClick={() => setLineHeight(Math.max(1.2, lineHeight - 0.1))} className="text-brand-purple font-black opacity-40 hover:opacity-100">-</button>
-                  <span className="font-space-grotesk font-black text-lg">{lineHeight.toFixed(1)}</span>
-                  <button onClick={() => setLineHeight(Math.min(2.5, lineHeight + 0.1))} className="text-brand-purple font-black opacity-40 hover:opacity-100">+</button>
+                  <button onClick={() => setLineHeight(Math.max(1.2, lineHeight - 0.1))} className="text-brand-purple font-black">-</button>
+                  <span className="font-space-grotesk font-black text-sm">{lineHeight.toFixed(1)}</span>
+                  <button onClick={() => setLineHeight(Math.min(2.5, lineHeight + 0.1))} className="text-brand-purple font-black">+</button>
                 </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[11px] font-black uppercase tracking-widest opacity-30">Version</span>
+              <div className="flex justify-between items-center border-t border-slate-100 dark:border-zinc-800 pt-4">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Version</span>
                 <select 
                   value={version.code}
                   onChange={(e) => setVersion(bibleVersions.find(v => v.code === e.target.value) || version)}
@@ -171,32 +202,29 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Search View - Clean White/Black No Blur */}
+      {/* Global Search Overlay (Full-screen feel, Clean) */}
       {openUI === 'search' && (
-        <div className={`fixed inset-0 z-[70] flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
+        <div className={`fixed inset-0 z-50 flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
           <div className="px-8 pt-16 pb-8 flex flex-col gap-8">
-            <button onClick={() => setOpenUI(null)} className="self-start text-slate-300"><span className="material-symbols-outlined text-4xl font-light">arrow_back</span></button>
-            <div className="relative">
-              <input 
-                type="text"
-                placeholder="Global Search"
-                value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); performGlobalSearch(e.target.value); }}
-                className={`w-full py-4 text-2xl font-black placeholder:opacity-20 focus:outline-none bg-transparent`}
-                autoFocus
-              />
-              {isGlobalSearching && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-brand-purple border-t-transparent rounded-full animate-spin"></div>}
-            </div>
+            <button onClick={() => setOpenUI(null)} className="self-start text-slate-300"><span className="material-icons text-3xl">arrow_back</span></button>
+            <input 
+              type="text"
+              placeholder="Search words..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); performGlobalSearch(e.target.value); }}
+              className="w-full py-2 text-2xl font-black placeholder:opacity-10 bg-transparent focus:outline-none"
+              autoFocus
+            />
           </div>
-          <div className="flex-1 overflow-y-auto px-8 pb-12">
-            <div className="flex flex-col gap-8">
+          <div className="flex-1 overflow-y-auto px-8 pb-32 no-scrollbar">
+            <div className="flex flex-col gap-10">
               {searchResults.map((res: any, idx) => (
                 <button key={idx} onClick={() => { 
                   const b = bibleBooks.find(b => b.id === res.book); 
                   if (b) { setBook(b); setChapter(res.chapter); setOpenUI(null); }
-                }} className="text-left group transition-opacity active:opacity-50">
-                  <p className="font-black text-[10px] text-brand-purple uppercase tracking-[0.3em] mb-3">{bibleBooks.find(b => b.id === res.book)?.name} {res.chapter}:{res.verse}</p>
-                  <p className="text-[17px] font-medium leading-relaxed opacity-70 group-hover:opacity-100">{res.text}</p>
+                }} className="text-left group active:opacity-50">
+                  <p className="font-black text-[9px] text-brand-purple uppercase tracking-[0.3em] mb-3">{bibleBooks.find(b => b.id === res.book)?.name} {res.chapter}:{res.verse}</p>
+                  <p className="text-[16px] font-medium leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity">{res.text}</p>
                 </button>
               ))}
             </div>
@@ -204,39 +232,38 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Book & Chapter Picker - Pure Design */}
+      {/* Picker Modal (Book/Chapter Selection) */}
       {openUI === 'picker' && (
-        <div className={`fixed inset-0 z-[70] flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'} animate-in slide-in-from-bottom duration-500`}>
+        <div className={`fixed inset-0 z-50 flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'} animate-in slide-in-from-bottom duration-500`}>
           <div className="px-8 pt-16 pb-8 flex flex-col gap-10">
             <div className="flex items-center justify-between">
-              <button onClick={() => setOpenUI(null)} className="text-slate-300"><span className="material-symbols-outlined text-4xl font-light">arrow_back</span></button>
-              <div className="flex gap-4">
-                <button onClick={() => setPickerTab('book')} className={`text-[12px] font-black uppercase tracking-widest ${pickerTab === 'book' ? 'text-brand-purple' : 'opacity-20'}`}>Books</button>
-                <button onClick={() => setPickerTab('chapter')} className={`text-[12px] font-black uppercase tracking-widest ${pickerTab === 'chapter' ? 'text-brand-purple' : 'opacity-20'}`}>Chapters</button>
+              <button onClick={() => setOpenUI(null)} className="text-slate-300"><span className="material-icons text-3xl">arrow_back</span></button>
+              <div className="flex gap-6">
+                <button onClick={() => setPickerTab('book')} className={`text-[11px] font-black uppercase tracking-widest ${pickerTab === 'book' ? 'text-brand-purple' : 'opacity-20'}`}>Books</button>
+                <button onClick={() => setPickerTab('chapter')} className={`text-[11px] font-black uppercase tracking-widest ${pickerTab === 'chapter' ? 'text-brand-purple' : 'opacity-20'}`}>Chapters</button>
               </div>
             </div>
-            
             <input 
               type="text"
-              placeholder="Filter books..."
+              placeholder="Search..."
               value={bookSearch}
               onChange={(e) => setBookSearch(e.target.value)}
-              className="w-full py-2 text-3xl font-black placeholder:opacity-10 bg-transparent focus:outline-none"
+              className="w-full py-2 text-2xl font-black placeholder:opacity-10 bg-transparent focus:outline-none"
             />
           </div>
 
-          <div className="flex-1 overflow-y-auto px-8 pb-24 no-scrollbar">
+          <div className="flex-1 overflow-y-auto px-8 pb-32 no-scrollbar">
             {pickerTab === 'book' ? (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-2">
                 {filteredBooks.map((b) => (
-                  <button key={b.id} onClick={() => { setBook(b); setPickerTab('chapter'); }} className="flex flex-col py-4 group active:opacity-50 transition-opacity">
-                    <span className="font-plus-jakarta font-black text-[22px] tracking-tight group-hover:text-brand-purple">{b.eng}</span>
-                    <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">{b.name}</span>
+                  <button key={b.id} onClick={() => { setBook(b); setPickerTab('chapter'); }} className="flex flex-col py-4 group active:opacity-50 transition-all">
+                    <span className="font-plus-jakarta font-black text-[20px] tracking-tight group-hover:text-brand-purple">{b.eng}</span>
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{b.name}</span>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col gap-12 pt-4">
+              <div className="flex flex-col gap-10 pt-4">
                 <h3 className="font-plus-jakarta font-black text-5xl tracking-tighter text-brand-purple/10 uppercase">{book.eng}</h3>
                 <div className="grid grid-cols-5 gap-6">
                   {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
@@ -251,43 +278,7 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Main Scripture Text - Focused Typography */}
-      <main className="px-10 mt-12 flex flex-col gap-12">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-40">
-            <div className="w-1.5 h-1.5 rounded-full bg-brand-purple animate-ping"></div>
-          </div>
-        ) : (
-          verses.map((v: any) => (
-            <div key={v.verse} className="flex flex-col gap-3 group">
-              <span className={`font-space-grotesk font-black text-[11px] tracking-widest transition-opacity ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'} group-hover:opacity-100`}>
-                {v.verse}
-              </span>
-              <p 
-                style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
-                className="font-medium tracking-tight"
-              >
-                {v.text}
-              </p>
-            </div>
-          ))
-        )}
-        
-        {!isLoading && verses.length > 0 && (
-          <div className="flex justify-between items-center mt-24 py-12">
-            <button onClick={() => setChapter(c => Math.max(1, c - 1))} className="text-slate-200 hover:text-brand-purple transition-colors" disabled={chapter === 1}>
-              <span className="material-symbols-outlined text-4xl font-light">chevron_left</span>
-            </button>
-            <button onClick={() => setChapter(c => Math.min(maxChapters, c + 1))} className="text-slate-200 hover:text-brand-purple transition-colors" disabled={chapter === maxChapters}>
-              <span className="material-symbols-outlined text-4xl font-light">chevron_right</span>
-            </button>
-          </div>
-        )}
-        <div className="h-40" />
-      </main>
-
       <style jsx global>{`
-        .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
