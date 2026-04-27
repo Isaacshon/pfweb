@@ -1,20 +1,19 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 
 const bibleVersions = [
-  { name: '개역개정', code: 'nkrv', lang: 'ko', local: true },
-  { name: '현대인', code: 'klb', lang: 'ko', local: true },
-  { name: '중국어', code: 'cn', lang: 'zh', local: true },
-  { name: '스페인어', code: 'es', lang: 'es', local: true },
-  { name: 'ESV', code: 'ESV', lang: 'en', local: false },
-  { name: 'NIV', code: 'NIV', lang: 'en', local: false },
-  { name: 'KJV', code: 'KJV', lang: 'en', local: false },
+  { name: '개역개정', code: 'nkrv', lang: 'ko', flag: '🇰🇷', local: true },
+  { name: '현대인', code: 'klb', lang: 'ko', flag: '🇰🇷', local: true },
+  { name: '중국어', code: 'cn', lang: 'zh', flag: '🇨🇳', local: true },
+  { name: '스페인어', code: 'es', lang: 'es', flag: '🇪🇸', local: true },
+  { name: 'ESV', code: 'ESV', lang: 'en', flag: '🇺🇸', local: false },
+  { name: 'NIV', code: 'NIV', lang: 'en', flag: '🇺🇸', local: false },
+  { name: 'KJV', code: 'KJV', lang: 'en', flag: '🇬🇧', local: false },
 ]
 
 const KOREAN_ABBRS = ["창", "출", "레", "민", "신", "수", "삿", "룻", "삼상", "삼하", "왕상", "왕하", "대상", "대하", "스", "느", "에", "욥", "시", "잠", "전", "아", "사", "렘", "애", "겔", "단", "호", "욜", "암", "옵", "욘", "미", "나", "합", "습", "학", "슥", "말", "마", "막", "눅", "요", "행", "롬", "고전", "고후", "갈", "엡", "빌", "골", "살전", "살후", "딤전", "딤후", "딛", "몬", "히", "약", "벧전", "벧후", "요일", "요이", "요삼", "유", "계"];
-
 
 const bibleBooks = [
   { id: 1, name: "창세기", eng: "Genesis" }, { id: 2, name: "출애굽기", eng: "Exodus" }, { id: 3, name: "레위기", eng: "Leviticus" }, { id: 4, name: "민수기", eng: "Numbers" }, { id: 5, name: "신명기", eng: "Deuteronomy" },
@@ -42,7 +41,17 @@ export default function AppPage() {
   const [maxChapters, setMaxChapters] = useState(21)
   const [localBibles, setLocalBibles] = useState<Record<string, any>>({})
 
+  // Study Features
+  const [highlights, setHighlights] = useState<Record<string, string>>({})
+  const [notes, setNotes] = useState<Record<string, string>>({})
+  const [activeMenuVerse, setActiveMenuVerse] = useState<number | null>(null)
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
+  const [currentNote, setCurrentNote] = useState('')
+  const [selectedColor, setSelectedColor] = useState('#fffbbd')
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
 
+  // Appearance
   const [fontSize, setFontSize] = useState(20)
   const [lineHeight, setLineHeight] = useState(1.85)
   const [verseGap, setVerseGap] = useState(30)
@@ -54,6 +63,8 @@ export default function AppPage() {
   const [searchResults, setSearchResults] = useState<any[]>([])
 
   const [isLoaded, setIsLoaded] = useState(false)
+  const longPressTimer = useRef<any>(null)
+  const isLongPressing = useRef(false)
 
   useEffect(() => {
     const savedVersion = localStorage.getItem('pf_bible_version')
@@ -62,6 +73,8 @@ export default function AppPage() {
     const savedFontSize = localStorage.getItem('pf_bible_fontsize')
     const savedLineHeight = localStorage.getItem('pf_bible_lineheight')
     const savedVerseGap = localStorage.getItem('pf_bible_versegap')
+    const savedHighlights = localStorage.getItem('pf_bible_highlights')
+    const savedNotes = localStorage.getItem('pf_bible_notes')
 
     if (savedVersion) {
       const v = bibleVersions.find(v => v.code === savedVersion)
@@ -75,6 +88,9 @@ export default function AppPage() {
     if (savedFontSize) setFontSize(parseInt(savedFontSize))
     if (savedLineHeight) setLineHeight(parseFloat(savedLineHeight))
     if (savedVerseGap) setVerseGap(parseInt(savedVerseGap))
+    if (savedHighlights) setHighlights(JSON.parse(savedHighlights))
+    if (savedNotes) setNotes(JSON.parse(savedNotes))
+    
     setIsLoaded(true)
   }, [])
 
@@ -86,7 +102,9 @@ export default function AppPage() {
     localStorage.setItem('pf_bible_fontsize', fontSize.toString())
     localStorage.setItem('pf_bible_lineheight', lineHeight.toString())
     localStorage.setItem('pf_bible_versegap', verseGap.toString())
-  }, [version.code, book.id, chapter, fontSize, lineHeight, verseGap, isLoaded])
+    localStorage.setItem('pf_bible_highlights', JSON.stringify(highlights))
+    localStorage.setItem('pf_bible_notes', JSON.stringify(notes))
+  }, [version.code, book.id, chapter, fontSize, lineHeight, verseGap, highlights, notes, isLoaded])
 
   const cleanText = (text: string) => {
     return text.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim()
@@ -105,14 +123,11 @@ export default function AppPage() {
 
         const abbr = KOREAN_ABBRS[bId - 1]
         const result: any[] = []
-        // We need to filter keys like "창1:1", "창1:2"
-        // Some verses might not exist, we'll try to find up to 200 verses
         for (let i = 1; i <= 200; i++) {
           const key = `${abbr}${cNum}:${i}`
           if (bibleData[key]) {
             result.push({ verse: i, text: bibleData[key] })
           } else if (i > 1) {
-            // Stop if we found verses and then a missing one
             break
           }
         }
@@ -140,7 +155,6 @@ export default function AppPage() {
         
         const abbr = KOREAN_ABBRS[bId - 1]
         let maxC = 0
-        // Find max chapter by scanning keys
         const keys = Object.keys(bibleData)
         keys.forEach(k => {
           if (k.startsWith(abbr)) {
@@ -261,6 +275,39 @@ export default function AppPage() {
     setTouchStartX(null)
   }
 
+  // Pointer Interaction (Long Press)
+  const handlePointerDown = (num: number, e: React.PointerEvent) => {
+    isLongPressing.current = false
+    longPressTimer.current = setTimeout(() => {
+      isLongPressing.current = true
+      setActiveMenuVerse(num)
+      setIsPaletteOpen(false)
+      if (window.navigator.vibrate) window.navigator.vibrate(50)
+    }, 500)
+  }
+
+  const handlePointerUp = () => {
+    clearTimeout(longPressTimer.current)
+  }
+
+  const toggleHighlight = (num: number, color: string) => {
+    const key = `${book.id}_${chapter}_${num}`
+    setHighlights(prev => ({
+      ...prev,
+      [key]: prev[key] === color ? '' : color
+    }))
+    setActiveMenuVerse(null)
+    setIsPaletteOpen(false)
+  }
+
+  const openNoteModal = (num: number) => {
+    const key = `${book.id}_${chapter}_${num}`
+    setActiveMenuVerse(null)
+    setIsPaletteOpen(false)
+    setCurrentNote(notes[key] || '')
+    setIsNoteModalOpen(true)
+  }
+
   const isEn = version.lang === 'en'
 
   const filteredBooks = useMemo(() => {
@@ -272,20 +319,31 @@ export default function AppPage() {
   const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-white'
   const textColor = isDarkMode ? 'text-zinc-100' : 'text-zinc-900'
 
+  const hasHistory = Object.keys(highlights).some(k => highlights[k] && highlights[k] !== '') || Object.keys(notes).length > 0
+  const historyItems = Object.keys(highlights).filter(k => highlights[k] && highlights[k] !== '').concat(Object.keys(notes)).filter((v, i, a) => a.indexOf(v) === i)
+
   return (
     <div className={`h-full flex flex-col transition-colors duration-500 ${bgColor} ${textColor}`}>
       <header className={`shrink-0 h-20 px-6 flex items-center justify-between z-40 border-b ${isDarkMode ? 'bg-[#050505]/80 border-zinc-900' : 'bg-white/80 border-slate-50'} backdrop-blur-sm`}>
-        <button onClick={() => setOpenUI(openUI === 'settings' ? null : 'settings')} className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'settings' ? accentColor : 'text-slate-300'}`}>
-          <span className="material-icons">tune</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setOpenUI(openUI === 'settings' ? null : 'settings')} className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'settings' ? accentColor : 'text-slate-300'}`}>
+            <span className="material-icons">tune</span>
+          </button>
+          <button 
+            onClick={() => setIsHistoryOpen(true)}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${hasHistory ? (isDarkMode ? 'bg-brand-yellow text-brand-dark shadow-lg shadow-brand-yellow/20' : 'bg-brand-purple text-white shadow-lg shadow-brand-purple/20') : 'bg-slate-100 text-slate-400'}`}
+          >
+            <span className="material-icons text-xl">history_edu</span>
+          </button>
+        </div>
 
         <button onClick={() => { setOpenUI('picker'); setPickerTab('book'); }} className="flex items-center gap-2 active:scale-95 transition-all">
           <span className="font-plus-jakarta font-black text-[16px] tracking-tight">
             {isEn ? book.eng : book.name}
           </span>
           <span className={`w-1 h-1 rounded-full ${accentBg}`}></span>
-          <span className={`font-plus-jakarta font-black text-[16px] tracking-tight ${accentColor}`}>{chapter}장</span>
-          <span className={`font-plus-jakarta font-black text-[12px] opacity-30 ml-1 uppercase`}>{version.name}</span>
+          <span className={`font-plus-jakarta font-black text-[16px] tracking-tight ${accentColor}`}>{chapter}{isEn ? ' Ch' : '장'}</span>
+          <span className={`font-plus-jakarta font-black text-[10px] opacity-30 ml-1 uppercase`}>{version.name}</span>
           <span className={`material-icons ${isDarkMode ? 'text-brand-yellow/20' : 'text-brand-purple/20'} text-lg`}>expand_more</span>
         </button>
 
@@ -295,17 +353,94 @@ export default function AppPage() {
         </button>
       </header>
 
-      <div id="bible-content" className="flex-1 overflow-y-auto px-10 pt-10 pb-40 no-scrollbar outline-none" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <div id="bible-content" className="flex-1 overflow-y-auto px-10 pt-10 pb-40 no-scrollbar outline-none select-none" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         {isLoading ? (
           <div className="flex items-center justify-center py-40"><div className={`w-2 h-2 rounded-full ${accentBg} animate-ping`}></div></div>
         ) : (
           <div className="flex flex-col" style={{ gap: `${verseGap}px` }}>
-            {verses.map((v: any) => (
-              <div key={v.verse} className="flex flex-col gap-2 group">
-                <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-brand-yellow/50' : 'text-brand-purple/30'}`}>{v.verse}</span>
-                <p style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }} className="font-medium tracking-tight">{v.text}</p>
-              </div>
-            ))}
+            {verses.map((v: any) => {
+              const key = `${book.id}_${chapter}_${v.verse}`
+              const highlightColor = highlights[key]
+              const noteText = notes[key]
+              
+              return (
+                <div 
+                  key={v.verse} 
+                  className="flex flex-col gap-2 group relative"
+                  onPointerDown={(e) => handlePointerDown(v.verse, e)}
+                  onPointerUp={handlePointerUp}
+                  onPointerLeave={handlePointerUp}
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-brand-yellow/50' : 'text-brand-purple/30'}`}>{v.verse}</span>
+                  <div className="relative inline">
+                    {highlightColor && (
+                      <div 
+                        className="absolute inset-x-[-4px] inset-y-0 opacity-30 z-0 rounded-sm" 
+                        style={{ backgroundColor: highlightColor }}
+                      />
+                    )}
+                    <p style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }} className="font-medium tracking-tight relative z-10">{v.text}</p>
+                    {noteText && (
+                      <div className={`mt-3 p-4 rounded-2xl border-l-4 ${isDarkMode ? 'bg-zinc-900 border-brand-yellow' : 'bg-slate-50 border-brand-purple'} relative z-10 shadow-sm animate-in slide-in-from-left-2 duration-300`}>
+                        <p className="text-xs font-bold italic opacity-60">"{noteText}"</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Context Menu (Floating Menu) */}
+                  {activeMenuVerse === v.verse && (
+                    <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-[100] animate-in zoom-in-95 duration-200 border border-slate-50 overflow-hidden">
+                      {!isPaletteOpen ? (
+                        <div className="flex items-center gap-5 px-5 py-2.5">
+                          <button 
+                            onClick={() => toggleHighlight(v.verse, selectedColor)} 
+                            className="text-sm font-black text-brand-dark active:scale-95 transition-transform uppercase tracking-widest"
+                          >
+                            Highlight
+                          </button>
+                          
+                          <button 
+                            onClick={() => setIsPaletteOpen(true)}
+                            className="w-6 h-6 rounded-full border-2 border-white transition-all active:scale-90 shadow-sm"
+                            style={{ backgroundColor: selectedColor, boxShadow: `0 0 0 2px ${selectedColor}44` }}
+                          ></button>
+
+                          <button 
+                            onClick={() => openNoteModal(v.verse)} 
+                            className="text-sm font-black text-brand-dark active:scale-95 transition-transform uppercase tracking-widest"
+                          >
+                            Note
+                          </button>
+
+                          <div className="flex items-center text-slate-300">
+                            <span className="material-icons text-lg">more_vert</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-6 px-6 py-2.5 animate-in slide-in-from-right-4 duration-300">
+                          <button 
+                            onClick={() => { setSelectedColor('#fffbbd'); setIsPaletteOpen(false); }} 
+                            className={`w-7 h-7 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#fffbbd' ? 'ring-2 ring-[#fffbbd] ring-offset-1' : ''}`}
+                          ></button>
+                          <button 
+                            onClick={() => { setSelectedColor('#9a78b4'); setIsPaletteOpen(false); }} 
+                            className={`w-7 h-7 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-125 transition-transform ${selectedColor === '#9a78b4' ? 'ring-2 ring-[#9a78b4] ring-offset-1' : ''}`}
+                          ></button>
+                          <div className="w-px h-4 bg-slate-100 mx-1"></div>
+                          <button 
+                            onClick={() => setIsPaletteOpen(false)} 
+                            className="material-icons text-slate-400 text-lg active:scale-90 transition-transform"
+                          >
+                            close
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
         {!isLoading && verses.length > 0 && (
@@ -316,6 +451,7 @@ export default function AppPage() {
         )}
       </div>
 
+      {/* Settings Panel */}
       {openUI === 'settings' && (
         <div className="fixed inset-0 z-50 bg-black/5" onClick={() => setOpenUI(null)}>
           <div className={`absolute bottom-28 left-6 right-6 p-8 rounded-[40px] shadow-2xl border transition-all animate-in slide-in-from-bottom-4 duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`} onClick={e => e.stopPropagation()}>
@@ -329,6 +465,7 @@ export default function AppPage() {
         </div>
       )}
 
+      {/* Search Panel */}
       {openUI === 'search' && (
         <div className={`fixed inset-0 z-50 flex flex-col transition-all ${bgColor} ${textColor}`}>
           <div className="px-8 pt-16 pb-8 flex flex-col gap-8">
@@ -348,6 +485,7 @@ export default function AppPage() {
         </div>
       )}
 
+      {/* Picker Panel */}
       {openUI === 'picker' && (
         <div className={`fixed inset-0 z-[100] transition-all duration-300 flex flex-col animate-in fade-in ${bgColor} ${textColor}`}>
           <div className="px-6 pt-16 pb-6 flex flex-col gap-6">
@@ -391,7 +529,7 @@ export default function AppPage() {
               <div className="flex flex-col gap-2">
                 {bibleVersions.map((v) => (
                   <button key={v.code} onClick={() => { setVersion(v); setPickerTab('book'); }} className={`flex items-center justify-between py-6 px-6 rounded-2xl transition-all ${version.code === v.code ? (isDarkMode ? 'bg-zinc-900 text-brand-yellow border border-brand-yellow/20' : 'bg-slate-50 text-brand-purple border border-brand-purple/20') : 'text-zinc-500 hover:opacity-70'}`}>
-                    <span className="text-lg font-bold tracking-tight">{v.name}</span>
+                    <span className="text-lg font-bold tracking-tight">{v.name} ({v.flag})</span>
                     {version.code === v.code && <span className="material-icons text-inherit">check_circle</span>}
                   </button>
                 ))}
@@ -400,6 +538,83 @@ export default function AppPage() {
           </div>
         </div>
       )}
+
+      {/* History Sheet */}
+      {isHistoryOpen && (
+        <div className="fixed inset-0 z-[300] bg-black/40 backdrop-blur-sm flex items-end animate-in fade-in duration-300" onClick={() => setIsHistoryOpen(false)}>
+          <div className={`w-full rounded-t-[40px] max-h-[85vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 duration-500 shadow-2xl ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`} onClick={e => e.stopPropagation()}>
+            <div className={`p-8 flex items-center justify-between border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-50'}`}>
+              <div>
+                <h2 className="text-2xl font-black uppercase tracking-tight">Study History</h2>
+                <p className="text-xs font-bold opacity-40 uppercase tracking-widest mt-1">{historyItems.length} Saved Activities</p>
+              </div>
+              <button onClick={() => setIsHistoryOpen(false)} className={`w-10 h-10 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-50'}`}><span className="material-icons text-slate-300">close</span></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar pb-20">
+              {historyItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 opacity-20">
+                  <span className="material-icons text-6xl mb-4">history_edu</span>
+                  <p className="font-bold">No history yet</p>
+                </div>
+              ) : (
+                historyItems.map(key => {
+                  const [bId, cNum, vNum] = key.split('_')
+                  const bName = bibleBooks.find(b => b.id === parseInt(bId))?.name
+                  const highlightColor = highlights[key]
+                  const noteText = notes[key]
+                  
+                  return (
+                    <div key={key} onClick={() => { 
+                      const b = bibleBooks.find(b => b.id === parseInt(bId));
+                      if (b) { setBook(b); setChapter(parseInt(cNum)); setIsHistoryOpen(false); }
+                    }} className={`p-5 rounded-[32px] border flex flex-col gap-3 active:scale-[0.98] transition-all ${isDarkMode ? 'bg-zinc-800/50 border-zinc-700' : 'bg-slate-50/50 border-slate-100'}`}>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${accentColor}`}>{bName} {cNum}:{vNum}</span>
+                        {highlightColor && <div className="w-3 h-3 rounded-full" style={{ backgroundColor: highlightColor }}></div>}
+                      </div>
+                      {noteText && (
+                        <div className={`p-4 rounded-2xl shadow-sm border-l-4 ${isDarkMode ? 'bg-zinc-900 border-brand-yellow' : 'bg-white border-brand-purple'}`}>
+                          <p className="text-sm font-bold leading-relaxed">{noteText}</p>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Note Modal */}
+      {isNoteModalOpen && (
+        <div className="fixed inset-0 z-[400] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className={`w-full max-w-sm rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-500 ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black uppercase tracking-tight">Verse Note</h2>
+              <button onClick={() => setIsNoteModalOpen(false)} className="material-icons text-slate-300">close</button>
+            </div>
+            <textarea 
+              value={currentNote}
+              onChange={(e) => setCurrentNote(e.target.value)}
+              placeholder="What did God speak to you today?"
+              className={`w-full h-40 rounded-3xl p-5 outline-none font-medium placeholder:opacity-30 resize-none mb-6 ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-50'}`}
+              autoFocus
+            />
+            <button 
+              onClick={() => {
+                const key = `${book.id}_${chapter}_${activeMenuVerse}`
+                setNotes(prev => ({ ...prev, [key]: currentNote }))
+                setIsNoteModalOpen(false)
+              }}
+              className={`w-full py-5 rounded-3xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all ${isDarkMode ? 'bg-brand-yellow text-black shadow-brand-yellow/20' : 'bg-brand-purple text-white shadow-brand-purple/20'}`}
+            >
+              Save Note
+            </button>
+          </div>
+        </div>
+      )}
+
       <style jsx global>{` .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
     </div>
   )
