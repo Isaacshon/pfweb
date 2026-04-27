@@ -449,15 +449,39 @@ export default function AppPage() {
                             Delete
                           </button>
                           
-                          <div className="relative flex items-center justify-center">
-                            <div 
-                              className="w-8 h-8 rounded-full border-[2px] border-white shadow-lg shrink-0"
-                              style={{ backgroundColor: highlightColor.color }}
-                            ></div>
-                            <div 
-                              className="absolute w-[44px] h-[44px] rounded-full border-2 opacity-30"
-                              style={{ borderColor: highlightColor.color }}
-                            ></div>
+                          <div className="relative flex items-center justify-center min-w-[44px]">
+                            {isPaletteOpen ? (
+                              <div className="flex gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); toggleHighlight(v.verse, '#fffbbd', v.text); }}
+                                  className="w-8 h-8 rounded-full border-2 border-white shadow-md active:scale-90 transition-transform bg-[#fffbbd]"
+                                />
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); toggleHighlight(v.verse, '#9a78b4', v.text); }}
+                                  className="w-8 h-8 rounded-full border-2 border-white shadow-md active:scale-90 transition-transform bg-[#9a78b4]"
+                                />
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setIsPaletteOpen(false); }}
+                                  className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center active:scale-90 transition-transform"
+                                >
+                                  <span className="material-icons text-slate-400 text-sm">close</span>
+                                </button>
+                              </div>
+                            ) : (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setIsPaletteOpen(true); }}
+                                className="relative flex items-center justify-center active:scale-95 transition-transform"
+                              >
+                                <div 
+                                  className="w-8 h-8 rounded-full border-[2px] border-white shadow-lg shrink-0"
+                                  style={{ backgroundColor: highlightColor.color }}
+                                ></div>
+                                <div 
+                                  className="absolute w-[44px] h-[44px] rounded-full border-2 opacity-30 animate-pulse"
+                                  style={{ borderColor: highlightColor.color }}
+                                ></div>
+                              </button>
+                            )}
                           </div>
 
                           <button 
@@ -500,12 +524,6 @@ export default function AppPage() {
                           <div className="w-px h-5 bg-slate-100 mx-0.5"></div>
 
                           {/* Actions */}
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); toggleHighlight(v.verse, selectedColor, v.text); }} 
-                            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
-                          >
-                            <span className="material-icons text-[22px]">draw</span>
-                          </button>
                           <button 
                             onClick={(e) => { e.stopPropagation(); openNoteModal(v.verse, v.text); }} 
                             className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
