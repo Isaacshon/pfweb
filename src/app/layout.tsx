@@ -29,7 +29,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#6d28d9" />
-        <link rel="apple-touch-icon" href="/images/PF app logo2.png" />
+        <link rel="apple-touch-icon" href="/images/PF app logo iphone.png" />
         <link rel="manifest" href="/manifest.json" />
         
         {/* Pretendard Font */}
