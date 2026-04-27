@@ -33,7 +33,7 @@ export default function ProfilePage() {
       </section>
 
       {/* Praise Team Mode Toggle */}
-      <section className="px-8 mb-12">
+      <section className="px-8 mb-12 flex flex-col gap-4">
         <button 
           onClick={() => setIsPraiseTeamMode(!isPraiseTeamMode)}
           className={`w-full py-5 rounded-[32px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 ${
@@ -45,6 +45,20 @@ export default function ProfilePage() {
           <span className="material-icons text-lg">{isPraiseTeamMode ? 'music_video' : 'queue_music'}</span>
           {isPraiseTeamMode ? 'Praise Team Mode Active' : 'Activate Praise Team Mode'}
         </button>
+
+        {/* Share App Action (Moved Up & Enhanced) */}
+        <Link 
+          href="/app/download"
+          className={`w-full py-6 rounded-[32px] flex items-center justify-between px-8 transition-all active:scale-[0.98] ${isDarkMode ? 'bg-zinc-900 border-brand-yellow/20 shadow-brand-yellow/5' : 'bg-brand-purple/5 border-brand-purple/10 shadow-brand-purple/5'} border shadow-xl`}
+        >
+          <div className="flex items-center gap-4">
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${accentBg}`}>
+              <span className="material-icons text-xl">qr_code_2</span>
+            </div>
+            <p className="text-sm font-black tracking-tight">Invite Friends to PassionFruits</p>
+          </div>
+          <span className={`material-icons ${accentColor}`}>arrow_forward</span>
+        </Link>
       </section>
 
       {/* Activity Analytics */}
@@ -94,7 +108,7 @@ export default function ProfilePage() {
       </section>
 
       {/* Stats Cards */}
-      <section className="px-8 grid grid-cols-2 gap-4 mb-8">
+      <section className="px-8 grid grid-cols-2 gap-4">
         <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border p-8 rounded-[48px] flex flex-col gap-1`}>
           <p className="text-3xl font-black font-space-grotesk tracking-tighter">12</p>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Shared<br/>Meditations</p>
@@ -103,22 +117,6 @@ export default function ProfilePage() {
           <p className="text-3xl font-black font-space-grotesk tracking-tighter">85%</p>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Worship<br/>Attendance</p>
         </div>
-      </section>
-
-      {/* Share App Action */}
-      <section className="px-8">
-        <Link 
-          href="/app/download"
-          className={`w-full py-6 rounded-[32px] flex items-center justify-between px-8 transition-all active:scale-[0.98] ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'} border shadow-sm`}
-        >
-          <div className="flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${accentBg}`}>
-              <span className="material-icons text-xl">qr_code_2</span>
-            </div>
-            <p className="text-sm font-black tracking-tight">Share App with Friends</p>
-          </div>
-          <span className="material-icons text-zinc-400">chevron_right</span>
-        </Link>
       </section>
     </div>
   )
