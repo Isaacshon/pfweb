@@ -3,7 +3,6 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import Image from 'next/image'
 import { ScanOverlay } from './ScanOverlay'
 import { useTheme } from '@/context/ThemeContext'
 
@@ -44,7 +43,6 @@ export function AppNavBar() {
     setIsSwiping(false)
   }
 
-  // Dynamic Theme Colors
   const activeColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
   const bgColor = isDarkMode ? 'bg-[#050505]/95' : 'bg-white/95'
   const borderColor = isDarkMode ? 'border-zinc-900' : 'border-zinc-50'
@@ -63,24 +61,27 @@ export function AppNavBar() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 onClick={() => setIsScanOpen(true)}
-                className="relative -top-8 cursor-pointer"
+                className="relative -top-8 cursor-pointer group"
               >
                 <div 
-                  className={`${isDarkMode ? 'bg-zinc-900 border-zinc-950' : 'bg-white border-white'} rounded-full w-20 h-20 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.1)] border-[4px] overflow-hidden transition-all duration-300 active:scale-90`}
+                  className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-white'} rounded-full w-20 h-20 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.1)] border-[4px] overflow-hidden transition-all duration-300 active:scale-90`}
                   style={{
                     transform: isSwiping && touchStart && currentY 
                       ? `translateY(${Math.max(-40, currentY - touchStart)}px)` 
                       : 'translateY(0)'
                   }}
                 >
-                  <div className="relative w-full h-full">
-                    <Image 
-                      src="/images/pf-character.png" 
-                      alt="PF Character" 
-                      fill 
-                      className="object-cover scale-125"
-                    />
-                  </div>
+                  {/* Using direct img tag for better reliability in PWA environments */}
+                  <img 
+                    src="/images/pf-character.png" 
+                    alt="PF Character" 
+                    className="w-full h-full object-contain scale-110"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://placehold.co/200x200?text=PF";
+                    }}
+                  />
                 </div>
                 <span className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.2em] text-center w-full ${activeColor}`}>Scan</span>
               </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef } from 'react'
+import { useTheme } from '@/context/ThemeContext'
 
 interface ScanOverlayProps {
   isOpen: boolean
@@ -9,81 +10,99 @@ interface ScanOverlayProps {
 
 export function ScanOverlay({ isOpen, onClose }: ScanOverlayProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const { isDarkMode } = useTheme()
 
   useEffect(() => {
-    if (isOpen) {
-      // Start camera
-      const startCamera = async () => {
+    let stream: MediaStream | null = null
+
+    async function setupCamera() {
+      if (isOpen) {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' } 
+          })
           if (videoRef.current) {
             videoRef.current.srcObject = stream
           }
         } catch (err) {
-          console.error('Camera access denied:', err)
+          console.error("Camera error:", err)
         }
       }
-      startCamera()
-    } else {
-      // Stop camera
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks()
-        tracks.forEach(track => track.stop())
+    }
+
+    setupCamera()
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop())
       }
     }
   }, [isOpen])
 
+  if (!isOpen) return null
+
+  const accentColor = isDarkMode ? 'border-brand-yellow' : 'border-brand-purple'
+  const glowColor = isDarkMode ? 'shadow-[0_0_20px_rgba(252,211,77,0.3)]' : 'shadow-[0_0_20px_rgba(109,40,217,0.3)]'
+
   return (
-    <div 
-      className={`fixed inset-0 z-[100] transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] bg-black overflow-hidden ${
-        isOpen ? 'translate-y-0' : 'translate-y-full'
-      }`}
-    >
-      {/* Silky Top Bar */}
-      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10 bg-gradient-to-b from-black/50 to-transparent">
-        <div className="flex flex-col">
-          <span className="text-brand-yellow font-black text-[10px] uppercase tracking-[0.3em]">Scanner</span>
-          <h2 className="text-white font-plus-jakarta font-black text-2xl tracking-tighter">PassionFruits</h2>
+    <div className="fixed inset-0 z-[100] bg-black animate-in slide-in-from-bottom duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]">
+      {/* Camera Feed */}
+      <video 
+        ref={videoRef} 
+        autoPlay 
+        playsInline 
+        className="w-full h-full object-cover opacity-60 grayscale-[0.3]"
+      />
+
+      {/* Close Button */}
+      <button 
+        onClick={onClose}
+        className="absolute top-16 right-8 w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-90 transition-transform"
+      >
+        <span className="material-icons">close</span>
+      </button>
+
+      {/* QR Scanning UI */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {/* The Scanning Box (QR Focus) */}
+        <div className="relative w-64 h-64">
+          {/* Corner Guides */}
+          <div className={`absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 ${accentColor} rounded-tl-3xl ${glowColor}`}></div>
+          <div className={`absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 ${accentColor} rounded-tr-3xl ${glowColor}`}></div>
+          <div className={`absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 ${accentColor} rounded-bl-3xl ${glowColor}`}></div>
+          <div className={`absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 ${accentColor} rounded-br-3xl ${glowColor}`}></div>
+          
+          {/* Scanning Line Animation */}
+          <div className={`absolute top-0 left-0 right-0 h-1 ${isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'} animate-scan-move opacity-50`}></div>
         </div>
-        <button 
-          onClick={onClose}
-          className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white active:scale-75 transition-all"
-        >
-          <span className="material-symbols-outlined text-2xl">close</span>
-        </button>
+
+        <div className="mt-12 text-center px-12">
+          <h3 className="text-white text-2xl font-black font-plus-jakarta tracking-tight mb-3">QR Code Scan</h3>
+          <p className="text-white/40 text-sm font-medium leading-relaxed">
+            Scan the QR code to connect<br/>with your community
+          </p>
+        </div>
       </div>
 
-      {/* Camera Viewport */}
-      <div className="w-full h-full relative">
-        <video 
-          ref={videoRef}
-          autoPlay 
-          playsInline 
-          className="w-full h-full object-cover grayscale contrast-125"
-        />
-        
-        {/* Scanning Reticle */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-64 h-64 border-2 border-brand-purple/50 rounded-[40px] relative">
-            <div className="absolute inset-0 border-2 border-brand-yellow rounded-[40px] animate-pulse"></div>
-            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-brand-yellow shadow-[0_0_15px_rgba(253,212,4,0.8)] animate-scan-line"></div>
-          </div>
+      {/* Brand Footer with Character Logo */}
+      <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-white/5 backdrop-blur-xl p-2 border border-white/10">
+          <img src="/images/pf-character.png" alt="PF Character" className="w-full h-full object-contain" />
         </div>
-      </div>
-
-      {/* Bottom Hint */}
-      <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center gap-4 animate-bounce">
-        <p className="text-white/60 font-bold text-[10px] uppercase tracking-widest">Scanning for life...</p>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-brand-yellow animate-pulse"></div>
+          <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em]">Scanner Ready</span>
+        </div>
       </div>
 
       <style jsx>{`
-        @keyframes scan-line {
-          0% { transform: translateY(-120px); opacity: 0; }
+        @keyframes scan-move {
+          0% { top: 0; opacity: 0; }
           50% { opacity: 1; }
-          100% { transform: translateY(120px); opacity: 0; }
+          100% { top: 100%; opacity: 0; }
         }
-        .animate-scan-line {
-          animation: scan-line 2s linear infinite;
+        .animate-scan-move {
+          animation: scan-move 2s infinite linear;
         }
       `}</style>
     </div>
