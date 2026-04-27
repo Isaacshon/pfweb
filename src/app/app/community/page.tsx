@@ -27,7 +27,18 @@ const initialPosts = [
     reactions: { Like: 5, Praying: 12, Comforting: 8, Insight: 2, Check: 3 },
     userReaction: null,
     comments: [
-      { id: 101, user: "Blessed Member", text: "Truly inspiring meditation. Thank you for sharing!", date: "10 min ago", isPinned: true }
+      { 
+        id: 101, 
+        user: "Blessed Member", 
+        text: "Truly inspiring meditation. Thank you for sharing!", 
+        date: "10 min ago", 
+        isPinned: true,
+        likes: 153,
+        userLiked: false,
+        replies: [
+          { id: 201, user: "chxikrohx", text: "@Blessed Member 제발 ㅋㅋㅋㅋㅋㅋㅋㅋ", date: "3 min ago", likes: 2, userLiked: false }
+        ]
+      }
     ]
   },
   { 
@@ -67,7 +78,7 @@ export default function CommunityPage() {
 
   // Load from DB & Request Notification Permission
   useEffect(() => {
-    const savedPosts = localStorage.getItem('pf_db_posts_v2')
+    const savedPosts = localStorage.getItem('pf_db_posts_v3')
     if (savedPosts) {
       setPosts(JSON.parse(savedPosts))
     } else {
@@ -89,7 +100,7 @@ export default function CommunityPage() {
   // Save to DB
   useEffect(() => {
     if (!isLoaded) return
-    localStorage.setItem('pf_db_posts_v2', JSON.stringify(posts))
+    localStorage.setItem('pf_db_posts_v3', JSON.stringify(posts))
   }, [posts, isLoaded])
 
   const showNotify = useCallback((msg: string) => {
@@ -114,9 +125,13 @@ export default function CommunityPage() {
     }
 
     const handlePopState = (e: PopStateEvent) => {
+      // Priority: Close modal first, then feed, then selection
       if (isCommentsOpen) {
         setIsCommentsOpen(false)
-      } else if (view === 'feed') {
+        return
+      }
+      
+      if (view === 'feed') {
         setView('selection')
       } else if (view === 'selection') {
         const now = Date.now()
@@ -137,7 +152,7 @@ export default function CommunityPage() {
 
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [view, lastBackPress, showNotify])
+  }, [view, lastBackPress, showNotify, isCommentsOpen])
 
   const navigateToFeed = (tab: 'meditation' | 'prayer') => {
     setActiveTab(tab)
@@ -158,7 +173,6 @@ export default function CommunityPage() {
         if (next) {
           updatedReactions[next] = (updatedReactions[next] || 0) + 1
           showNotify("한 명이 당신을 위해 함께 기도합니다.")
-          // Push simulation for author
           triggerPush("PassionFruits", "당신의 글에 누군가 함께 기도하고 있습니다.")
         }
         
@@ -182,7 +196,8 @@ export default function CommunityPage() {
             date: "Just now", 
             isAuthor: p.user === currentUserName,
             likes: 0,
-            userLiked: false
+            userLiked: false,
+            replies: []
           }]
         }
       }
@@ -278,6 +293,14 @@ export default function CommunityPage() {
     window.history.pushState({ pf_view: 'comments' }, '')
   }
 
+  const handleManualCloseComments = () => {
+    if (window.history.state?.pf_view === 'comments') {
+      window.history.back()
+    } else {
+      setIsCommentsOpen(false)
+    }
+  }
+
   const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-white'
   const textColor = isDarkMode ? 'text-white' : 'text-zinc-900'
   const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
@@ -350,6 +373,7 @@ export default function CommunityPage() {
                 <div className="flex items-center gap-8">
                   <div className="relative">
                     <button 
+                      type="button"
                       onPointerDown={(e) => handlePointerDown(p.id, e)}
                       onPointerUp={(e) => handlePointerUp(p.id, e)}
                       onPointerCancel={handlePointerCancel}
@@ -397,12 +421,7 @@ export default function CommunityPage() {
       {isCommentsOpen && activePost && (
         <CommentsSheet 
           isOpen={isCommentsOpen}
-          onClose={() => {
-            setIsCommentsOpen(false)
-            if (window.history.state?.pf_view === 'comments') {
-              window.history.back()
-            }
-          }}
+          onClose={handleManualCloseComments}
           comments={activePost.comments}
           onAddComment={(text) => addComment(activePost.id, text)}
           onToggleLike={(commentId) => toggleCommentLike(activePost.id, commentId)}

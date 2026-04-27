@@ -3,6 +3,16 @@
 import React, { useState } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 
+interface Reply {
+  id: number
+  user: string
+  avatar?: string
+  text: string
+  date: string
+  likes?: number
+  userLiked?: boolean
+}
+
 interface Comment {
   id: number
   user: string
@@ -13,6 +23,7 @@ interface Comment {
   userLiked?: boolean
   isPinned?: boolean
   isAuthor?: boolean
+  replies?: Reply[]
 }
 
 interface CommentsSheetProps {
@@ -27,6 +38,7 @@ interface CommentsSheetProps {
 export function CommentsSheet({ isOpen, onClose, comments, onAddComment, onToggleLike, authorName }: CommentsSheetProps) {
   const { isDarkMode } = useTheme()
   const [inputText, setInputText] = useState('')
+  const [expandedComments, setExpandedComments] = useState<Record<number, boolean>>({})
 
   const bgColor = isDarkMode ? 'bg-[#121212]' : 'bg-white'
   const textColor = isDarkMode ? 'text-white' : 'text-zinc-900'
@@ -46,9 +58,12 @@ export function CommentsSheet({ isOpen, onClose, comments, onAddComment, onToggl
     }
   }
 
+  const toggleReplies = (commentId: number) => {
+    setExpandedComments(prev => ({ ...prev, [commentId]: !prev[commentId] }))
+  }
+
   const handleReply = (userName: string) => {
     setInputText(`@${userName} `)
-    // In a real app, we might focus the input here
   }
 
   return (
@@ -76,44 +91,96 @@ export function CommentsSheet({ isOpen, onClose, comments, onAddComment, onToggl
 
         {/* Comments List */}
         <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6 space-y-8">
-          {comments.map((c) => (
-            <div key={c.id} className="flex gap-4 group">
-              <img 
-                src={c.avatar || "/images/PF app logo iphone.png"} 
-                className="w-12 h-12 rounded-full border border-zinc-500/10 object-cover" 
-                alt="" 
-              />
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black">{c.user}</span>
-                  <span className={`text-[10px] ${subTextColor}`}>
-                    {c.date} {c.isAuthor && <span className="ml-1 opacity-60">• 작성자</span>}
-                  </span>
-                  {c.isPinned && <span className="material-icons text-[14px] text-zinc-500 rotate-45">push_pin</span>}
-                </div>
-                <p className="text-sm leading-relaxed">{c.text}</p>
-                <div className="pt-1">
-                  <button 
-                    type="button"
-                    onClick={() => handleReply(c.user)}
-                    className={`text-[10px] font-black ${subTextColor} hover:opacity-100 transition-opacity uppercase tracking-widest`}
-                  >
-                    답글 달기
-                  </button>
+          {comments.map((c) => {
+            const isExpanded = expandedComments[c.id]
+            const hasReplies = c.replies && c.replies.length > 0
+
+            return (
+              <div key={c.id} className="flex flex-col gap-4">
+                <div className="flex gap-4 group">
+                  <img 
+                    src={c.avatar || "/images/PF app logo iphone.png"} 
+                    className="w-12 h-12 rounded-full border border-zinc-500/10 object-cover" 
+                    alt="" 
+                  />
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black">{c.user}</span>
+                      <span className={`text-[10px] ${subTextColor}`}>
+                        {c.date} {c.isAuthor && <span className="ml-1 opacity-60">• 작성자</span>}
+                      </span>
+                      {c.isPinned && <span className="material-icons text-[14px] text-zinc-500 rotate-45">push_pin</span>}
+                    </div>
+                    <p className="text-sm leading-relaxed">{c.text}</p>
+                    <div className="pt-1">
+                      <button 
+                        type="button"
+                        onClick={() => handleReply(c.user)}
+                        className={`text-[10px] font-black ${subTextColor} hover:opacity-100 transition-opacity uppercase tracking-widest`}
+                      >
+                        답글 달기
+                      </button>
+                    </div>
+
+                    {/* Threaded Replies UI */}
+                    {hasReplies && (
+                      <div className="pt-4 space-y-6">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-[1px] ${isDarkMode ? 'bg-white/10' : 'bg-black/5'}`}></div>
+                          <button 
+                            type="button"
+                            onClick={() => toggleReplies(c.id)}
+                            className={`text-[10px] font-black ${subTextColor} uppercase tracking-widest hover:opacity-100 transition-opacity`}
+                          >
+                            {isExpanded ? '답글 숨기기' : `답글 ${c.replies?.length}개 더 보기`}
+                          </button>
+                        </div>
+
+                        {isExpanded && (
+                          <div className="space-y-6 animate-in slide-in-from-top-2 duration-300">
+                            {c.replies?.map((r) => (
+                              <div key={r.id} className="flex gap-3">
+                                <img 
+                                  src={r.avatar || "/images/PF app logo iphone.png"} 
+                                  className="w-8 h-8 rounded-full border border-zinc-500/10 object-cover" 
+                                  alt="" 
+                                />
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-black">{r.user}</span>
+                                    <span className={`text-[9px] ${subTextColor}`}>{r.date}</span>
+                                  </div>
+                                  <p className="text-xs leading-relaxed">{r.text}</p>
+                                  <button 
+                                    type="button"
+                                    onClick={() => handleReply(r.user)}
+                                    className={`text-[9px] font-black ${subTextColor} uppercase tracking-widest`}
+                                  >
+                                    답글 달기
+                                  </button>
+                                </div>
+                                <button type="button" className={`material-icons text-[16px] ${subTextColor} pt-1`}>favorite_border</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-center gap-1 min-w-[30px] pt-1">
+                    <button 
+                      type="button"
+                      onClick={() => onToggleLike(c.id)}
+                      className={`material-icons text-[20px] transition-all active:scale-125 ${c.userLiked ? 'text-red-500' : subTextColor}`}
+                    >
+                      {c.userLiked ? 'favorite' : 'favorite_border'}
+                    </button>
+                    {(c.likes ?? 0) > 0 && <span className={`text-[10px] font-bold ${subTextColor}`}>{c.likes}</span>}
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col items-center gap-1 min-w-[30px] pt-1">
-                <button 
-                  type="button"
-                  onClick={() => onToggleLike(c.id)}
-                  className={`material-icons text-[20px] transition-all active:scale-125 ${c.userLiked ? 'text-red-500' : subTextColor}`}
-                >
-                  {c.userLiked ? 'favorite' : 'favorite_border'}
-                </button>
-                {(c.likes ?? 0) > 0 && <span className={`text-[10px] font-bold ${subTextColor}`}>{c.likes}</span>}
-              </div>
-            </div>
-          ))}
+            )
+          })}
           {comments.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-20">
               <span className="material-icons text-5xl">chat_bubble_outline</span>
@@ -136,7 +203,7 @@ export function CommentsSheet({ isOpen, onClose, comments, onAddComment, onToggl
           ))}
         </div>
 
-        {/* Input Area - Instagram Reference Style */}
+        {/* Input Area */}
         <div className="px-6 pb-12 pt-4 border-t border-zinc-500/5">
           <div className="flex items-center gap-4">
             <div className={`flex-1 flex items-center gap-3 h-14 px-6 rounded-full border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-100 border-slate-200'}`}>
