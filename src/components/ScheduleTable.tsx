@@ -37,9 +37,13 @@ export const ScheduleTable = () => {
               <div key={index} className="flex flex-col md:flex-row md:justify-between md:items-center border-b-4 border-brand-dark/5 pb-10 last:border-0 last:pb-0 gap-6">
                 <div>
                   <h4 className="font-black text-3xl text-brand-dark mb-2 uppercase tracking-tight">{item.name}</h4>
-                  <p className="text-sm text-brand-purple font-black uppercase tracking-[0.2em]">{item.location}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="material-icons text-brand-purple text-sm">place</span>
+                    <p className="text-sm text-brand-purple font-black uppercase tracking-[0.2em]">{item.location}</p>
+                  </div>
                 </div>
-                <div className="md:text-right">
+                <div className="flex items-center gap-4 md:text-right">
+                  <span className="material-icons text-brand-dark/20 hidden md:block">access_time</span>
                   <span className="inline-block px-8 py-2 bg-brand-dark text-white rounded-full text-base font-black uppercase tracking-widest shadow-lg">
                     {item.time}
                   </span>

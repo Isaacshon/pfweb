@@ -263,7 +263,10 @@ export default function Home() {
                 <span className="text-brand-purple font-black text-sm tracking-widest uppercase mb-2 block">Moments</span>
                 <h2 className="text-4xl font-black text-brand-dark uppercase tracking-tighter">Passion in Action</h2>
               </div>
-              <Link href="/events" className="text-brand-purple font-black text-xs uppercase tracking-widest border-b-2 border-brand-purple pb-1">Full Gallery</Link>
+              <Link href="/events" className="flex items-center gap-2 text-brand-purple font-black text-xs uppercase tracking-widest border-b-2 border-brand-purple pb-1 group">
+                Full Gallery
+                <span className="material-icons text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </Link>
             </div>
             <GallerySlider images={gallery} />
           </div>
@@ -300,7 +303,7 @@ export default function Home() {
               <div className="space-y-6">
                 <Link href="/contact" className="flex items-center gap-8 p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:border-brand-purple transition-colors group">
                   <div className="w-16 h-16 rounded-2xl bg-[#fffbbd] flex items-center justify-center text-brand-dark shadow-sm">
-                    <span className="material-symbols-outlined text-3xl">location_on</span>
+                    <span className="material-icons text-3xl">place</span>
                   </div>
                   <div>
                     <h4 className="font-black text-xl text-brand-dark uppercase">Toronto Office</h4>
@@ -309,7 +312,7 @@ export default function Home() {
                 </Link>
                 <Link href="/contact" className="flex items-center gap-8 p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:border-brand-purple transition-colors group">
                   <div className="w-16 h-16 rounded-2xl bg-[#9a78b4] flex items-center justify-center text-white shadow-sm">
-                    <span className="material-symbols-outlined text-3xl">mail</span>
+                    <span className="material-icons text-3xl">mail</span>
                   </div>
                   <div>
                     <h4 className="font-black text-xl text-brand-dark uppercase">General Inquiries</h4>
@@ -342,10 +345,10 @@ export default function Home() {
               <h4 className="font-black mb-10 text-brand-purple uppercase tracking-[0.2em] text-xs">Follow</h4>
               <div className="flex gap-6">
                 <a href="https://www.instagram.com/passionfruits_ministry/" target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center hover:text-brand-purple border border-slate-200 shadow-sm transition-all">
-                  <span className="material-symbols-outlined text-2xl">photo_camera</span>
+                  <span className="material-icons text-2xl">camera_alt</span>
                 </a>
                 <a href="#" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center hover:text-brand-purple border border-slate-200 shadow-sm transition-all">
-                  <span className="material-symbols-outlined text-2xl">play_circle</span>
+                    <span className="material-icons text-2xl">play_circle</span>
                 </a>
               </div>
             </div>
@@ -369,7 +372,7 @@ export default function Home() {
             onClick={() => setIsMenuOpen(false)}
             className="w-12 h-12 flex items-center justify-center bg-slate-50 rounded-2xl shadow-sm"
           >
-            <span className="material-symbols-outlined text-brand-dark text-3xl">close</span>
+            <span className="material-icons text-brand-dark text-3xl">close</span>
           </button>
         </div>
         

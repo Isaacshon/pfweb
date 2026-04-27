@@ -30,7 +30,7 @@ export const IconMenu = ({ items }: { items?: any[] }) => {
             {item.iconUrl ? (
               <img src={item.iconUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={item.label} />
             ) : (
-              <span className="material-symbols-outlined text-brand-purple/70 group-hover:text-brand-purple text-3xl">
+              <span className="material-icons text-brand-purple/70 group-hover:text-brand-purple text-3xl">
                 {item.icon}
               </span>
             )}

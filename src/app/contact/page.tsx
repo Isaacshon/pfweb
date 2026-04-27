@@ -144,7 +144,7 @@ export default function Contact() {
             <div className="space-y-6 md:space-y-8">
               <div className="flex items-center gap-6 group cursor-pointer">
                 <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-brand-purple transition-all shadow-sm">
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">mail</span>
+                  <span className="material-icons text-slate-400 group-hover:text-white transition-colors">mail</span>
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{content?.emailTitle || 'Email Us'}</h4>
@@ -154,7 +154,7 @@ export default function Contact() {
 
               <div className="flex items-center gap-6 group cursor-pointer">
                 <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-brand-purple transition-all shadow-sm">
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">share</span>
+                  <span className="material-icons text-slate-400 group-hover:text-white transition-colors">share</span>
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Follow Us</h4>
@@ -229,10 +229,10 @@ export default function Contact() {
             <h4 className="font-black mb-10 text-brand-purple uppercase tracking-[0.2em] text-xs">Follow</h4>
             <div className="flex gap-6">
               <a href="https://www.instagram.com/passionfruits_ministry/" target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center hover:text-brand-purple border border-slate-200 shadow-sm transition-all">
-                <span className="material-symbols-outlined text-2xl">photo_camera</span>
+                <span className="material-icons text-2xl">camera_alt</span>
               </a>
               <a href="#" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center hover:text-brand-purple border border-slate-200 shadow-sm transition-all">
-                <span className="material-symbols-outlined text-2xl">play_circle</span>
+                <span className="material-icons text-2xl">play_circle</span>
               </a>
             </div>
           </div>
@@ -255,7 +255,7 @@ export default function Contact() {
             onClick={() => setIsMenuOpen(false)}
             className="w-12 h-12 flex items-center justify-center bg-slate-50 rounded-2xl shadow-sm"
           >
-            <span className="material-symbols-outlined text-brand-dark text-3xl">close</span>
+            <span className="material-icons text-brand-dark text-3xl">close</span>
           </button>
         </div>
         
