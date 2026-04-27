@@ -37,7 +37,7 @@ export default function AppPage() {
   const [fontSize, setFontSize] = useState(20)
   const [lineHeight, setLineHeight] = useState(1.85)
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const [openUI, setOpenUI] = useState<string | null>(null) // 'picker', 'settings', 'search'
+  const [openUI, setOpenUI] = useState<string | null>(null)
   const [pickerTab, setPickerTab] = useState<'book' | 'chapter'>('book')
   
   const [searchQuery, setSearchQuery] = useState('')
@@ -45,7 +45,6 @@ export default function AppPage() {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [isGlobalSearching, setIsGlobalSearching] = useState(false)
 
-  // Clean HTML Tags Engine
   const cleanText = (text: string) => {
     return text.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim()
   }
@@ -56,8 +55,7 @@ export default function AppPage() {
       const res = await fetch(`https://bolls.life/get-chapter/${vCode}/${bId}/${cNum}/`)
       const data = await res.json()
       if (Array.isArray(data)) {
-        const cleaned = data.map(v => ({ ...v, text: cleanText(v.text) }))
-        setVerses(cleaned)
+        setVerses(data.map(v => ({ ...v, text: cleanText(v.text) })))
       }
     } catch (err) { console.error(err) }
     finally { setIsLoading(false) }
@@ -78,9 +76,7 @@ export default function AppPage() {
     try {
       const res = await fetch(`https://bolls.life/search/${version.code}/?search=${encodeURIComponent(query)}`)
       const data = await res.json()
-      if (Array.isArray(data)) {
-        setSearchResults(data.map(v => ({ ...v, text: cleanText(v.text) })))
-      }
+      if (Array.isArray(data)) setSearchResults(data.map(v => ({ ...v, text: cleanText(v.text) })))
     } catch (err) { console.error(err) }
     finally { setIsGlobalSearching(false) }
   }, [version.code])
@@ -96,108 +92,111 @@ export default function AppPage() {
   }, [bookSearch])
 
   return (
-    <div className={`min-h-screen flex flex-col pt-0 pb-32 transition-all duration-700 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-white text-brand-dark'}`}>
+    <div className={`min-h-screen flex flex-col pt-safe pb-32 transition-colors duration-500 ${isDarkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-white text-brand-dark'}`}>
       
-      {/* Sticky Header */}
-      <div className={`sticky top-0 z-50 px-6 py-5 flex flex-col gap-4 border-b transition-all ${isDarkMode ? 'bg-zinc-950/80 border-zinc-900' : 'bg-white/80 border-slate-50'} backdrop-blur-xl`}>
-        <div className="flex items-center justify-between gap-1">
+      {/* Ultra-Minimal Header */}
+      <header className={`sticky top-0 z-50 flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950/80' : 'bg-white/80'} backdrop-blur-sm`}>
+        <div className="px-6 h-20 flex items-center justify-between">
+          {/* Settings Icon */}
           <button 
             onClick={() => setOpenUI(openUI === 'settings' ? null : 'settings')}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${openUI === 'settings' ? 'bg-brand-purple text-white rotate-90' : 'text-slate-400 hover:bg-slate-100/50'}`}
+            className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'settings' ? 'text-brand-purple' : 'text-slate-300'}`}
           >
-            <span className="material-symbols-outlined text-[20px] font-light">tune</span>
+            <span className="material-symbols-outlined text-[22px] font-light">tune</span>
           </button>
 
+          {/* Core Navigation - Clean Text Only */}
           <button 
             onClick={() => { setOpenUI('picker'); setPickerTab('book'); }}
-            className="flex-1 flex items-center justify-center gap-2 bg-slate-100/50 dark:bg-zinc-900/50 p-2 rounded-full px-4 active:scale-95 transition-transform"
+            className="flex items-center gap-3 px-4 py-2 group active:scale-95 transition-all"
           >
-            <span className="font-plus-jakarta font-black text-[15px] text-brand-purple">{book.name}</span>
-            <div className="w-1.5 h-1.5 rounded-full bg-brand-yellow"></div>
-            <span className="font-plus-jakarta font-black text-[15px] text-brand-dark dark:text-white">{chapter}장</span>
-            <span className="material-symbols-outlined text-sm opacity-30">expand_more</span>
+            <span className="font-plus-jakarta font-black text-[17px] tracking-tight group-active:text-brand-purple">{book.name}</span>
+            <span className="w-1 h-1 rounded-full bg-brand-yellow"></span>
+            <span className="font-plus-jakarta font-black text-[17px] tracking-tight text-brand-purple">{chapter}장</span>
+            <span className="material-symbols-outlined text-sm opacity-20 group-hover:opacity-100 transition-opacity">expand_more</span>
           </button>
 
-          <select 
-            value={version.code}
-            onChange={(e) => {
-              const selected = bibleVersions.find(v => v.code === e.target.value)
-              if (selected) setVersion(selected)
-            }}
-            className={`text-[10px] font-black px-3 py-2 rounded-lg focus:outline-none cursor-pointer uppercase tracking-widest ${isDarkMode ? 'bg-zinc-900 text-zinc-400' : 'bg-slate-50 text-slate-400'}`}
-          >
-            {bibleVersions.map(v => <option key={v.code} value={v.code}>{v.name}</option>)}
-          </select>
-
+          {/* Search Icon */}
           <button 
             onClick={() => setOpenUI(openUI === 'search' ? null : 'search')}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${openUI === 'search' ? 'bg-brand-purple text-white' : 'text-slate-400 hover:bg-slate-100/50'}`}
+            className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'search' ? 'text-brand-purple' : 'text-slate-300'}`}
           >
-            <span className="material-symbols-outlined text-[20px] font-light">search</span>
+            <span className="material-symbols-outlined text-[22px] font-light">search</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Settings Panel */}
+      {/* Discrete Settings Sheet - No Blur */}
       {openUI === 'settings' && (
-        <div className={`fixed inset-0 z-[60] flex items-end justify-center px-4 pb-12 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300`} onClick={() => setOpenUI(null)}>
-          <div className={`w-full max-w-md p-8 rounded-[40px] flex flex-col gap-8 shadow-2xl ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`} onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center">
-              <span className="text-[12px] font-black uppercase tracking-widest opacity-40">Display Mode</span>
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className={`px-6 py-2 rounded-full font-black text-xs transition-all ${isDarkMode ? 'bg-brand-purple text-white' : 'bg-slate-100 text-brand-dark'}`}>
-                {isDarkMode ? 'Dark Mode' : 'Light Mode'}
-              </button>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[12px] font-black uppercase tracking-widest opacity-40">Text Size</span>
-              <div className="flex items-center gap-6">
-                <button onClick={() => setFontSize(Math.max(14, fontSize - 2))} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-brand-purple font-black">-</button>
-                <span className="font-space-grotesk font-black text-xl">{fontSize}</span>
-                <button onClick={() => setFontSize(Math.min(32, fontSize + 2))} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-brand-purple font-black">+</button>
+        <div className="fixed inset-0 z-[60] bg-black/5" onClick={() => setOpenUI(null)}>
+          <div 
+            className={`absolute bottom-0 left-0 right-0 p-10 rounded-t-[48px] shadow-[0_-20px_60px_rgba(0,0,0,0.1)] border-t transition-transform animate-in slide-in-from-bottom duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`} 
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex flex-col gap-10 max-w-sm mx-auto">
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-black uppercase tracking-widest opacity-30">Night Mode</span>
+                <button onClick={() => setIsDarkMode(!isDarkMode)} className={`w-12 h-6 rounded-full relative transition-all ${isDarkMode ? 'bg-brand-purple' : 'bg-slate-200'}`}>
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isDarkMode ? 'left-7' : 'left-1'}`}></div>
+                </button>
               </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-[12px] font-black uppercase tracking-widest opacity-40">Line Spacing</span>
-              <div className="flex items-center gap-6">
-                <button onClick={() => setLineHeight(Math.max(1.2, lineHeight - 0.1))} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-brand-purple font-black">-</button>
-                <span className="font-space-grotesk font-black text-xl">{lineHeight.toFixed(1)}</span>
-                <button onClick={() => setLineHeight(Math.min(2.5, lineHeight + 0.1))} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-brand-purple font-black">+</button>
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-black uppercase tracking-widest opacity-30">Text Size</span>
+                <div className="flex items-center gap-6">
+                  <button onClick={() => setFontSize(Math.max(14, fontSize - 2))} className="text-brand-purple font-black opacity-40 hover:opacity-100">-</button>
+                  <span className="font-space-grotesk font-black text-lg">{fontSize}</span>
+                  <button onClick={() => setFontSize(Math.min(32, fontSize + 2))} className="text-brand-purple font-black opacity-40 hover:opacity-100">+</button>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-black uppercase tracking-widest opacity-30">Spacing</span>
+                <div className="flex items-center gap-6">
+                  <button onClick={() => setLineHeight(Math.max(1.2, lineHeight - 0.1))} className="text-brand-purple font-black opacity-40 hover:opacity-100">-</button>
+                  <span className="font-space-grotesk font-black text-lg">{lineHeight.toFixed(1)}</span>
+                  <button onClick={() => setLineHeight(Math.min(2.5, lineHeight + 0.1))} className="text-brand-purple font-black opacity-40 hover:opacity-100">+</button>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-black uppercase tracking-widest opacity-30">Version</span>
+                <select 
+                  value={version.code}
+                  onChange={(e) => setVersion(bibleVersions.find(v => v.code === e.target.value) || version)}
+                  className="bg-transparent font-black text-xs text-brand-purple focus:outline-none"
+                >
+                  {bibleVersions.map(v => <option key={v.code} value={v.code}>{v.name}</option>)}
+                </select>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Global Search Panel */}
+      {/* Search View - Clean White/Black No Blur */}
       {openUI === 'search' && (
-        <div className={`fixed inset-0 z-[60] flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
-          <div className="px-6 py-8 flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-              <button onClick={() => setOpenUI(null)} className="w-10 h-10 flex items-center justify-center"><span className="material-symbols-outlined">arrow_back</span></button>
-              <h2 className="font-plus-jakarta font-black text-2xl tracking-tighter">Global Search</h2>
-            </div>
+        <div className={`fixed inset-0 z-[70] flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
+          <div className="px-8 pt-16 pb-8 flex flex-col gap-8">
+            <button onClick={() => setOpenUI(null)} className="self-start text-slate-300"><span className="material-symbols-outlined text-4xl font-light">arrow_back</span></button>
             <div className="relative">
               <input 
                 type="text"
-                placeholder="Type to search word..."
+                placeholder="Global Search"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); performGlobalSearch(e.target.value); }}
-                className={`w-full py-4 px-12 rounded-2xl font-bold text-sm focus:outline-none focus:ring-4 transition-all ${isDarkMode ? 'bg-zinc-900 focus:ring-brand-purple/10' : 'bg-slate-100 focus:ring-brand-purple/10'}`}
+                className={`w-full py-4 text-2xl font-black placeholder:opacity-20 focus:outline-none bg-transparent`}
                 autoFocus
               />
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 opacity-30">search</span>
-              {isGlobalSearching && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-brand-purple border-t-transparent rounded-full animate-spin"></div>}
+              {isGlobalSearching && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-brand-purple border-t-transparent rounded-full animate-spin"></div>}
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto px-6 pb-12">
-            <div className="flex flex-col gap-3">
+          <div className="flex-1 overflow-y-auto px-8 pb-12">
+            <div className="flex flex-col gap-8">
               {searchResults.map((res: any, idx) => (
                 <button key={idx} onClick={() => { 
                   const b = bibleBooks.find(b => b.id === res.book); 
-                  if (b) { setBook(b); setChapter(res.chapter); setOpenUI(null); setSearchQuery(''); setSearchResults([]); }
-                }} className={`text-left p-6 rounded-3xl transition-all active:scale-[0.98] ${isDarkMode ? 'bg-zinc-900/50 hover:bg-zinc-900' : 'bg-slate-50 hover:bg-slate-100'}`}>
-                  <p className="font-black text-[10px] text-brand-purple uppercase tracking-[0.2em] mb-2">{bibleBooks.find(b => b.id === res.book)?.name} {res.chapter}:{res.verse}</p>
-                  <p className="text-[15px] font-medium leading-relaxed opacity-80">{res.text}</p>
+                  if (b) { setBook(b); setChapter(res.chapter); setOpenUI(null); }
+                }} className="text-left group transition-opacity active:opacity-50">
+                  <p className="font-black text-[10px] text-brand-purple uppercase tracking-[0.3em] mb-3">{bibleBooks.find(b => b.id === res.book)?.name} {res.chapter}:{res.verse}</p>
+                  <p className="text-[17px] font-medium leading-relaxed opacity-70 group-hover:opacity-100">{res.text}</p>
                 </button>
               ))}
             </div>
@@ -205,56 +204,43 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Book & Chapter Picker Overlay (Inspired by Screenshots) */}
+      {/* Book & Chapter Picker - Pure Design */}
       {openUI === 'picker' && (
         <div className={`fixed inset-0 z-[70] flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'} animate-in slide-in-from-bottom duration-500`}>
-          <div className="px-6 pt-12 pb-6 flex flex-col gap-6">
+          <div className="px-8 pt-16 pb-8 flex flex-col gap-10">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button onClick={() => setOpenUI(null)} className="w-10 h-10 flex items-center justify-center text-brand-dark dark:text-white"><span className="material-symbols-outlined text-3xl">arrow_back</span></button>
-                <h2 className="font-plus-jakarta font-black text-2xl tracking-tighter">참조 구절</h2>
-              </div>
+              <button onClick={() => setOpenUI(null)} className="text-slate-300"><span className="material-symbols-outlined text-4xl font-light">arrow_back</span></button>
               <div className="flex gap-4">
-                <span className="material-symbols-outlined opacity-60">translate</span>
-                <span className="material-symbols-outlined opacity-60">history</span>
+                <button onClick={() => setPickerTab('book')} className={`text-[12px] font-black uppercase tracking-widest ${pickerTab === 'book' ? 'text-brand-purple' : 'opacity-20'}`}>Books</button>
+                <button onClick={() => setPickerTab('chapter')} className={`text-[12px] font-black uppercase tracking-widest ${pickerTab === 'chapter' ? 'text-brand-purple' : 'opacity-20'}`}>Chapters</button>
               </div>
             </div>
             
-            <div className="relative">
-              <input 
-                type="text"
-                placeholder="검색"
-                value={bookSearch}
-                onChange={(e) => setBookSearch(e.target.value)}
-                className={`w-full py-4 px-12 rounded-2xl font-bold text-sm focus:outline-none transition-all ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-100'}`}
-              />
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 opacity-30">search</span>
-            </div>
+            <input 
+              type="text"
+              placeholder="Filter books..."
+              value={bookSearch}
+              onChange={(e) => setBookSearch(e.target.value)}
+              className="w-full py-2 text-3xl font-black placeholder:opacity-10 bg-transparent focus:outline-none"
+            />
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 pb-20 no-scrollbar">
+          <div className="flex-1 overflow-y-auto px-8 pb-24 no-scrollbar">
             {pickerTab === 'book' ? (
-              <div className="flex flex-col gap-1">
+              <div className="grid grid-cols-1 gap-4">
                 {filteredBooks.map((b) => (
-                  <button key={b.id} onClick={() => { setBook(b); setPickerTab('chapter'); }} className="flex justify-between items-center py-6 px-4 rounded-2xl active:bg-slate-50 dark:active:bg-zinc-900 transition-colors group">
-                    <div className="flex flex-col text-left">
-                      <span className="font-plus-jakarta font-black text-[18px] group-active:text-brand-purple">{b.eng}</span>
-                      <span className="text-[12px] font-bold text-slate-400 group-active:text-brand-purple/60">{b.name}</span>
-                    </div>
-                    <span className="material-symbols-outlined text-slate-300">volume_up</span>
+                  <button key={b.id} onClick={() => { setBook(b); setPickerTab('chapter'); }} className="flex flex-col py-4 group active:opacity-50 transition-opacity">
+                    <span className="font-plus-jakarta font-black text-[22px] tracking-tight group-hover:text-brand-purple">{b.eng}</span>
+                    <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">{b.name}</span>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col gap-8 animate-in fade-in duration-300">
-                <div className="flex items-center gap-3">
-                  <h3 className="font-plus-jakarta font-black text-2xl text-brand-purple">{book.eng}</h3>
-                  <span className="text-slate-400 font-bold">{book.name}</span>
-                </div>
-                <div className="grid grid-cols-5 gap-3">
-                  <button onClick={() => setPickerTab('book')} className="aspect-square rounded-2xl bg-brand-purple text-white font-black text-sm flex items-center justify-center active:scale-90 transition-transform">Intro</button>
+              <div className="flex flex-col gap-12 pt-4">
+                <h3 className="font-plus-jakarta font-black text-5xl tracking-tighter text-brand-purple/10 uppercase">{book.eng}</h3>
+                <div className="grid grid-cols-5 gap-6">
                   {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
-                    <button key={c} onClick={() => { setChapter(c); setOpenUI(null); }} className={`aspect-square rounded-2xl font-black text-sm flex items-center justify-center active:scale-90 transition-transform ${chapter === c ? 'bg-brand-yellow text-brand-dark shadow-lg shadow-brand-yellow/30' : 'bg-slate-100 dark:bg-zinc-900 text-slate-500'}`}>
+                    <button key={c} onClick={() => { setChapter(c); setOpenUI(null); }} className={`aspect-square flex items-center justify-center font-black text-lg transition-all active:scale-75 ${chapter === c ? 'text-brand-purple scale-125' : 'text-slate-300 hover:text-brand-dark dark:hover:text-white'}`}>
                       {c}
                     </button>
                   ))}
@@ -265,16 +251,16 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Main Scripture View */}
-      <main className="px-8 mt-12 flex flex-col gap-10">
+      {/* Main Scripture Text - Focused Typography */}
+      <main className="px-10 mt-12 flex flex-col gap-12">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-6">
-            <div className={`w-10 h-10 border-[3px] border-t-brand-purple rounded-full animate-spin ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}></div>
+          <div className="flex items-center justify-center py-40">
+            <div className="w-1.5 h-1.5 rounded-full bg-brand-purple animate-ping"></div>
           </div>
         ) : (
           verses.map((v: any) => (
-            <div key={v.verse} className="flex items-start gap-6 group">
-              <span className={`font-space-grotesk font-black text-[11px] mt-2.5 shrink-0 w-6 text-center transition-colors ${isDarkMode ? 'text-zinc-800' : 'text-slate-200'}`}>
+            <div key={v.verse} className="flex flex-col gap-3 group">
+              <span className={`font-space-grotesk font-black text-[11px] tracking-widest transition-opacity ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'} group-hover:opacity-100`}>
                 {v.verse}
               </span>
               <p 
@@ -288,21 +274,23 @@ export default function AppPage() {
         )}
         
         {!isLoading && verses.length > 0 && (
-          <div className="flex justify-between items-center mt-20 pt-10 border-t border-slate-100 dark:border-zinc-900">
-            <button onClick={() => setChapter(c => Math.max(1, c - 1))} className="w-14 h-14 rounded-2xl flex items-center justify-center text-slate-300 hover:text-brand-purple disabled:opacity-20 active:scale-75 transition-all" disabled={chapter === 1}>
-              <span className="material-symbols-outlined text-3xl">chevron_left</span>
+          <div className="flex justify-between items-center mt-24 py-12">
+            <button onClick={() => setChapter(c => Math.max(1, c - 1))} className="text-slate-200 hover:text-brand-purple transition-colors" disabled={chapter === 1}>
+              <span className="material-symbols-outlined text-4xl font-light">chevron_left</span>
             </button>
-            <div className="flex flex-col items-center">
-              <span className="font-black text-[10px] text-slate-300 uppercase tracking-widest">{book.name}</span>
-              <span className="font-space-grotesk font-black text-xl text-brand-purple">{chapter}장</span>
-            </div>
-            <button onClick={() => setChapter(c => Math.min(maxChapters, c + 1))} className="w-14 h-14 rounded-2xl flex items-center justify-center text-slate-300 hover:text-brand-purple disabled:opacity-20 active:scale-75 transition-all" disabled={chapter === maxChapters}>
-              <span className="material-symbols-outlined text-3xl">chevron_right</span>
+            <button onClick={() => setChapter(c => Math.min(maxChapters, c + 1))} className="text-slate-200 hover:text-brand-purple transition-colors" disabled={chapter === maxChapters}>
+              <span className="material-symbols-outlined text-4xl font-light">chevron_right</span>
             </button>
           </div>
         )}
         <div className="h-40" />
       </main>
+
+      <style jsx global>{`
+        .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   )
 }
