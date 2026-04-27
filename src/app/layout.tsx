@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 import { LanguageProvider } from "@/context/LanguageContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { DynamicFavicon } from "@/components/DynamicFavicon";
 
 export default function RootLayout({
@@ -37,10 +38,12 @@ export default function RootLayout({
         />
         <DynamicFavicon />
       </head>
-      <body className="h-full overflow-hidden overscroll-none select-none bg-white">
-        <LanguageProvider>
-          {children}
-        </LanguageProvider>
+      <body className="h-full overflow-hidden overscroll-none select-none">
+        <ThemeProvider>
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

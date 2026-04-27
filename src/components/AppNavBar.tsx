@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { ScanOverlay } from './ScanOverlay'
+import { useTheme } from '@/context/ThemeContext'
 
 const navItems = [
   { label: 'Home', icon: 'home', path: '/app' },
@@ -16,6 +17,7 @@ const navItems = [
 
 export function AppNavBar() {
   const pathname = usePathname()
+  const { isDarkMode } = useTheme()
   const [isScanOpen, setIsScanOpen] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [currentY, setCurrentY] = useState<number | null>(null)
@@ -42,9 +44,14 @@ export function AppNavBar() {
     setIsSwiping(false)
   }
 
+  // Dynamic Theme Colors
+  const activeColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
+  const bgColor = isDarkMode ? 'bg-[#050505]/95' : 'bg-white/95'
+  const borderColor = isDarkMode ? 'border-zinc-900' : 'border-zinc-50'
+
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 h-24 px-4 pb-6 flex justify-around items-center max-w-md mx-auto bg-white/95 backdrop-blur-md rounded-t-[40px] z-50 border-t border-zinc-50 shadow-[0_-10px_40px_rgba(0,0,0,0.03)] md:max-w-none md:rounded-none">
+      <nav className={`fixed bottom-0 left-0 right-0 h-24 px-4 pb-6 flex justify-around items-center max-w-md mx-auto ${bgColor} backdrop-blur-md rounded-t-[40px] z-50 border-t ${borderColor} shadow-[0_-10px_40px_rgba(0,0,0,0.03)] md:max-w-none md:rounded-none transition-colors duration-500`}>
         {navItems.map((item) => {
           const isActive = pathname === item.path
           
@@ -59,7 +66,7 @@ export function AppNavBar() {
                 className="relative -top-8 cursor-pointer"
               >
                 <div 
-                  className="bg-white rounded-full w-20 h-20 flex items-center justify-center shadow-[0_15px_40px_rgba(109,40,217,0.2)] border-[4px] border-white overflow-hidden transition-all duration-300 active:scale-90"
+                  className={`${isDarkMode ? 'bg-zinc-900 border-zinc-950' : 'bg-white border-white'} rounded-full w-20 h-20 flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.1)] border-[4px] overflow-hidden transition-all duration-300 active:scale-90`}
                   style={{
                     transform: isSwiping && touchStart && currentY 
                       ? `translateY(${Math.max(-40, currentY - touchStart)}px)` 
@@ -75,7 +82,7 @@ export function AppNavBar() {
                     />
                   </div>
                 </div>
-                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] font-black text-brand-purple uppercase tracking-[0.2em] text-center w-full">Scan</span>
+                <span className={`absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.2em] text-center w-full ${activeColor}`}>Scan</span>
               </div>
             )
           }
@@ -85,7 +92,7 @@ export function AppNavBar() {
               key={item.label}
               href={item.path}
               className={`flex flex-col items-center gap-1.5 transition-all active:scale-90 duration-200 min-w-[60px] ${
-                isActive ? 'text-brand-purple' : 'text-slate-300'
+                isActive ? activeColor : 'text-slate-400'
               }`}
             >
               <span className="material-icons text-[26px]">
