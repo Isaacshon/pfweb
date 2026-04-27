@@ -25,7 +25,7 @@ export default function BiblePage() {
       <div className="flex justify-between items-center bg-white p-4 rounded-[24px] shadow-[0_10px_30px_rgba(109,40,217,0.04)]">
         <button className="flex items-center gap-2 px-4 py-2 bg-[#f8f9ff] rounded-full hover:bg-[#e6eeff] transition-colors">
           <span className="font-bold text-[18px] text-brand-dark">John 1</span>
-          <span className="material-symbols-outlined text-slate-400">expand_more</span>
+          <span className="material-icons text-slate-400">expand_more</span>
         </button>
         
         <div className="relative">
@@ -36,7 +36,7 @@ export default function BiblePage() {
           >
             {bibleVersions.map(v => <option key={v} value={v}>{v}</option>)}
           </select>
-          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-white pointer-events-none text-sm">arrow_drop_down</span>
+          <span className="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-white pointer-events-none text-sm">arrow_drop_down</span>
         </div>
       </div>
 
@@ -45,7 +45,7 @@ export default function BiblePage() {
         <BentoCard className="min-h-[500px] flex flex-col relative overflow-visible">
           {/* Playful Integration Icon */}
           <div className="absolute -top-6 -right-4 w-16 h-16 bg-brand-yellow rounded-full flex items-center justify-center shadow-lg transform rotate-12 animate-pulse" style={{ animationDuration: '3s' }}>
-            <span className="material-symbols-outlined text-3xl text-brand-dark" style={{ fontVariationSettings: "'FILL' 1" }}>auto_stories</span>
+            <span className="material-icons text-3xl text-brand-dark" style={{ fontVariationSettings: "'FILL' 1" }}>auto_stories</span>
           </div>
 
           <div className="flex-1 space-y-6 overflow-y-auto no-scrollbar">
@@ -64,7 +64,7 @@ export default function BiblePage() {
           {/* Navigation Indicators */}
           <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-50">
             <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-brand-purple transition-colors">
-              <span className="material-symbols-outlined">chevron_left</span>
+              <span className="material-icons">chevron_left</span>
             </button>
             <div className="flex gap-2 items-center">
               <div className="w-2 h-2 rounded-full bg-slate-200"></div>
@@ -72,7 +72,7 @@ export default function BiblePage() {
               <div className="w-2 h-2 rounded-full bg-slate-200"></div>
             </div>
             <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-brand-purple transition-colors">
-              <span className="material-symbols-outlined">chevron_right</span>
+              <span className="material-icons">chevron_right</span>
             </button>
           </div>
         </BentoCard>
@@ -82,7 +82,7 @@ export default function BiblePage() {
       <BentoCard className="flex items-center justify-between bg-[#dee9fc]/50 border border-white/50" padding={false}>
         <div className="flex items-center gap-4 p-4">
           <div className="w-12 h-12 rounded-2xl bg-brand-yellow flex items-center justify-center shadow-sm">
-            <span className="material-symbols-outlined text-brand-dark" style={{ fontVariationSettings: "'FILL' 1" }}>bookmark_add</span>
+            <span className="material-icons text-brand-dark" style={{ fontVariationSettings: "'FILL' 1" }}>bookmark_add</span>
           </div>
           <div>
             <h3 className="font-black text-brand-dark text-sm uppercase tracking-tight">Save Progress</h3>

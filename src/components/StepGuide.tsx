@@ -35,7 +35,7 @@ export const StepGuide = ({
                 {step.iconUrl ? (
                   <img src={step.iconUrl} className="relative z-10 w-16 h-16 object-contain group-hover:scale-110 transition-transform duration-500" alt={step.title} />
                 ) : (
-                  <span className="material-symbols-outlined relative z-10 text-slate-400 group-hover:text-brand-purple text-5xl transition-all duration-300">
+                  <span className="material-icons relative z-10 text-brand-purple/30 group-hover:text-brand-purple text-6xl transition-all duration-500 transform group-hover:rotate-12">
                     {step.icon}
                   </span>
                 )}

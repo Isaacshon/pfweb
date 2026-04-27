@@ -148,7 +148,7 @@ export default function ConferencePage() {
             {(content?.speakers || speakers).map((s: any, i: number) => (
               <div key={i} className="bg-slate-50 rounded-3xl p-6 md:p-8 text-center border border-slate-100 hover:border-brand-purple transition-colors">
                 <div className="w-20 md:w-24 h-20 md:h-24 bg-brand-purple/10 rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-brand-purple text-3xl md:text-4xl">person</span>
+                  <span className="material-icons text-brand-purple text-3xl md:text-4xl">person</span>
                 </div>
                 <h3 className="font-black text-xl text-brand-dark mb-2">{s.name}</h3>
                 <p className="text-slate-400 font-bold text-sm">{s.role}</p>
@@ -227,7 +227,7 @@ export default function ConferencePage() {
             onClick={() => setIsMenuOpen(false)}
             className="w-12 h-12 flex items-center justify-center bg-slate-50 rounded-2xl shadow-sm"
           >
-            <span className="material-symbols-outlined text-brand-dark text-3xl">close</span>
+            <span className="material-icons text-brand-dark text-3xl">close</span>
           </button>
         </div>
         

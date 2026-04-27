@@ -33,7 +33,7 @@ export function AppTopBar({
         
         {showNotifications && (
           <button className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-brand-purple transition-colors active:scale-95">
-            <span className="material-symbols-outlined text-[24px]">notifications</span>
+            <span className="material-icons text-[24px]">notifications</span>
           </button>
         )}
       </div>

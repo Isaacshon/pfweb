@@ -97,7 +97,7 @@ export default function EventsPage() {
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-4 mb-12">
               <span className="w-12 h-12 bg-brand-purple rounded-2xl flex items-center justify-center text-white">
-                <span className="material-symbols-outlined">campaign</span>
+                <span className="material-icons">campaign</span>
               </span>
               <h2 className="text-2xl md:text-4xl font-black text-brand-dark uppercase tracking-tighter">Notice Board</h2>
             </div>
@@ -111,7 +111,7 @@ export default function EventsPage() {
                   <p className="text-slate-500 font-medium leading-relaxed">{post.content}</p>
                   <div className="mt-6 pt-6 border-t border-slate-50 flex items-center gap-2">
                     <div className="w-6 h-6 bg-brand-purple/10 rounded-lg flex items-center justify-center text-brand-purple">
-                      <span className="material-symbols-outlined text-xs">person</span>
+                      <span className="material-icons text-xs">person</span>
                     </div>
                     <span className="text-[10px] font-black text-brand-purple uppercase tracking-widest">{post.author}</span>
                   </div>
@@ -155,7 +155,7 @@ export default function EventsPage() {
             onClick={() => setIsMenuOpen(false)}
             className="w-12 h-12 flex items-center justify-center bg-slate-50 rounded-2xl shadow-sm"
           >
-            <span className="material-symbols-outlined text-brand-dark text-3xl">close</span>
+            <span className="material-icons text-brand-dark text-3xl">close</span>
           </button>
         </div>
         

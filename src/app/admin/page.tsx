@@ -275,7 +275,7 @@ export default function AdminDashboard() {
       `}>
         <div className="mb-12 flex items-center gap-4">
           <div className="w-10 h-10 bg-brand-purple rounded-xl flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-2xl">shield_person</span>
+            <span className="material-icons text-white text-2xl">shield_person</span>
           </div>
           <div>
             <h1 className="font-black text-xl tracking-tighter uppercase leading-none">PF Admin</h1>
@@ -293,7 +293,7 @@ export default function AdminDashboard() {
                 ${activeTab === item.id ? 'bg-brand-purple text-white shadow-lg' : 'text-white/50 hover:bg-white/5 hover:text-white'}
               `}
             >
-              <span className="material-symbols-outlined text-xl">{item.icon}</span>
+              <span className="material-icons text-xl">{item.icon}</span>
               {item.label}
             </button>
           ))}
@@ -303,7 +303,7 @@ export default function AdminDashboard() {
           onClick={() => router.push('/contact')}
           className="mt-auto flex items-center gap-4 px-6 py-4 text-white/40 hover:text-white transition-colors font-black text-xs uppercase tracking-widest"
         >
-          <span className="material-symbols-outlined text-xl">logout</span>
+          <span className="material-icons text-xl">logout</span>
           Exit Admin
         </button>
       </aside>
@@ -323,12 +323,12 @@ export default function AdminDashboard() {
           </div>
           <div className="flex gap-4">
             <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm relative">
-              <span className="material-symbols-outlined">notifications</span>
+              <span className="material-icons">notifications</span>
               <span className="absolute top-3 right-3 w-2 h-2 bg-brand-purple rounded-full border-2 border-white"></span>
             </div>
             <div className="flex items-center gap-4 bg-white p-2 pr-6 rounded-2xl border border-slate-100 shadow-sm">
               <div className="w-8 h-8 rounded-xl bg-[#fffbbd] flex items-center justify-center text-brand-dark">
-                <span className="material-symbols-outlined text-sm">person_pin</span>
+                <span className="material-icons text-sm">person_pin</span>
               </div>
               <span className="font-black text-[10px] uppercase tracking-widest text-brand-dark">{siteSettings.adminName}</span>
             </div>
@@ -423,10 +423,10 @@ export default function AdminDashboard() {
                                 {item.iconUrl ? (
                                   <img src={item.iconUrl} className="w-full h-full object-cover" />
                                 ) : (
-                                  <span className="material-symbols-outlined text-2xl text-brand-purple">{item.icon}</span>
+                                  <span className="material-icons text-2xl text-brand-purple">{item.icon}</span>
                                 )}
                                 <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                                  <span className="material-symbols-outlined text-white text-sm">upload</span>
+                                  <span className="material-icons text-white text-sm">upload</span>
                                   <input 
                                     type="file" className="hidden" accept="image/*"
                                     onChange={async (e) => {
@@ -486,7 +486,7 @@ export default function AdminDashboard() {
                               }}
                               className="absolute top-6 right-6 w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-300 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all"
                             >
-                              <span className="material-symbols-outlined text-sm">delete</span>
+                              <span className="material-icons text-sm">delete</span>
                             </button>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                               <div className="space-y-2">
@@ -496,7 +496,7 @@ export default function AdminDashboard() {
                                     {item.iconUrl ? (
                                       <img src={item.iconUrl} className="w-full h-full object-cover" />
                                     ) : (
-                                      <span className="material-symbols-outlined text-slate-300">{item.icon}</span>
+                                      <span className="material-icons text-slate-300">{item.icon}</span>
                                     )}
                                   </div>
                                   <label className="px-3 py-2 bg-slate-200 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest cursor-pointer hover:bg-slate-300 transition-colors">
@@ -665,7 +665,7 @@ export default function AdminDashboard() {
                               }}
                               className="absolute top-6 right-6 w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all"
                             >
-                              <span className="material-symbols-outlined text-xs">delete</span>
+                              <span className="material-icons text-xs">delete</span>
                             </button>
                             <div className="space-y-4">
                               <div className="flex items-center gap-4 mb-2">
@@ -673,7 +673,7 @@ export default function AdminDashboard() {
                                   {item.iconUrl ? (
                                     <img src={item.iconUrl} className="w-full h-full object-cover" />
                                   ) : (
-                                    <span className="material-symbols-outlined text-slate-300">{item.icon}</span>
+                                    <span className="material-icons text-slate-300">{item.icon}</span>
                                   )}
                                 </div>
                                 <label className="px-3 py-2 bg-slate-200 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest cursor-pointer hover:bg-slate-300 transition-colors">
@@ -810,7 +810,7 @@ export default function AdminDashboard() {
                               }}
                               className="absolute top-6 right-6 w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-300 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-all"
                             >
-                              <span className="material-symbols-outlined text-sm">delete</span>
+                              <span className="material-icons text-sm">delete</span>
                             </button>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div className="space-y-2">
@@ -1004,7 +1004,7 @@ export default function AdminDashboard() {
                       onClick={() => handleDeletePost(post.id)}
                       className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors shadow-sm"
                     >
-                      <span className="material-symbols-outlined text-sm">delete</span>
+                      <span className="material-icons text-sm">delete</span>
                     </button>
                   </div>
                 ))}
@@ -1039,7 +1039,7 @@ export default function AdminDashboard() {
                     w-20 h-20 rounded-3xl bg-white shadow-xl flex items-center justify-center mb-6 transition-transform duration-500
                     ${isUploading ? 'scale-90 opacity-50' : 'group-hover:scale-110 group-hover:rotate-3'}
                   `}>
-                    <span className="material-symbols-outlined text-4xl text-brand-purple">add_photo_alternate</span>
+                    <span className="material-icons text-4xl text-brand-purple">add_photo_alternate</span>
                   </div>
                   <p className="text-sm font-black text-brand-dark uppercase tracking-[0.2em] mb-2">Drop images here or click</p>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Support: JPG, PNG, WEBP (Max 5MB)</p>
@@ -1067,7 +1067,7 @@ export default function AdminDashboard() {
                       onClick={() => handleDeleteImage(item.id, item.url)}
                       className="w-full py-4 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-2xl flex items-center justify-center gap-2 hover:bg-red-500 hover:border-red-500 transition-all duration-300 font-black text-[10px] uppercase tracking-widest"
                     >
-                      <span className="material-symbols-outlined text-sm">delete</span>
+                      <span className="material-icons text-sm">delete</span>
                       Remove Image
                     </button>
                   </div>
@@ -1076,7 +1076,7 @@ export default function AdminDashboard() {
               
               {gallery.length === 0 && !isUploading && (
                 <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-dashed border-slate-200">
-                  <span className="material-symbols-outlined text-4xl text-slate-200 mb-4">image_not_supported</span>
+                  <span className="material-icons text-4xl text-slate-200 mb-4">image_not_supported</span>
                   <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">No images in gallery yet</p>
                 </div>
               )}
@@ -1144,7 +1144,7 @@ export default function AdminDashboard() {
             onClick={handleSaveContent}
             className="flex-grow py-6 bg-brand-purple text-white rounded-[2.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-3"
           >
-            <span className="material-symbols-outlined text-base">cloud_upload</span>
+            <span className="material-icons text-base">cloud_upload</span>
             SAVE CHANGES & PUBLISH TO SITE
           </button>
           <button 

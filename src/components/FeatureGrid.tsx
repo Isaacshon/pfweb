@@ -34,7 +34,7 @@ export const FeatureGrid = () => {
             Spreading the love of Jesus Christ through the creative language of culture.
           </p>
           <div className="mt-6 flex items-center gap-2 text-xs font-black uppercase tracking-widest">
-            Learn More <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            Learn More <span className="material-icons text-sm">arrow_forward</span>
           </div>
         </Link>
         
@@ -44,7 +44,7 @@ export const FeatureGrid = () => {
             Leading a youth culture that is as trendy as it is transformative.
           </p>
           <div className="mt-6 flex items-center gap-2 text-xs font-black uppercase tracking-widest">
-            About Us <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            About Us <span className="material-icons text-sm">arrow_forward</span>
           </div>
         </Link>
       </div>

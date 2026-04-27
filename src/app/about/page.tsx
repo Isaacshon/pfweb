@@ -120,7 +120,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
               <div className="bg-white p-8 md:p-16 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border border-slate-100 relative group text-left">
                 <div className="absolute -top-6 -left-4 md:-left-6 w-16 md:w-20 h-16 md:h-20 bg-brand-purple rounded-2xl md:rounded-3xl flex items-center justify-center text-white shadow-xl rotate-3 group-hover:rotate-0 transition-transform">
-                  <span className="material-symbols-outlined text-3xl md:text-4xl">auto_awesome</span>
+                  <span className="material-icons text-3xl md:text-4xl">auto_awesome</span>
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter mb-6 md:mb-8 leading-tight break-keep">
                   {massiveTitle.split(',').map((part: string, i: number) => {
@@ -190,7 +190,7 @@ export default function AboutPage() {
                   {m.iconUrl ? (
                     <img src={m.iconUrl} className="w-full h-full object-cover" alt={m.title} />
                   ) : (
-                    <span className="material-symbols-outlined text-brand-dark text-2xl md:text-3xl">{m.icon}</span>
+                    <span className="material-icons text-brand-dark text-2xl md:text-3xl">{m.icon}</span>
                   )}
                 </div>
                 <h3 className="font-black text-xl text-brand-dark mb-3">{m.title}</h3>
@@ -212,7 +212,7 @@ export default function AboutPage() {
                 {b.iconUrl ? (
                   <img src={b.iconUrl} className="w-10 h-10 object-contain mb-4" alt={b.title} />
                 ) : (
-                  <span className="material-symbols-outlined text-brand-purple text-2xl md:text-3xl mb-4 block">{b.icon}</span>
+                  <span className="material-icons text-brand-purple text-2xl md:text-3xl mb-4 block">{b.icon}</span>
                 )}
                 <h3 className="font-black text-lg text-brand-dark mb-3">{b.title}</h3>
                 <p className="text-slate-500 font-medium leading-relaxed text-sm">{b.desc}</p>
@@ -245,7 +245,7 @@ export default function AboutPage() {
             onClick={() => setIsMenuOpen(false)}
             className="w-12 h-12 flex items-center justify-center bg-slate-50 rounded-2xl shadow-sm"
           >
-            <span className="material-symbols-outlined text-brand-dark text-3xl">close</span>
+            <span className="material-icons text-brand-dark text-3xl">close</span>
           </button>
         </div>
         

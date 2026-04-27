@@ -89,11 +89,11 @@ export default function SchedulePage() {
               
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
-                  <span className="material-symbols-outlined text-[18px] opacity-70">schedule</span>
+                  <span className="material-icons text-[18px] opacity-70">schedule</span>
                   <span>{event.time}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
-                  <span className="material-symbols-outlined text-[18px] opacity-70">location_on</span>
+                  <span className="material-icons text-[18px] opacity-70">location_on</span>
                   <span>{event.location}</span>
                 </div>
               </div>
