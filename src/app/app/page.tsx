@@ -4,11 +4,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 
 const bibleVersions = [
-  { name: '개역한글', code: 'KRV' },
-  { name: '개역개정', code: 'NKP' },
-  { name: 'ESV', code: 'ESV' },
-  { name: 'NIV', code: 'NIV' },
-  { name: 'KJV', code: 'KJV' },
+  { name: '개역한글', code: 'KRV', lang: 'ko' },
+  { name: '개역개정', code: 'NKP', lang: 'ko' },
+  { name: 'ESV', code: 'ESV', lang: 'en' },
+  { name: 'NIV', code: 'NIV', lang: 'en' },
+  { name: 'KJV', code: 'KJV', lang: 'en' },
 ]
 
 const bibleBooks = [
@@ -45,7 +45,8 @@ export default function AppPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [bookSearch, setBookSearch] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
-  const [isGlobalSearching, setIsGlobalSearching] = useState(false)
+
+  const isEn = version.lang === 'en'
 
   const cleanText = (text: string) => {
     return text.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim()
@@ -74,13 +75,11 @@ export default function AppPage() {
 
   const performGlobalSearch = useCallback(async (query: string) => {
     if (!query || query.length < 2) return
-    setIsGlobalSearching(true)
     try {
       const res = await fetch(`https://bolls.life/search/${version.code}/?search=${encodeURIComponent(query)}`)
       const data = await res.json()
       if (Array.isArray(data)) setSearchResults(data.map(v => ({ ...v, text: cleanText(v.text) })))
     } catch (err) { console.error(err) }
-    finally { setIsGlobalSearching(false) }
   }, [version.code])
 
   useEffect(() => { fetchBookInfo(version.code, book.id) }, [version.code, book.id, fetchBookInfo])
@@ -103,14 +102,16 @@ export default function AppPage() {
   return (
     <div className={`h-full flex flex-col transition-colors duration-500 ${bgColor} ${textColor}`}>
       
-      {/* Header with Global Theme State */}
+      {/* Header with Dynamic Book Naming */}
       <header className={`shrink-0 h-20 px-6 flex items-center justify-between z-40 border-b ${isDarkMode ? 'bg-[#050505]/80 border-zinc-900' : 'bg-white/80 border-slate-50'} backdrop-blur-sm`}>
         <button onClick={() => setOpenUI(openUI === 'settings' ? null : 'settings')} className={`w-10 h-10 flex items-center justify-center transition-all ${openUI === 'settings' ? accentColor : 'text-slate-300'}`}>
           <span className="material-icons">tune</span>
         </button>
 
         <button onClick={() => { setOpenUI('picker'); setPickerTab('book'); }} className="flex items-center gap-2 active:scale-95 transition-all">
-          <span className="font-plus-jakarta font-black text-[16px] tracking-tight">{book.name}</span>
+          <span className="font-plus-jakarta font-black text-[16px] tracking-tight">
+            {isEn ? book.eng : book.name}
+          </span>
           <span className={`w-1 h-1 rounded-full ${accentBg}`}></span>
           <span className={`font-plus-jakarta font-black text-[16px] tracking-tight ${accentColor}`}>{chapter}장</span>
           <span className={`material-icons ${isDarkMode ? 'text-brand-yellow/20' : 'text-brand-purple/20'} text-lg`}>expand_more</span>
@@ -150,7 +151,7 @@ export default function AppPage() {
         )}
       </div>
 
-      {/* Settings Modal (Global Theme Toggle) */}
+      {/* Settings Modal */}
       {openUI === 'settings' && (
         <div className="fixed inset-0 z-50 bg-black/5" onClick={() => setOpenUI(null)}>
           <div className={`absolute bottom-28 left-6 right-6 p-8 rounded-[40px] shadow-2xl border transition-all animate-in slide-in-from-bottom-4 duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`} onClick={e => e.stopPropagation()}>
@@ -164,7 +165,7 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Global Search Overlay (Themed) */}
+      {/* Global Search Overlay */}
       {openUI === 'search' && (
         <div className={`fixed inset-0 z-50 flex flex-col transition-all ${bgColor} ${textColor}`}>
           <div className="px-8 pt-16 pb-8 flex flex-col gap-8">
@@ -175,7 +176,9 @@ export default function AppPage() {
             <div className="flex flex-col gap-10">
               {searchResults.map((res: any, idx) => (
                 <button key={idx} onClick={() => { const b = bibleBooks.find(b => b.id === res.book); if (b) { setBook(b); setChapter(res.chapter); setOpenUI(null); } }} className="text-left group active:opacity-50">
-                  <p className={`font-black text-[9px] ${accentColor} uppercase tracking-[0.3em] mb-3`}>{bibleBooks.find(b => b.id === res.book)?.name} {res.chapter}:{res.verse}</p>
+                  <p className={`font-black text-[9px] ${accentColor} uppercase tracking-[0.3em] mb-3`}>
+                    {isEn ? bibleBooks.find(b => b.id === res.book)?.eng : bibleBooks.find(b => b.id === res.book)?.name} {res.chapter}:{res.verse}
+                  </p>
                   <p className="text-[16px] font-medium leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity">{res.text}</p>
                 </button>
               ))}
@@ -184,7 +187,7 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* REFERENCE PICKER UI (Themed, No Speaker Icons) */}
+      {/* REFERENCE PICKER UI (Linguistic Sync) */}
       {openUI === 'picker' && (
         <div className={`fixed inset-0 z-[100] transition-all duration-300 flex flex-col animate-in fade-in ${bgColor} ${textColor}`}>
           <div className="px-6 pt-16 pb-6 flex flex-col gap-6">
@@ -230,8 +233,12 @@ export default function AppPage() {
                     onClick={() => { setBook(b); setPickerTab('chapter'); setBookSearch(''); }}
                     className="flex items-center justify-between py-5 group active:opacity-50 transition-all"
                   >
-                    <span className={`text-[17px] font-medium tracking-tight ${book.id === b.id ? accentColor + ' font-bold' : 'text-zinc-500'}`}>{b.eng}</span>
-                    <span className={`text-[11px] font-black uppercase tracking-widest ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'}`}>{b.name}</span>
+                    <span className={`text-[17px] font-medium tracking-tight ${book.id === b.id ? accentColor + ' font-bold' : 'text-zinc-500'}`}>
+                      {isEn ? b.eng : b.name}
+                    </span>
+                    <span className={`text-[11px] font-black uppercase tracking-widest ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'}`}>
+                      {isEn ? b.name : b.eng}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -239,7 +246,7 @@ export default function AppPage() {
 
             {pickerTab === 'chapter' && (
               <div className="flex flex-col gap-10">
-                <h3 className="text-xl font-bold">{book.name}</h3>
+                <h3 className="text-xl font-bold">{isEn ? book.eng : book.name}</h3>
                 <div className="grid grid-cols-5 gap-3">
                   <button className={`${isDarkMode ? 'bg-zinc-900 text-zinc-600' : 'bg-slate-50 text-slate-300'} aspect-square rounded-lg flex items-center justify-center font-bold text-[14px]`}>Intro</button>
                   {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
