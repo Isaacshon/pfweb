@@ -34,8 +34,11 @@ export default function AppPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [maxChapters, setMaxChapters] = useState(21)
 
+  // Typography Settings
   const [fontSize, setFontSize] = useState(20)
   const [lineHeight, setLineHeight] = useState(1.85)
+  const [verseGap, setVerseGap] = useState(40) // New: Vertical gap between verses
+
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [openUI, setOpenUI] = useState<string | null>(null)
   const [pickerTab, setPickerTab] = useState<'book' | 'chapter'>('book')
@@ -128,7 +131,7 @@ export default function AppPage() {
             <div className="w-2 h-2 rounded-full bg-brand-purple animate-ping"></div>
           </div>
         ) : (
-          <div className="flex flex-col gap-10">
+          <div className="flex flex-col" style={{ gap: `${verseGap}px` }}>
             {verses.map((v: any) => (
               <div key={v.verse} className="flex flex-col gap-2 group">
                 <span className={`font-space-grotesk font-black text-[10px] tracking-widest ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'}`}>
@@ -157,14 +160,14 @@ export default function AppPage() {
         )}
       </div>
 
-      {/* Settings Modal (No Blur, High-End Minimalism) */}
+      {/* Settings Modal (Added Verse Spacing Control) */}
       {openUI === 'settings' && (
         <div className="fixed inset-0 z-50 bg-black/5" onClick={() => setOpenUI(null)}>
           <div 
             className={`absolute bottom-28 left-6 right-6 p-8 rounded-[40px] shadow-2xl border transition-all animate-in slide-in-from-bottom-4 duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`} 
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-6">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Night Mode</span>
                 <button onClick={() => setIsDarkMode(!isDarkMode)} className={`w-12 h-6 rounded-full relative transition-all ${isDarkMode ? 'bg-brand-purple' : 'bg-slate-200'}`}>
@@ -180,11 +183,20 @@ export default function AppPage() {
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Spacing</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Line Height</span>
                 <div className="flex items-center gap-6">
                   <button onClick={() => setLineHeight(Math.max(1.2, lineHeight - 0.1))} className="text-brand-purple font-black">-</button>
                   <span className="font-space-grotesk font-black text-sm">{lineHeight.toFixed(1)}</span>
                   <button onClick={() => setLineHeight(Math.min(2.5, lineHeight + 0.1))} className="text-brand-purple font-black">+</button>
+                </div>
+              </div>
+              {/* New: Verse Spacing Control */}
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Verse Spacing</span>
+                <div className="flex items-center gap-6">
+                  <button onClick={() => setVerseGap(Math.max(10, verseGap - 5))} className="text-brand-purple font-black">-</button>
+                  <span className="font-space-grotesk font-black text-sm">{verseGap}</span>
+                  <button onClick={() => setVerseGap(Math.min(80, verseGap + 5))} className="text-brand-purple font-black">+</button>
                 </div>
               </div>
               <div className="flex justify-between items-center border-t border-slate-100 dark:border-zinc-800 pt-4">
@@ -202,7 +214,7 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Global Search Overlay (Full-screen feel, Clean) */}
+      {/* Other Overlays (Search, Picker) - Same as before */}
       {openUI === 'search' && (
         <div className={`fixed inset-0 z-50 flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
           <div className="px-8 pt-16 pb-8 flex flex-col gap-8">
@@ -232,7 +244,6 @@ export default function AppPage() {
         </div>
       )}
 
-      {/* Picker Modal (Book/Chapter Selection) */}
       {openUI === 'picker' && (
         <div className={`fixed inset-0 z-50 flex flex-col transition-all ${isDarkMode ? 'bg-zinc-950' : 'bg-white'} animate-in slide-in-from-bottom duration-500`}>
           <div className="px-8 pt-16 pb-8 flex flex-col gap-10">
