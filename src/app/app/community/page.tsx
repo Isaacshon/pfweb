@@ -311,65 +311,18 @@ export default function CommunityPage() {
 
   if (view === 'selection') {
     return (
-      <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-1000 bg-black font-pretendard">
-        {/* Constellation Background Layer - Enhanced Visibility */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
-          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            {/* Geometric Lines (Constellation-like) - Thicker lines */}
-            <path d="M10,20 L30,40 L20,60 L10,20" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="2,2" className="animate-pulse" style={{ animationDuration: '4s' }} />
-            <path d="M70,10 L90,30 L80,50 L70,10" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="2,4" className="animate-pulse" style={{ animationDuration: '5s' }} />
-            <path d="M40,80 L60,90 L50,70 L40,80" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="2,2" className="animate-pulse" style={{ animationDuration: '6s' }} />
-            
-            {/* Subtle Symbols (Points) - Larger points */}
-            <circle cx="30" cy="40" r="1.2" fill="white" className="animate-ping" style={{ animationDuration: '3s' }} />
-            <circle cx="80" cy="50" r="1.0" fill="white" className="animate-ping" style={{ animationDuration: '4s' }} />
-            <circle cx="15" cy="25" r="1.5" fill="white" className="opacity-50" />
-            
-            {/* Fish (Icthus) Geometric - Thicker and bigger */}
-            <path d="M45,30 C50,25 55,30 60,30 L65,25 M65,35 L60,30" fill="none" stroke="white" strokeWidth="0.8" />
-          </svg>
-        </div>
-
-        <div className="flex-1 flex overflow-hidden relative z-10"> 
-          {/* Left: Meditation */}
-          <button 
-            onClick={() => navigateToFeed('meditation')} 
-            className="flex-1 relative group transition-all duration-1000 hover:flex-[1.2] flex items-center justify-end overflow-hidden pr-6 md:pr-12" 
-            style={{ backgroundColor: 'rgba(154, 120, 180, 0.75)' }}
-          >
-            <div className="absolute top-20 left-10 w-32 h-32 border border-white/10 rounded-full rotate-45"></div>
-            <h2 className="text-3xl md:text-6xl font-black tracking-tight text-white text-right drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
-              MEDITATION
-            </h2>
+      <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-700 bg-black font-pretendard">
+        <div className="flex-1 flex overflow-hidden pb-24"> 
+          <button onClick={() => navigateToFeed('meditation')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(154, 120, 180, 0.85)' }}>
+            <div className="absolute top-20 left-10 w-16 h-16 border-2 border-white/20 rounded-full animate-pulse"></div>
+            <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white">MEDITATION</h2>
           </button>
-
-          {/* Central Line & Cross - More Prominent */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20 z-20 flex items-center justify-center">
-            <div className="w-12 h-12 bg-brand-dark rounded-full border-2 border-white/40 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.2)] backdrop-blur-md">
-              <span className="material-icons text-white text-2xl font-bold">add</span>
-            </div>
-          </div>
-
-          {/* Right: Prayer */}
-          <button 
-            onClick={() => navigateToFeed('prayer')} 
-            className="flex-1 relative group transition-all duration-1000 hover:flex-[1.2] flex items-center justify-start overflow-hidden pl-6 md:pl-12" 
-            style={{ backgroundColor: 'rgba(255, 251, 189, 0.7)' }}
-          >
-            <div className="absolute bottom-20 right-10 w-40 h-40 border border-white/10 rounded-full -rotate-12"></div>
-            <h2 className="text-3xl md:text-6xl font-black tracking-tight text-brand-dark text-left drop-shadow-[0_4px_12px_rgba(255,255,255,0.3)]">
-              PRAYER
-            </h2>
+          <button onClick={() => navigateToFeed('prayer')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(255, 251, 189, 0.85)' }}>
+            <div className="absolute top-32 right-12 w-12 h-12 border-2 border-white/30 rotate-45 animate-pulse"></div>
+            <h2 className="text-2xl md:text-5xl font-extralight tracking-[0.1em] md:tracking-[0.25em] text-white">PRAYER</h2>
           </button>
         </div>
-
-        {notification && (
-          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-500">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 px-6 py-3 rounded-full text-white text-xs font-bold shadow-2xl">
-              {notification}
-            </div>
-          </div>
-        )}
+        {notification && <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 duration-500"><div className="bg-white/10 backdrop-blur-xl border border-white/20 px-6 py-3 rounded-full text-white text-xs font-bold shadow-2xl">{notification}</div></div>}
       </div>
     )
   }

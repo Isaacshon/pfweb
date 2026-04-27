@@ -17,7 +17,6 @@ export function AppNavBar() {
   const pathname = usePathname()
   const { isDarkMode, mounted } = useTheme()
   const [isScanOpen, setIsScanOpen] = useState(false)
-  
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [pullDistance, setPullDistance] = useState(0)
   const [hasVibrated, setHasVibrated] = useState(false)
@@ -76,6 +75,28 @@ export function AppNavBar() {
     setTouchStart(null)
     setPullDistance(0)
     setHasVibrated(false)
+  }
+
+  useEffect(() => {
+    if (!isScanOpen) return
+
+    window.history.pushState({ pf_view: 'scanner' }, '')
+
+    const handlePopState = (e: PopStateEvent) => {
+      setIsScanOpen(false)
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [isScanOpen])
+
+  const handleCloseScanner = () => {
+    if (window.history.state?.pf_view === 'scanner') {
+      window.history.back()
+    }
+    setIsScanOpen(false)
   }
 
   if (!mounted) return null
@@ -203,7 +224,7 @@ export function AppNavBar() {
         </div>
       )}
 
-      <ScanOverlay isOpen={isScanOpen} onClose={() => setIsScanOpen(false)} />
+      <ScanOverlay isOpen={isScanOpen} onClose={handleCloseScanner} />
 
       <style jsx global>{`
         @keyframes bounce-slow {
