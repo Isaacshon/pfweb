@@ -13,6 +13,7 @@ export default function DownloadPage() {
   const textColor = isDarkMode ? 'text-white' : 'text-zinc-900'
   const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
   const accentBg = isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white'
+  const activeBorder = isDarkMode ? 'border-brand-yellow' : 'border-brand-purple'
 
   const [installPrompt, setInstallPrompt] = React.useState<any>(null)
 
