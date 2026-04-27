@@ -190,6 +190,8 @@ export default function CommunityPage() {
   const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
   const accentBg = isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'
 
+  const filteredPosts = posts.filter(p => p.type === activeTab)
+
   if (view === 'selection') {
     return (
       <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-700 bg-black font-pretendard">
