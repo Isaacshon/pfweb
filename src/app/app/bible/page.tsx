@@ -170,8 +170,8 @@ export default function BiblePage() {
                         
                         <button 
                           onClick={() => setIsPaletteOpen(true)}
-                          className="w-6 h-6 rounded-full border-2 border-white ring-2 ring-offset-1 transition-all active:scale-90"
-                          style={{ backgroundColor: selectedColor, ringColor: selectedColor }}
+                          className="w-6 h-6 rounded-full border-2 border-white transition-all active:scale-90"
+                          style={{ backgroundColor: selectedColor, boxShadow: `0 0 0 2px ${selectedColor}44` }}
                         ></button>
 
                         <button 
