@@ -431,7 +431,7 @@ export default function AppPage() {
                     <p style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }} className="font-medium tracking-tight relative z-10">{v.text}</p>
                     {noteText && (
                       <div className={`mt-3 p-4 rounded-2xl border-l-4 ${isDarkMode ? 'bg-zinc-900 border-brand-yellow' : 'bg-slate-50 border-brand-purple'} relative z-10 shadow-sm animate-in slide-in-from-left-2 duration-300`}>
-                        <p className="text-xs font-bold italic opacity-60">"{noteText}"</p>
+                        <p className="text-xs font-bold italic opacity-60">"{noteText.text}"</p>
                       </div>
                     )}
                   </div>
