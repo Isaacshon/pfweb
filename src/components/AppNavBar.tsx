@@ -157,7 +157,7 @@ export function AppNavBar() {
               </div>
               <button 
                 onClick={closeTutorial}
-                className={`w-full py-5 rounded-[24px] font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl active:scale-95 transition-all`}
+                className={`w-full py-5 rounded-[24px] font-black text-xs uppercase tracking-widest ${activeBg} shadow-xl active:scale-95 transition-all`}
               >
                 Got it!
               </button>
