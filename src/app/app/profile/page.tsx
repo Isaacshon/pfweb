@@ -123,7 +123,7 @@ export default function ProfilePage() {
             <div className="space-y-3">
               <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Denomination</p>
               <div className="flex flex-wrap gap-2">
-                {['Presbyterian', 'Methodist', 'Baptist', 'Pentecostal', 'Holiness', 'Anglican', 'None', 'Private', 'Other'].map(d => (
+                {['Presbyterian', 'Methodist', 'Baptist', 'Pentecostal', 'Holiness', 'Anglican', 'Reformed', 'None', 'Private', 'Other'].map(d => (
                   <button key={d} onClick={()=>setDenomination(d)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${denomination === d ? accentBg : inputBg + ' border opacity-40'}`}>{d}</button>
                 ))}
               </div>
