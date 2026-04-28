@@ -243,7 +243,7 @@ export default function WorshipPage() {
         <div className={`p-1.5 rounded-full ${isDarkMode ? 'bg-zinc-900/60' : 'bg-slate-100'} flex gap-1`}>
           <button 
             onClick={() => setActiveTab('upcoming')}
-            className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'upcoming' ? accentBg + ' shadow-md' : 'opacity-40'}`}
+            className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'upcoming' ? 'bg-[#9a78b4] text-white shadow-md' : 'opacity-40'}`}
           >
             Upcoming
           </button>
