@@ -97,7 +97,7 @@ export default function WorshipPage() {
       // 1. Supabase Realtime Subscription (Live Sync)
       const channel = supabase
         .channel('worship_sets_changes')
-        .on('postgres_changes', { event: '*', table: 'worship_sets' }, (payload) => {
+        .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'worship_sets' }, (payload: any) => {
           console.log('Realtime update received:', payload)
           fetchSets() // Refresh all to keep order correct
         })
