@@ -20,7 +20,25 @@ export function AppNavBar() {
   ])
 
   useEffect(() => {
-    // Single stable listener for auth changes
+    // 1. Initial Load from LocalStorage (Instant UI)
+    const savedUser = localStorage.getItem('pf_current_user')
+    if (savedUser) {
+      const user = JSON.parse(savedUser)
+      setCurrentUser(user)
+      const baseItems = [
+        { label: 'Home', icon: 'home', path: '/app' },
+        { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
+        { label: 'Community', icon: 'groups', path: '/app/community' },
+        { label: 'My', icon: 'person', path: '/app/profile' },
+      ]
+      if (user.role === 'leader' || user.role === 'worship_team') {
+        const worshipItem = { label: 'Worship', icon: 'music_note', path: '/app/worship' }
+        baseItems.splice(2, 0, worshipItem)
+      }
+      setNavItems(baseItems)
+    }
+
+    // 2. Background Sync with Supabase
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const { data: profile } = await supabase
@@ -33,7 +51,7 @@ export function AppNavBar() {
         setCurrentUser(user)
         localStorage.setItem('pf_current_user', JSON.stringify(user))
 
-        const baseItems = [
+        const updatedItems = [
           { label: 'Home', icon: 'home', path: '/app' },
           { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
           { label: 'Community', icon: 'groups', path: '/app/community' },
@@ -42,9 +60,9 @@ export function AppNavBar() {
 
         if (user.role === 'leader' || user.role === 'worship_team') {
           const worshipItem = { label: 'Worship', icon: 'music_note', path: '/app/worship' }
-          baseItems.splice(2, 0, worshipItem)
+          updatedItems.splice(2, 0, worshipItem)
         }
-        setNavItems(baseItems)
+        setNavItems(updatedItems)
       } else {
         setCurrentUser(null)
         localStorage.removeItem('pf_current_user')
@@ -60,7 +78,7 @@ export function AppNavBar() {
     return () => {
       authListener.subscription.unsubscribe()
     }
-  }, []) // Mount once
+  }, [])
   const [isScanOpen, setIsScanOpen] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [pullDistance, setPullDistance] = useState(0)
