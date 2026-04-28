@@ -1,3 +1,8 @@
+"use client"
+
+import React, { useState, useEffect } from 'react'
+import { useTheme } from '@/context/ThemeContext'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 interface Song {
