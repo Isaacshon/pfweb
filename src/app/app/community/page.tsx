@@ -94,49 +94,7 @@ const reactionTypes = [
   { label: 'Check', icon: 'check_circle', color: 'text-emerald-500' },
 ]
 
-const initialPosts = [
-  { 
-    id: 1, 
-    type: 'meditation',
-    user: "Isaac Shon", 
-    avatar: "/images/PF app logo iphone.png",
-    isAnonymous: false,
-    verse: "Psalms 37:4", 
-    title: "Aligning Desires with Purpose",
-    content: "Your heart is a very important element. Psalm 37:4 says, 'Delight yourself in the Lord, and he will give you the desires of your heart.' God wants to align your passion with His purpose.",
-    date: "42 min ago",
-    reactions: { Like: 5, Praying: 12, Comforting: 8, Insight: 2, Check: 3 },
-    userReaction: null,
-    comments: [
-      { 
-        id: 101, 
-        user: "Blessed Member", 
-        text: "Truly inspiring meditation. Thank you for sharing!", 
-        date: "10 min ago", 
-        isPinned: true,
-        likes: 153,
-        userLiked: false,
-        replies: [
-          { id: 201, user: "chxikrohx", text: "@Blessed Member 제발 ㅋㅋㅋㅋㅋㅋㅋㅋ", date: "3 min ago", likes: 2, userLiked: false }
-        ]
-      }
-    ]
-  },
-  { 
-    id: 2, 
-    type: 'prayer',
-    user: "Anonymous", 
-    avatar: "", 
-    isAnonymous: true,
-    verse: "Matthew 11:28", 
-    title: "Prayer for Restoration",
-    content: "Dear Lord, I feel overwhelmed by the burdens of this week. I come to You seeking the rest You promised. Please restore my soul and give me the strength to face tomorrow with a peaceful heart.",
-    date: "1h ago",
-    reactions: { Like: 12, Praying: 52, Comforting: 8, Insight: 0, Check: 1 },
-    userReaction: 'Praying',
-    comments: []
-  },
-]
+const initialPosts: any[] = []
 
 export default function CommunityPage() {
   const { isDarkMode } = useTheme()

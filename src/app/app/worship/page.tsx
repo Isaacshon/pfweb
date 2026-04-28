@@ -12,19 +12,7 @@ interface SetList {
   notes?: string
 }
 
-const initialSets: SetList[] = [
-  {
-    id: '1',
-    date: '2026-05-03',
-    title: 'Sunday Worship Service',
-    songs: [
-      { title: 'Way Maker', artist: 'Leeland', key: 'E', link: 'https://youtube.com/watch?v=iJCV_2H9xD0' },
-      { title: 'Goodness of God', artist: 'Bethel Music', key: 'Ab', link: 'https://youtube.com/watch?v=-f4MUUMWMK4' },
-      { title: 'The Blessing', artist: 'Elevation Worship', key: 'B', link: 'https://youtube.com/watch?v=Zp6aygmvzM4' }
-    ],
-    notes: 'Please focus on the bridge transition for Way Maker.'
-  }
-]
+const initialSets: SetList[] = []
 
 export default function WorshipPage() {
   const { isDarkMode } = useTheme()
