@@ -127,7 +127,8 @@ export default function WorshipPage() {
     setSongLink(url)
     if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('music.youtube.com') || url.includes('spotify.com')) {
       setIsPreviewing(true)
-      setIsPlaylist(url.includes('playlist') || url.includes('list='));
+      const playlist = url.includes('playlist') || url.includes('list=')
+      setIsPlaylist(playlist)
       
       try {
         const response = await fetch('/api/fetch-metadata', {
@@ -138,16 +139,38 @@ export default function WorshipPage() {
         
         if (response.ok) {
           const data = await response.json()
-          setSongTitle(data.title || '')
-          setSongArtist(data.artist || '')
-          setSongThumbnail(data.thumbnail || '')
-          setDetectedSongs([])
+          
+          if (data.type === 'playlist') {
+            // Playlist response - populate detectedSongs
+            if (data.tracks && data.tracks.length > 0) {
+              setDetectedSongs(data.tracks.map((t: any) => ({
+                title: t.title || '',
+                artist: t.artist || '',
+                key: 'C',
+                link: url,
+                thumbnail: t.thumbnail || ''
+              })))
+            } else {
+              // Playlist detected but no tracks extracted - show playlist info
+              setDetectedSongs([])
+              setSongTitle(data.playlistTitle || 'Playlist')
+              setSongArtist('')
+              setSongThumbnail(data.thumbnail || '')
+            }
+          } else {
+            // Single track response
+            setSongTitle(data.title || '')
+            setSongArtist(data.artist || '')
+            setSongThumbnail(data.thumbnail || '')
+            setDetectedSongs([])
+          }
         } else {
           const err = await response.json()
           console.error('Metadata error:', err.error)
           setSongTitle('')
           setSongArtist('')
           setSongThumbnail('')
+          setDetectedSongs([])
         }
       } catch (err) {
         console.error('Network error fetching metadata', err)
@@ -534,24 +557,49 @@ export default function WorshipPage() {
                       <div className="space-y-6">
                         {isPlaylist ? (
                           <div className="space-y-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Playlist Detected ({detectedSongs.length} Songs)</p>
-                              <button onClick={addAllDetected} className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest ${accentBg}`}>Add All</button>
-                            </div>
-                            <div className="space-y-2">
-                              {detectedSongs.map((ds, idx) => (
-                                <div key={idx} className={`p-4 rounded-2xl border ${cardBg} flex items-center justify-between`}>
-                                  <div>
-                                    <p className="text-xs font-black">{ds.title}</p>
-                                    <p className="text-[8px] font-bold opacity-40 uppercase">{ds.artist}</p>
-                                  </div>
-                                  <button onClick={() => {
-                                    addSong(ds);
-                                    setDetectedSongs(detectedSongs.filter((_, i) => i !== idx));
-                                  }} className="text-emerald-500"><span className="material-icons text-sm">add_circle</span></button>
+                            {detectedSongs.length > 0 ? (
+                              <>
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Playlist Detected ({detectedSongs.length} Songs)</p>
+                                  <button onClick={addAllDetected} className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest ${accentBg}`}>Add All</button>
                                 </div>
-                              ))}
-                            </div>
+                                <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar">
+                                  {detectedSongs.map((ds, idx) => (
+                                    <div key={idx} className={`p-3 rounded-2xl border ${cardBg} flex items-center gap-3`}>
+                                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-zinc-500/10 flex-shrink-0">
+                                        {ds.thumbnail ? (
+                                          <img src={ds.thumbnail} alt={ds.title} className="w-full h-full object-cover" />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center"><span className="material-icons text-sm opacity-20">music_note</span></div>
+                                        )}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-black truncate">{ds.title}</p>
+                                        <p className="text-[8px] font-bold opacity-40 uppercase truncate">{ds.artist}</p>
+                                      </div>
+                                      <button onClick={() => {
+                                        addSong(ds);
+                                        setDetectedSongs(detectedSongs.filter((_, i) => i !== idx));
+                                      }} className="text-emerald-500 flex-shrink-0"><span className="material-icons text-sm">add_circle</span></button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="text-center py-6 space-y-4">
+                                {songThumbnail && (
+                                  <img src={songThumbnail} alt="Playlist" className="w-24 h-24 rounded-2xl mx-auto object-cover" />
+                                )}
+                                <p className="text-sm font-black">{songTitle || 'Playlist Detected'}</p>
+                                <p className="text-[9px] font-bold opacity-40">Playlist tracks could not be auto-extracted. You can add songs manually below, or try pasting individual track links instead.</p>
+                                <button 
+                                  onClick={() => { setIsPlaylist(false); setSongTitle(''); setSongArtist(''); setSongThumbnail(''); }}
+                                  className={`px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest ${accentBg}`}
+                                >
+                                  Switch to Manual Entry
+                                </button>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <>
