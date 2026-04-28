@@ -471,12 +471,61 @@ export default function AppPage() {
                     )}
                   </div>
 
-                            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-brand-purple active:scale-90 transition-all"
-                          >
-                            <span className="material-icons text-[22px]">share</span>
-                          </button>
-                        </div>
-                      )}
+                  {/* Context Menu (Floating Menu) - Multi-selection support */}
+                  {selectedVerses.length > 0 && selectedVerses[selectedVerses.length - 1] === v.verse && (
+                    <div className={`fixed bottom-32 left-1/2 -translate-x-1/2 bg-white rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] z-[1000] animate-in slide-in-from-bottom-4 duration-300 border border-slate-100/50 overflow-visible flex flex-col items-center`}>
+                      <div className="flex items-center gap-4 px-6 py-4 border-b border-slate-50 w-full justify-between">
+                        <span className="text-slate-400 font-black text-[10px] uppercase tracking-widest">{selectedVerses.length} selected</span>
+                        <button onClick={() => setSelectedVerses([])} className="material-icons text-slate-300 text-lg hover:text-slate-600 transition-colors">close</button>
+                      </div>
+
+                      <div className="flex items-center gap-2 px-4 py-3">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); removeHighlight(); }}
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50 active:scale-90 transition-all"
+                        >
+                          <span className="material-icons text-[22px]">delete_outline</span>
+                        </button>
+
+                        <div className="w-px h-6 bg-slate-100 mx-1"></div>
+
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); toggleHighlight('#fffbbd'); }}
+                          className="w-10 h-10 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-110 transition-all"
+                        />
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); toggleHighlight('#9a78b4'); }}
+                          className="w-10 h-10 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-110 transition-all"
+                        />
+
+                        <div className="w-px h-6 bg-slate-100 mx-1"></div>
+
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); openNoteModal(selectedVerses); }} 
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50 active:scale-90 transition-all"
+                        >
+                          <span className="material-icons text-[22px]">sticky_note_2</span>
+                        </button>
+                        
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); shareToCommunity(); }} 
+                          className="w-12 h-12 rounded-full flex items-center justify-center bg-brand-purple text-white shadow-lg shadow-brand-purple/20 active:scale-90 transition-all"
+                        >
+                          <span className="material-icons text-[22px]">forum</span>
+                        </button>
+
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation();
+                            const text = selectedVerses.sort((a,b)=>a-b).map(num => verses.find(x => x.verse === num)?.text).join('\n');
+                            navigator.clipboard.writeText(text); 
+                            setSelectedVerses([]); 
+                          }} 
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50 active:scale-90 transition-all"
+                        >
+                          <span className="material-icons text-[22px]">content_copy</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
