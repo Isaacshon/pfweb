@@ -86,7 +86,7 @@ export default function ProfilePage() {
           .from('attendance')
           .select('*')
           .eq('user_id', user.id)
-          .order('date', { ascending: false })
+          .order('service_date', { ascending: false })
         if (data) setMyAttendances(data)
       }
       fetchAttendance()
@@ -106,7 +106,7 @@ export default function ProfilePage() {
       const { data: attendanceData } = await supabase
         .from('attendance')
         .select('user_id')
-        .eq('date', todayDateString)
+        .eq('service_date', todayDateString)
 
       if (attendanceData && attendanceData.length > 0) {
         const userIds = attendanceData.map(a => a?.user_id).filter(Boolean)
@@ -129,7 +129,7 @@ export default function ProfilePage() {
         event: 'INSERT', 
         schema: 'public', 
         table: 'attendance', 
-        filter: `date=eq.${todayDateString}` 
+        filter: `service_date=eq.${todayDateString}` 
       }, async (payload) => {
         const newUserId = payload.new.user_id
         const { data: profile } = await supabase
@@ -482,7 +482,7 @@ export default function ProfilePage() {
               {calendarPadding.map(p => <div key={`pad-${p}`} />)}
               {daysInMonth.map(day => {
                 const dateStr = format(day, 'yyyy-MM-dd')
-                const hasAttended = myAttendances.some(a => a?.date === dateStr)
+                const hasAttended = myAttendances.some(a => a?.service_date === dateStr)
                 return (
                   <div key={dateStr} className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold ${hasAttended ? 'bg-gradient-to-tr from-yellow-500 to-[#9a78b4] text-white shadow-md' : 'text-slate-400 opacity-60'}`}>
                     {format(day, 'd')}
@@ -506,7 +506,7 @@ export default function ProfilePage() {
                     <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-yellow-500 to-[#9a78b4] flex items-center justify-center shadow-lg relative border-2 border-white/10">
                       <span className="material-icons text-3xl text-white drop-shadow-md">workspace_premium</span>
                     </div>
-                    <p className="text-[9px] font-black uppercase tracking-widest opacity-50">{record.date ? record.date.substring(5) : 'Unknown'}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest opacity-50">{record.service_date ? record.service_date.substring(5) : 'Unknown'}</p>
                   </div>
                 ))
               )}

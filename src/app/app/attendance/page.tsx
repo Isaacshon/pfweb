@@ -34,7 +34,7 @@ function AttendanceContent() {
       try {
         const { error } = await supabase
           .from('attendance')
-          .insert({ user_id: userId, date: date })
+          .insert({ user_id: userId, service_date: date })
 
         if (error) {
           if (error.code === '23505') { // Unique violation
