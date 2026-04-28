@@ -75,7 +75,7 @@ async function getYouTubePlaylistTracks(listId: string) {
     const html = await res.text()
 
     // Extract ytInitialData JSON embedded in the page
-    const match = html.match(/var\s+ytInitialData\s*=\s*(\{.+?\});\s*<\/script>/s)
+    const match = html.match(/var\s+ytInitialData\s*=\s*(\{[\s\S]+?\});\s*<\/script>/)
     if (!match) return null
 
     const data = JSON.parse(match[1])
