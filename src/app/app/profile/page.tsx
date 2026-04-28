@@ -37,8 +37,9 @@ export default function ProfilePage() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [myAttendances, setMyAttendances] = useState<any[]>([])
   const [lobbyUsers, setLobbyUsers] = useState<{id: string, nickname: string}[]>([])
-  const todayDateString = new Date().toISOString().split('T')[0]
-  const qrUrl = typeof window !== 'undefined' ? `${window.location.origin}/app/attendance?date=${todayDateString}` : ''
+  const [mounted, setMounted] = useState(false)
+  const todayDateString = mounted ? new Date().toISOString().split('T')[0] : ''
+  const qrUrl = mounted ? `${window.location.origin}/app/attendance?date=${todayDateString}` : ''
 
   const PROFANITY_LIST = ['씨발', '병신', '존나', 'fuck', 'shit', 'bitch', 'ㅅㅂ', 'ㅄ', 'ㅈㄴ']
 
@@ -69,6 +70,7 @@ export default function ProfilePage() {
         localStorage.removeItem('pf_current_user')
       }
       setIsLoaded(true)
+      setMounted(true)
     })
 
     return () => {
@@ -93,12 +95,12 @@ export default function ProfilePage() {
 
   // Live QR Lobby Realtime
   useEffect(() => {
-    if (!isQrModalOpen) {
+    if (!isQrModalOpen || !todayDateString) {
       setLobbyUsers([])
       return
     }
 
-    let isMounted = true
+    let isMountedLobby = true
 
     const fetchInitialLobby = async () => {
       const { data: attendanceData } = await supabase
@@ -107,13 +109,15 @@ export default function ProfilePage() {
         .eq('date', todayDateString)
 
       if (attendanceData && attendanceData.length > 0) {
-        const userIds = attendanceData.map(a => a.user_id)
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, nickname')
-          .in('id', userIds)
-        if (profiles && isMounted) {
-          setLobbyUsers(profiles)
+        const userIds = attendanceData.map(a => a?.user_id).filter(Boolean)
+        if (userIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, nickname')
+            .in('id', userIds)
+          if (profiles && isMountedLobby) {
+            setLobbyUsers(profiles)
+          }
         }
       }
     }
@@ -134,7 +138,7 @@ export default function ProfilePage() {
           .eq('id', newUserId)
           .single()
         
-        if (profile && isMounted) {
+        if (profile && isMountedLobby) {
           setLobbyUsers(prev => {
             if (prev.some(u => u.id === profile.id)) return prev;
             return [...prev, profile]
@@ -144,7 +148,7 @@ export default function ProfilePage() {
       .subscribe()
 
     return () => {
-      isMounted = false
+      isMountedLobby = false
       supabase.removeChannel(channel)
     }
   }, [isQrModalOpen, todayDateString])
@@ -472,13 +476,13 @@ export default function ProfilePage() {
               <p className="text-xs font-black uppercase tracking-widest opacity-50">{format(currentDate, 'MMMM yyyy')}</p>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center mb-2">
-              {['S','M','T','W','T','F','S'].map(d => <span key={d} className="text-[9px] font-black uppercase tracking-widest opacity-30">{d}</span>)}
+              {['S','M','T','W','T','F','S'].map((d, i) => <span key={i} className="text-[9px] font-black uppercase tracking-widest opacity-30">{d}</span>)}
             </div>
             <div className="grid grid-cols-7 gap-1">
               {calendarPadding.map(p => <div key={`pad-${p}`} />)}
               {daysInMonth.map(day => {
                 const dateStr = format(day, 'yyyy-MM-dd')
-                const hasAttended = myAttendances.some(a => a.date === dateStr)
+                const hasAttended = myAttendances.some(a => a?.date === dateStr)
                 return (
                   <div key={dateStr} className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold ${hasAttended ? 'bg-gradient-to-tr from-yellow-500 to-[#9a78b4] text-white shadow-md' : 'text-slate-400 opacity-60'}`}>
                     {format(day, 'd')}
@@ -502,7 +506,7 @@ export default function ProfilePage() {
                     <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-yellow-500 to-[#9a78b4] flex items-center justify-center shadow-lg relative border-2 border-white/10">
                       <span className="material-icons text-3xl text-white drop-shadow-md">workspace_premium</span>
                     </div>
-                    <p className="text-[9px] font-black uppercase tracking-widest opacity-50">{record.date.substring(5)}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest opacity-50">{record.date ? record.date.substring(5) : 'Unknown'}</p>
                   </div>
                 ))
               )}
