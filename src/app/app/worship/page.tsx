@@ -91,18 +91,35 @@ export default function WorshipPage() {
         return
       }
 
-      // Fetch Sets
-      const { data: setsData } = await supabase.from('worship_sets').select('*').order('date', { ascending: false })
-      if (setsData) setSets(setsData)
+      // Initial Fetch
+      fetchSets()
+
+      // 1. Supabase Realtime Subscription (Live Sync)
+      const channel = supabase
+        .channel('worship_sets_changes')
+        .on('postgres_changes', { event: '*', table: 'worship_sets' }, (payload) => {
+          console.log('Realtime update received:', payload)
+          fetchSets() // Refresh all to keep order correct
+        })
+        .subscribe()
 
       // Fetch Team Options
       const { data: members } = await supabase.from('profiles').select('id, nickname').in('role', ['leader', 'worship_team'])
       if (members) setTeamOptions(members)
 
       setIsLoaded(true)
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
     }
     init()
   }, [])
+
+  const fetchSets = async () => {
+    const { data: setsData } = await supabase.from('worship_sets').select('*').order('date', { ascending: false })
+    if (setsData) setSets(setsData)
+  }
 
   const handleLinkChange = async (url: string) => {
     setSongLink(url)
