@@ -4,8 +4,12 @@ import React, { useState, useEffect } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 interface Song {
+  id?: string
   title: string
   artist: string
   key: string
@@ -143,6 +147,7 @@ export default function WorshipPage() {
           if (data.type === 'playlist' && data.tracks && data.tracks.length > 0) {
             // Playlist: auto-add ALL tracks directly as individual cards
             const tracks: Song[] = data.tracks.map((t: any) => ({
+              id: Math.random().toString(36).substring(7),
               title: t.title || '',
               artist: t.artist || '',
               key: 'C',
@@ -178,7 +183,7 @@ export default function WorshipPage() {
   }
 
   const addSong = (specificSong?: Song) => {
-    const target = specificSong || { title: songTitle, artist: songArtist, key: songKey, link: songLink, thumbnail: songThumbnail }
+    const target = specificSong ? { ...specificSong, id: specificSong.id || Math.random().toString(36).substring(7) } : { id: Math.random().toString(36).substring(7), title: songTitle, artist: songArtist, key: songKey, link: songLink, thumbnail: songThumbnail }
     if (!target.title) return
     setNewSongs([...newSongs, target])
     if (!specificSong) {
@@ -276,6 +281,28 @@ export default function WorshipPage() {
     const today = new Date().toISOString().split('T')[0]
     return activeTab === 'upcoming' ? set.date >= today : set.date < today
   })
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const handleDragEndNew = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setNewSongs((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id)
+        const newIndex = items.findIndex((i) => i.id === over.id)
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
+  }
 
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} pb-40 transition-colors duration-500 font-pretendard`}>
@@ -488,76 +515,22 @@ export default function WorshipPage() {
             <div className="space-y-6">
               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Songs Management</h3>
               
-              <div className="grid grid-cols-2 gap-4">
-                {newSongs.map((song, i) => {
-                  const cardColors = [
-                    'bg-[#b8a99a]', 'bg-[#a3aa7e]', 'bg-[#c2a882]',
-                    'bg-[#8a9e8a]', 'bg-[#9a9a9a]', 'bg-[#c9a08a]',
-                    'bg-[#8a8e9e]', 'bg-[#9a8a7a]', 'bg-[#a8967a]'
-                  ]
-                  const cc = cardColors[i % cardColors.length]
-                  return (
-                    <div key={i} className={`${cc} rounded-[28px] p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-300 relative group shadow-lg`}>
-                      {/* Delete Button */}
-                      <button 
-                        onClick={() => removeSong(i)} 
-                        className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 backdrop-blur-sm"
-                      >
-                        <span className="material-icons text-sm">close</span>
-                      </button>
-
-                      {/* Thumbnail */}
-                      <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center">
-                        {song.thumbnail ? (
-                          <img src={song.thumbnail} alt={song.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="material-icons text-5xl text-white/30">music_note</span>
-                        )}
-                      </div>
-
-                      {/* Editable Title & Artist */}
-                      <div className="px-1 space-y-1">
-                        <input 
-                          type="text"
-                          value={song.title}
-                          onChange={(e) => updateSong(i, 'title', e.target.value)}
-                          className="bg-transparent font-black text-sm text-white outline-none w-full placeholder-white/30 leading-tight"
-                          placeholder="Song Title"
-                        />
-                        <input 
-                          type="text"
-                          value={song.artist}
-                          onChange={(e) => updateSong(i, 'artist', e.target.value)}
-                          className="bg-transparent text-[10px] font-bold text-white/60 outline-none w-full placeholder-white/20"
-                          placeholder="Artist"
-                        />
-                      </div>
-
-                      {/* Bottom Action Bar: Key / Sheet / Link */}
-                      <div className="flex items-center justify-between px-1 pt-1">
-                        {/* Key Selector */}
-                        <select
-                          value={song.key}
-                          onChange={(e) => updateSong(i, 'key', e.target.value)}
-                          className="bg-white/20 text-white text-[9px] font-black rounded-full px-3 py-1.5 outline-none cursor-pointer appearance-none text-center"
-                        >
-                          {KEYS.map(k => <option key={k} value={k} className="text-black">{k}</option>)}
-                        </select>
-                        <div className="flex gap-1.5">
-                          <button onClick={() => findSheet(song.title)} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" title="Search Sheet Music">
-                            <span className="material-icons text-white text-sm">description</span>
-                          </button>
-                          {song.link && (
-                            <a href={song.link} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" title="Open Original">
-                              <span className="material-icons text-white text-sm">play_arrow</span>
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndNew}>
+                <SortableContext items={newSongs.map(s => s.id as string)} strategy={rectSortingStrategy}>
+                  <div className="grid grid-cols-2 gap-4">
+                    {newSongs.map((song, i) => (
+                      <SortableSongCard 
+                        key={song.id} 
+                        song={song} 
+                        index={i} 
+                        updateSong={updateSong} 
+                        removeSong={removeSong} 
+                        findSheet={findSheet} 
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
 
               {/* Add Song Form - The "Magic" Input */}
               <div className={`p-8 rounded-[40px] border ${isDarkMode ? 'bg-zinc-900/30' : 'bg-slate-100/50'} space-y-6 relative overflow-hidden`}>
@@ -721,3 +694,115 @@ export default function WorshipPage() {
     </div>
   )
 }
+
+interface SortableSongCardProps {
+  song: Song
+  index: number
+  updateSong: (index: number, field: keyof Song, value: string) => void
+  removeSong: (index: number) => void
+  findSheet: (title: string) => void
+}
+
+function SortableSongCard({ song, index, updateSong, removeSong, findSheet }: SortableSongCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: song.id as string })
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.9 : 1,
+    zIndex: isDragging ? 50 : 'auto',
+    position: 'relative' as any,
+    scale: isDragging ? 1.05 : 1,
+  }
+
+  const cardColors = [
+    'bg-[#b8a99a]', 'bg-[#a3aa7e]', 'bg-[#c2a882]',
+    'bg-[#8a9e8a]', 'bg-[#9a9a9a]', 'bg-[#c9a08a]',
+    'bg-[#8a8e9e]', 'bg-[#9a8a7a]', 'bg-[#a8967a]'
+  ]
+  const cc = cardColors[index % cardColors.length]
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes} 
+      {...listeners} 
+      className={`${cc} rounded-[28px] p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-300 shadow-lg group select-none`}
+    >
+      {/* Delete Button */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); removeSong(index); }} 
+        onPointerDown={(e) => e.stopPropagation()}
+        className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 backdrop-blur-sm"
+      >
+        <span className="material-icons text-sm">close</span>
+      </button>
+
+      {/* Thumbnail */}
+      <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center pointer-events-none">
+        {song.thumbnail ? (
+          <img src={song.thumbnail} alt={song.title} className="w-full h-full object-cover" />
+        ) : (
+          <span className="material-icons text-5xl text-white/30">music_note</span>
+        )}
+      </div>
+
+      {/* Editable Title & Artist */}
+      <div className="px-1 space-y-1">
+        <input 
+          type="text"
+          value={song.title}
+          onChange={(e) => updateSong(index, 'title', e.target.value)}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="bg-transparent font-black text-sm text-white outline-none w-full placeholder-white/30 leading-tight"
+          placeholder="Song Title"
+        />
+        <input 
+          type="text"
+          value={song.artist}
+          onChange={(e) => updateSong(index, 'artist', e.target.value)}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="bg-transparent text-[10px] font-bold text-white/60 outline-none w-full placeholder-white/20"
+          placeholder="Artist"
+        />
+      </div>
+
+      {/* Bottom Action Bar */}
+      <div className="flex items-center justify-between px-1 pt-1">
+        <select
+          value={song.key}
+          onChange={(e) => updateSong(index, 'key', e.target.value)}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="bg-white/20 text-white text-[9px] font-black rounded-full px-3 py-1.5 outline-none cursor-pointer appearance-none text-center"
+        >
+          {KEYS.map(k => <option key={k} value={k} className="text-black">{k}</option>)}
+        </select>
+        <div className="flex gap-1.5">
+          <button 
+            onClick={(e) => { e.stopPropagation(); findSheet(song.title); }} 
+            onPointerDown={(e) => e.stopPropagation()}
+            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" 
+            title="Search Sheet Music"
+          >
+            <span className="material-icons text-white text-sm">description</span>
+          </button>
+          {song.link && (
+            <a 
+              href={song.link} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" 
+              title="Open Original"
+            >
+              <span className="material-icons text-white text-sm">play_arrow</span>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
