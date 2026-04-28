@@ -29,48 +29,71 @@ export default function ProfilePage() {
   const [period, setPeriod] = useState<'Weekly' | 'Monthly' | 'Yearly'>('Weekly')
   const [isPraiseTeamMode, setIsPraiseTeamMode] = useState(false)
 
+  const PROFANITY_LIST = ['씨발', '병신', '존나', 'fuck', 'shit', 'bitch', 'ㅅㅂ', 'ㅄ', 'ㅈㄴ']
+
   useEffect(() => {
-    const saved = localStorage.getItem('pf_auth_user')
+    const saved = localStorage.getItem('pf_current_user')
     if (saved) setUser(JSON.parse(saved))
     setIsLoaded(true)
   }, [])
 
   const handleSignup = () => {
     if (!username || !password || password !== confirmPassword) {
-      alert("Please check your details")
+      alert("Password confirmation does not match.")
       return
     }
-    const isSpecialUser = username.toLowerCase() === 'admin' || nickname === '사랑합니다'
+
+    if (PROFANITY_LIST.some(word => nickname.toLowerCase().includes(word))) {
+      alert("Please choose a appropriate nickname.")
+      return
+    }
+
+    // Mock Nickname Uniqueness Check
+    const allUsers = JSON.parse(localStorage.getItem('pf_users') || '[]')
+    if (allUsers.some((u: any) => u.nickname === nickname)) {
+      alert("This nickname is already taken.")
+      return
+    }
+
+    const isLeader = username.toLowerCase() === 'admin'
+    const isWorship = nickname === '사랑합니다'
+    
     const newUser = {
       firstName, lastName, username, password, nickname, 
       signupPath: signupPath === 'Other' ? signupPathOther : signupPath, 
       denomination: denomination === 'Other' ? denominationOther : denomination,
-      role: isSpecialUser ? 'praise_team' : 'user'
+      role: isLeader ? 'leader' : (isWorship ? 'worship_team' : 'user')
     }
-    localStorage.setItem('pf_auth_user', JSON.stringify(newUser))
+
+    // Save to user list and set as current
+    allUsers.push(newUser)
+    localStorage.setItem('pf_users', JSON.stringify(allUsers))
+    localStorage.setItem('pf_current_user', JSON.stringify(newUser))
     setUser(newUser)
   }
 
   const handleLogin = () => {
-    // In a real app, this would be an API call. For now, we use mock logic.
+    const allUsers = JSON.parse(localStorage.getItem('pf_users') || '[]')
+    const found = allUsers.find((u: any) => u.username === loginId && u.password === loginPw)
+
     if (loginId.toLowerCase() === 'admin' && loginPw === 'admin') {
-      const adminUser = { username: 'admin', nickname: 'Administrator', role: 'praise_team' }
-      localStorage.setItem('pf_auth_user', JSON.stringify(adminUser))
+      const adminUser = { username: 'admin', nickname: 'Administrator', role: 'leader' }
+      localStorage.setItem('pf_current_user', JSON.stringify(adminUser))
       setUser(adminUser)
     } else if (loginId === '사랑합니다') {
-      const specialUser = { username: '사랑합니다', nickname: '사랑합니다', role: 'praise_team' }
-      localStorage.setItem('pf_auth_user', JSON.stringify(specialUser))
+      const specialUser = { username: '사랑합니다', nickname: '사랑합니다', role: 'worship_team' }
+      localStorage.setItem('pf_current_user', JSON.stringify(specialUser))
       setUser(specialUser)
+    } else if (found) {
+      localStorage.setItem('pf_current_user', JSON.stringify(found))
+      setUser(found)
     } else {
-      // Allow any login for demo
-      const mockUser = { username: loginId, nickname: loginId, role: 'user' }
-      localStorage.setItem('pf_auth_user', JSON.stringify(mockUser))
-      setUser(mockUser)
+      alert("Invalid ID or Password")
     }
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('pf_auth_user')
+    localStorage.removeItem('pf_current_user')
     setUser(null)
   }
 
@@ -152,15 +175,31 @@ export default function ProfilePage() {
           <img src="/images/PF app logo iphone.png" alt="PF" className="w-full h-full object-contain scale-110" />
         </div>
         <h1 className="text-4xl font-black font-plus-jakarta tracking-tighter mb-2">{user.nickname || user.username}</h1>
-        <div className="flex items-center gap-2">
-          <span className={`w-1.5 h-1.5 rounded-full ${isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'}`}></span>
-          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em]">{user.role === 'praise_team' ? 'Praise Team Member' : 'PassionFruits Member'}</p>
+        <div className="flex flex-col items-center gap-2">
+          {user.role === 'leader' && (
+            <div className={`px-4 py-1 rounded-full ${isDarkMode ? 'bg-brand-yellow/10 border-brand-yellow/20 text-brand-yellow' : 'bg-brand-purple/10 border-brand-purple/20 text-brand-purple'} border flex items-center gap-2 shadow-lg`}>
+              <span className="material-icons text-[12px]">verified</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">PF Leader</span>
+            </div>
+          )}
+          {user.role === 'worship_team' && (
+            <div className={`px-4 py-1 rounded-full ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-400' : 'bg-slate-100 border-slate-200 text-slate-500'} border flex items-center gap-2`}>
+              <span className="material-icons text-[12px]">music_note</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">PF Worship Team</span>
+            </div>
+          )}
+          {user.role === 'user' && (
+            <div className="flex items-center gap-2">
+              <span className={`w-1.5 h-1.5 rounded-full ${isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'}`}></span>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em]">PassionFruits Member</p>
+            </div>
+          )}
         </div>
         <button onClick={handleLogout} className="mt-6 text-[10px] font-black opacity-20 uppercase tracking-[0.4em] hover:opacity-100 transition-opacity">Logout Session</button>
       </section>
 
-      {/* Praise Team Mode Toggle - Only for authorized users */}
-      {user.role === 'praise_team' && (
+      {/* Praise Team Mode Toggle - Only for authorized users (Leader & Worship Team) */}
+      {(user.role === 'leader' || user.role === 'worship_team') && (
         <section className="px-8 mb-12">
           <button 
             onClick={() => setIsPraiseTeamMode(!isPraiseTeamMode)}
