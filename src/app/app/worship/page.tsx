@@ -213,17 +213,21 @@ export default function WorshipPage() {
     }
   }
 
+  const themeColor = activeTab === 'upcoming' ? '#9a78b4' : '#fffbbd'
+  const themeText = activeTab === 'upcoming' ? 'text-white' : 'text-zinc-900'
+  const themeBg = activeTab === 'upcoming' ? 'bg-[#9a78b4]' : 'bg-[#fffbbd]'
+
   const getStatus = (date: string) => {
     const today = new Date().toISOString().split('T')[0]
-    if (date === today) return { label: 'TODAY', color: 'bg-[#9a78b4] text-white' }
-    if (date > today) return { label: 'UPCOMING', color: 'bg-[#9a78b4] text-white' }
+    if (date === today) return { label: 'TODAY', color: `${themeBg} ${themeText}` }
+    if (date > today) return { label: 'UPCOMING', color: `${themeBg} ${themeText}` }
     return { label: 'COMPLETED', color: 'bg-zinc-500/20 text-zinc-500' }
   }
 
   const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-[#F8FAFC]'
   const textColor = isDarkMode ? 'text-white' : 'text-zinc-900'
-  const accentColor = 'text-[#9a78b4]'
-  const accentBg = 'bg-[#9a78b4] text-white'
+  const accentColor = `text-[${themeColor}]`
+  const accentBg = `${themeBg} ${themeText}`
   const cardBg = isDarkMode ? 'bg-zinc-900/40 border-zinc-500/10' : 'bg-white border-slate-200'
 
   // Safety Render: Only show loading if we literally have zero user info
@@ -249,7 +253,7 @@ export default function WorshipPage() {
           <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">Set List & Practice</p>
         </div>
         {(currentUser.role === 'leader' || currentUser.role === 'worship_team') && (
-          <button onClick={() => setIsAddModalOpen(true)} className={`w-10 h-10 rounded-full flex items-center justify-center ${accentBg} shadow-lg active:scale-90 transition-all`}>
+          <button onClick={() => setIsAddModalOpen(true)} className={`w-10 h-10 rounded-full flex items-center justify-center ${accentBg} shadow-lg active:scale-90 transition-all duration-700`}>
             <span className="material-icons">add</span>
           </button>
         )}
@@ -260,13 +264,13 @@ export default function WorshipPage() {
         <div className={`p-1.5 rounded-full ${isDarkMode ? 'bg-zinc-900/60' : 'bg-slate-100'} flex gap-1`}>
           <button 
             onClick={() => setActiveTab('upcoming')}
-            className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'upcoming' ? 'bg-[#9a78b4] text-white shadow-md' : 'opacity-40'}`}
+            className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-700 ${activeTab === 'upcoming' ? 'bg-[#9a78b4] text-white shadow-md' : 'opacity-40'}`}
           >
             Upcoming
           </button>
           <button 
             onClick={() => setActiveTab('history')}
-            className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? accentBg + ' shadow-md' : 'opacity-40'}`}
+            className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-700 ${activeTab === 'history' ? 'bg-[#fffbbd] text-zinc-900 shadow-md' : 'opacity-40'}`}
           >
             History
           </button>
