@@ -35,30 +35,34 @@ export default function ProfilePage() {
   const PROFANITY_LIST = ['씨발', '병신', '존나', 'fuck', 'shit', 'bitch', 'ㅅㅂ', 'ㅄ', 'ㅈㄴ']
 
   useEffect(() => {
-    // Clear legacy mock data for clean start
+    // Clear legacy mock data
     localStorage.removeItem('pf_users')
     localStorage.removeItem('pf_db_posts_v3')
-    localStorage.removeItem('pf_auth_user')
 
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+    // Load remembered credentials
+    const remEmail = localStorage.getItem('pf_rem_email')
+    const remPw = localStorage.getItem('pf_rem_pw')
+    if (remEmail) setLoginEmail(remEmail)
+    if (remPw) setLoginPw(remPw)
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        // Fetch profile to get role
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single()
         
-        if (profile) {
-          setUser({ ...session.user, ...profile })
-        } else {
-          setUser(session.user)
-        }
+        setUser({ ...session.user, ...profile })
+      } else {
+        setUser(null)
       }
       setIsLoaded(true)
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
     }
-    checkUser()
   }, [])
 
   // Real-time Password Match Check
@@ -125,9 +129,20 @@ export default function ProfilePage() {
 
     if (error) {
       alert(error.message)
-    } else {
-      alert("Signup successful! Please login.")
-      setAuthMode('login')
+    } else if (data.user) {
+      // Automatic Login & Save credentials
+      localStorage.setItem('pf_rem_email', email)
+      localStorage.setItem('pf_rem_pw', password)
+      
+      // Supabase auto-signs in after signup by default
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single()
+      
+      setUser({ ...data.user, ...profile })
+      alert("Welcome to PassionFruits!")
     }
   }
 
@@ -140,6 +155,10 @@ export default function ProfilePage() {
     if (error) {
       alert(error.message)
     } else if (data.user) {
+      // Remember credentials
+      localStorage.setItem('pf_rem_email', loginEmail)
+      localStorage.setItem('pf_rem_pw', loginPw)
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
@@ -152,6 +171,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    localStorage.removeItem('pf_rem_pw') // Clear password on logout for security if you prefer
     setUser(null)
   }
 
