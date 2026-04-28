@@ -204,7 +204,7 @@ export default function CommunityPage() {
         }
         if (next) {
           updatedReactions[next] = (updatedReactions[next] || 0) + 1
-          if (p.type === 'prayer') {
+          if (p.type === 'prayer' && p.user === currentUserName) {
             showNotify("Someone is praying for you.")
             triggerPush("PassionFruits", "Someone is praying for you.")
           }
