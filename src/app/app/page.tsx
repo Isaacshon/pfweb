@@ -445,7 +445,6 @@ export default function AppPage() {
     }))
     window.location.href = '/app/community'
   }
-  const isEn = version.lang === 'en'
 
   const filteredBooks = useMemo(() => {
     return bibleBooks.filter(b => b.name.includes(bookSearch) || b.eng.toLowerCase().includes(bookSearch.toLowerCase()))
