@@ -5,6 +5,87 @@ import { useTheme } from '@/context/ThemeContext'
 import { CommentsSheet } from '@/components/CommentsSheet'
 import { CommunityTutorial } from '@/components/CommunityTutorial'
 
+const bibleVersions = [
+  { name: 'KRV', full: '개역개정', code: 'nkrv', lang: 'ko', flag: '🇰🇷', local: true },
+  { name: 'KLB', full: '현대인의 성경', code: 'klb', lang: 'ko', flag: '🇰🇷', local: true },
+  { name: 'CUV', full: '和合本', code: 'cn', lang: 'zh', flag: '🇨🇳', local: true },
+  { name: 'RVR', full: 'Reina-Valera', code: 'es', lang: 'es', flag: '🇪🇸', local: true },
+  { name: 'ESV', full: 'English Standard Version', code: 'ESV', lang: 'en', flag: '🇺🇸', local: false },
+  { name: 'NIV', full: 'New International Version', code: 'NIV', lang: 'en', flag: '🇺🇸', local: false },
+  { name: 'KJV', full: 'King James Version', code: 'KJV', lang: 'en', flag: '🇬🇧', local: false },
+]
+
+const bibleBooks = [
+  { id: 1, name: "창세기", eng: "Genesis", zh: "创世记", es: "Génesis" },
+  { id: 2, name: "출애굽기", eng: "Exodus", zh: "出埃及记", es: "Éxodo" },
+  { id: 3, name: "레위기", eng: "Leviticus", zh: "利未记", es: "Levítico" },
+  { id: 4, name: "민수기", eng: "Numbers", zh: "民数记", es: "Números" },
+  { id: 5, name: "신명기", eng: "Deuteronomy", zh: "申命记", es: "Deuteronomio" },
+  { id: 6, name: "여호수아", eng: "Joshua", zh: "约书亚记", es: "Josué" },
+  { id: 7, name: "사사기", eng: "Judges", zh: "士师记", es: "Jueces" },
+  { id: 8, name: "룻기", eng: "Ruth", zh: "路得记", es: "Rut" },
+  { id: 9, name: "사무엘상", eng: "1 Samuel", zh: "撒母耳记上", es: "1 Samuel" },
+  { id: 10, name: "사무엘하", eng: "2 Samuel", zh: "撒母耳记下", es: "2 Samuel" },
+  { id: 11, name: "열왕기상", eng: "1 Kings", zh: "列王纪上", es: "1 Reyes" },
+  { id: 12, name: "열왕기하", eng: "2 Kings", zh: "列王纪下", es: "2 Reyes" },
+  { id: 13, name: "역대상", eng: "1 Chronicles", zh: "历代志上", es: "1 Crónicas" },
+  { id: 14, name: "역대하", eng: "2 Chronicles", zh: "历代志下", es: "2 Crónicas" },
+  { id: 15, name: "에스라", eng: "Ezra", zh: "以斯拉记", es: "Esdras" },
+  { id: 16, name: "느헤미야", eng: "Nehemiah", zh: "느헤미야", es: "Nehemías" },
+  { id: 17, name: "에스더", eng: "Esther", zh: "以斯帖记", es: "Ester" },
+  { id: 18, name: "욥기", eng: "Job", zh: "约伯记", es: "Job" },
+  { id: 19, name: "시편", eng: "Psalms", zh: "诗篇", es: "Salmos" },
+  { id: 20, name: "잠언", eng: "Proverbs", zh: "箴言", es: "Proverbios" },
+  { id: 21, name: "전도서", eng: "Ecclesiastes", zh: "传道书", es: "Eclesiastés" },
+  { id: 22, name: "아가", eng: "Song of Solomon", zh: "雅歌", es: "Cantar de los Cantares" },
+  { id: 23, name: "이사야", eng: "Isaiah", zh: "以赛亚书", es: "Isaías" },
+  { id: 24, name: "예레미야", eng: "Jeremiah", zh: "耶利米书", es: "Jeremías" },
+  { id: 25, name: "예레미야 애가", eng: "Lamentations", zh: "耶利米哀歌", es: "Lamentaciones" },
+  { id: 26, name: "에스겔", eng: "Ezekiel", zh: "以西结书", es: "Ezequiel" },
+  { id: 27, name: "다니엘", eng: "Daniel", zh: "但以理书", es: "Daniel" },
+  { id: 28, name: "호세아", eng: "Hosea", zh: "何西阿书", es: "Oseas" },
+  { id: 29, name: "요엘", eng: "Joel", zh: "约珥书", es: "Joel" },
+  { id: 30, name: "아모스", eng: "Amos", zh: "阿摩司书", es: "Amós" },
+  { id: 31, name: "오바댜", eng: "Obadiah", zh: "俄巴底亚书", es: "Abdías" },
+  { id: 32, name: "요나", eng: "Jonah", zh: "约拿书", es: "Jonás" },
+  { id: 33, name: "미가", eng: "Micah", zh: "弥迦书", es: "Miqueas" },
+  { id: 34, name: "나훔", eng: "Nahum", zh: "那鸿书", es: "Nahúm" },
+  { id: 35, name: "하박국", eng: "Habakkuk", zh: "哈巴谷书", es: "Habacuc" },
+  { id: 36, name: "스바냐", eng: "Zephaniah", zh: "西番雅书", es: "Sofonías" },
+  { id: 37, name: "학개", eng: "Haggai", zh: "哈该书", es: "Hageo" },
+  { id: 38, name: "스가랴", eng: "Zechariah", zh: "撒迦利亚书", es: "Zacarías" },
+  { id: 39, name: "말라기", eng: "Malachi", zh: "玛拉基书", es: "Malaquías" },
+  { id: 40, name: "마태복음", eng: "Matthew", zh: "马太福音", es: "Mateo" },
+  { id: 41, name: "마가복음", eng: "Mark", zh: "马可福音", es: "Marcos" },
+  { id: 42, name: "누가복음", eng: "Luke", zh: "路加福音", es: "Lucas" },
+  { id: 43, name: "요한복음", eng: "John", zh: "约翰福音", es: "Juan" },
+  { id: 44, name: "사도행전", eng: "Acts", zh: "使徒行传", es: "Hechos" },
+  { id: 45, name: "로마서", eng: "Romans", zh: "罗马书", es: "Romanos" },
+  { id: 46, name: "고린도전서", eng: "1 Corinthians", zh: "哥林多前书", es: "1 Corintios" },
+  { id: 47, name: "고린도후서", eng: "2 Corinthians", zh: "哥林多后书", es: "2 Corintios" },
+  { id: 48, name: "갈라디아서", eng: "Galatians", zh: "加라太书", es: "Gálatas" },
+  { id: 49, name: "에베소서", eng: "Ephesians", zh: "以弗所书", es: "Efesios" },
+  { id: 50, name: "빌립보서", eng: "Philippians", zh: "腓立比书", es: "Filipenses" },
+  { id: 51, name: "골로새서", eng: "Colossians", zh: "歌罗西书", es: "Colosenses" },
+  { id: 52, name: "데살로니가전서", eng: "1 Thessalonians", zh: "帖撒罗尼迦前书", es: "1 Tesalonicenses" },
+  { id: 53, name: "데살로니가후서", eng: "2 Thessalonians", zh: "帖撒罗尼迦后书", es: "2 Tesalonicenses" },
+  { id: 54, name: "디모데전서", eng: "1 Timothy", zh: "提摩太前书", es: "1 Timoteo" },
+  { id: 55, name: "디모데후서", eng: "2 Timothy", zh: "提摩太后书", es: "2 Timoteo" },
+  { id: 56, name: "디도서", eng: "Titus", zh: "提多书", es: "Tito" },
+  { id: 57, name: "빌레몬서", eng: "Philemon", zh: "腓利门书", es: "Filemón" },
+  { id: 58, name: "히브리서", eng: "Hebrews", zh: "希伯来书", es: "Hebreos" },
+  { id: 59, name: "야고보서", eng: "James", zh: "雅各书", es: "Santiago" },
+  { id: 60, name: "베드로전서", eng: "1 Peter", zh: "彼得前书", es: "1 Pedro" },
+  { id: 61, name: "베드로후서", eng: "2 Peter", zh: "彼得后书", es: "2 Pedro" },
+  { id: 62, name: "요한일서", eng: "1 John", zh: "约翰一书", es: "1 Juan" },
+  { id: 63, name: "요한이서", eng: "2 John", zh: "约翰二书", es: "2 Juan" },
+  { id: 64, name: "요한삼서", eng: "3 John", zh: "约翰三书", es: "3 Juan" },
+  { id: 65, name: "유다서", eng: "Jude", zh: "犹大书", es: "Judas" },
+  { id: 66, name: "요한계시록", eng: "Revelation", zh: "启示录", es: "Apocalipsis" }
+]
+
+const KOREAN_ABBRS = ["창", "출", "레", "민", "신", "수", "삿", "룻", "삼상", "삼하", "왕상", "왕하", "대상", "대하", "스", "느", "에", "욥", "시", "잠", "전", "아", "사", "렘", "애", "겔", "단", "호", "욜", "암", "옵", "욘", "미", "나", "합", "습", "학", "슥", "말", "마", "막", "눅", "요", "행", "롬", "고전", "고후", "갈", "엡", "빌", "골", "살전", "살후", "딤전", "딤후", "딛", "몬", "히", "약", "벧전", "벧후", "요일", "요이", "요삼", "유", "계"];
+
 const reactionTypes = [
   { label: 'Like', icon: 'thumb_up', color: 'text-blue-500' },
   { label: 'Praying', icon: 'auto_awesome', color: 'text-brand-yellow' },
@@ -79,6 +160,48 @@ export default function CommunityPage() {
   const [draftTitle, setDraftTitle] = useState('')
   const [draftContent, setDraftContent] = useState('')
   const [parsedVerses, setParsedVerses] = useState<any[]>([])
+
+  // Scripture Picker States
+  const [isScripturePickerOpen, setIsScripturePickerOpen] = useState(false)
+  const [pStep, setPStep] = useState<'book' | 'chapter' | 'verse'>('book')
+  const [pBook, setPBook] = useState<any>(bibleBooks[0])
+  const [pChapter, setPChapter] = useState(1)
+  const [pVerses, setPVerses] = useState<any[]>([])
+  const [pVersion, setPVersion] = useState(bibleVersions[0])
+  const [isFetchingVerses, setIsFetchingVerses] = useState(false)
+  const [pBookSearch, setPBookSearch] = useState('')
+
+  const getPName = (b: any, lang: string) => {
+    if (lang === 'zh') return b.zh || b.name;
+    if (lang === 'es') return b.es || b.name;
+    if (lang === 'en') return b.eng || b.name;
+    return b.name;
+  }
+
+  const fetchScripture = async (ver: any, bk: any, ch: number) => {
+    setIsFetchingVerses(true)
+    try {
+      if (ver.local) {
+        const res = await fetch(`/bible/bible_${ver.code}.json`)
+        const data = await res.json()
+        const abbr = KOREAN_ABBRS[bk.id - 1]
+        const prefix = `${abbr}${ch}:`
+        const filtered = Object.keys(data)
+          .filter(k => k.startsWith(prefix))
+          .map(k => ({ verse: k.split(':')[1], text: data[k], included: false }))
+        setPVerses(filtered)
+      } else {
+        const res = await fetch(`https://bolls.life/get-text/${ver.code}/${bk.id}/${ch}/`)
+        const data = await res.json()
+        setPVerses(data.map((v: any) => ({ verse: v.verse, text: v.text, included: false })))
+      }
+      setPStep('verse')
+    } catch (err) { 
+      console.error(err)
+      showNotify("Error fetching scripture")
+    }
+    setIsFetchingVerses(false)
+  }
 
   const currentUserName = "Isaac Shon"
 
@@ -556,7 +679,7 @@ export default function CommunityPage() {
               autoFocus
             />
 
-            {selectedVerseRef && (
+            {selectedVerseRef ? (
               <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -577,6 +700,7 @@ export default function CommunityPage() {
                         {v.verse}
                       </button>
                     ))}
+                    <button onClick={() => { setSelectedVerseRef(''); setSelectedVerseContent(''); }} className="w-8 h-8 rounded-lg flex items-center justify-center bg-zinc-500/10 text-zinc-400"><span className="material-icons text-sm">close</span></button>
                   </div>
                 </div>
                 <div className={`p-8 rounded-[32px] ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} border border-zinc-500/5 relative overflow-hidden`}>
@@ -584,6 +708,112 @@ export default function CommunityPage() {
                   <p className="text-[16px] leading-relaxed opacity-80 italic font-medium">
                     {parsedVerses.filter(v => v.included).map(v => `[${v.verse}] ${v.text}`).join(' ')}
                   </p>
+                </div>
+              </div>
+            ) : (
+              <button 
+                onClick={() => { setIsScripturePickerOpen(true); setPStep('book'); }}
+                className={`w-full py-10 rounded-[32px] border-2 border-dashed ${isDarkMode ? 'border-zinc-800 hover:border-brand-yellow/30' : 'border-slate-100 hover:border-brand-purple/30'} flex flex-col items-center justify-center gap-4 transition-all group`}
+              >
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} group-hover:scale-110 transition-transform`}>
+                  <span className={`material-icons ${accentColor}`}>auto_stories</span>
+                </div>
+                <p className="text-sm font-bold opacity-30 uppercase tracking-widest">Add Scripture</p>
+              </button>
+            )}
+
+            {/* Scripture Picker Inside Write Modal */}
+            {isScripturePickerOpen && (
+              <div className="fixed inset-0 z-[200] flex flex-col animate-in fade-in slide-in-from-bottom-10 duration-500 bg-inherit">
+                <header className="px-6 pt-16 pb-6 flex items-center justify-between border-b border-zinc-500/10">
+                  <button onClick={() => setIsScripturePickerOpen(false)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
+                  <h2 className="text-sm font-black uppercase tracking-widest opacity-40">Select Scripture</h2>
+                  <div className="w-10"></div>
+                </header>
+
+                <div className="flex-1 overflow-y-auto px-6 py-6 no-scrollbar">
+                  {pStep === 'book' && (
+                    <div className="space-y-6">
+                      <div className="relative">
+                        <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">search</span>
+                        <input type="text" placeholder="Search Book..." value={pBookSearch} onChange={(e)=>setPBookSearch(e.target.value)} className={`w-full py-4 pl-12 pr-6 rounded-2xl ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} outline-none font-bold`} />
+                      </div>
+                      <div className="flex flex-col">
+                        {bibleBooks.filter(b => b.name.includes(pBookSearch) || b.eng.toLowerCase().includes(pBookSearch.toLowerCase())).map(b => (
+                          <button key={b.id} onClick={() => { setPBook(b); setPStep('chapter'); }} className="flex items-center justify-between py-5 border-b border-zinc-500/5 active:opacity-50">
+                            <span className="text-lg font-bold">{getPName(b, pVersion.lang)}</span>
+                            <span className="material-icons text-zinc-300">chevron_right</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {pStep === 'chapter' && (
+                    <div className="space-y-10">
+                      <div className="flex items-center gap-4">
+                        <button onClick={()=>setPStep('book')} className={`w-10 h-10 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'}`}><span className="material-icons text-sm">arrow_back</span></button>
+                        <h3 className="text-2xl font-black uppercase tracking-tight">{getPName(pBook, pVersion.lang)}</h3>
+                      </div>
+                      <div className="grid grid-cols-5 gap-3">
+                        {Array.from({ length: 50 }, (_, i) => i + 1).map(c => (
+                          <button key={c} onClick={() => { setPChapter(c); fetchScripture(pVersion, pBook, c); }} className={`aspect-square rounded-xl flex items-center justify-center font-bold text-lg ${pChapter === c ? accentBg + ' text-white' : (isDarkMode ? 'bg-zinc-900' : 'bg-slate-50')}`}>
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {pStep === 'verse' && (
+                    <div className="space-y-10">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <button onClick={()=>setPStep('chapter')} className={`w-10 h-10 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'}`}><span className="material-icons text-sm">arrow_back</span></button>
+                          <h3 className="text-2xl font-black uppercase tracking-tight">{getPName(pBook, pVersion.lang)} {pChapter}</h3>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            const selected = pVerses.filter(v => v.included);
+                            if (selected.length > 0) {
+                              const ref = `${getPName(pBook, pVersion.lang)} ${pChapter}:${selected.map(s=>s.verse).join(',')}`;
+                              const content = selected.map(s => `${s.verse}. ${s.text}`).join('\n');
+                              setSelectedVerseRef(ref);
+                              setSelectedVerseContent(content);
+                              setIsScripturePickerOpen(false);
+                            }
+                          }}
+                          className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${accentBg} text-white shadow-lg`}
+                        >
+                          Add
+                        </button>
+                      </div>
+                      
+                      {isFetchingVerses ? (
+                        <div className="flex items-center justify-center py-20 animate-pulse"><div className={`w-2 h-2 rounded-full ${accentBg}`}></div></div>
+                      ) : (
+                        <div className="flex flex-col gap-4">
+                          {pVerses.map((v, i) => (
+                            <button 
+                              key={i} 
+                              onClick={() => {
+                                const next = [...pVerses];
+                                next[i].included = !next[i].included;
+                                setPVerses(next);
+                              }}
+                              className={`p-6 rounded-[24px] text-left transition-all border ${v.included ? accentBg + ' text-white border-transparent' : (isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100')}`}
+                            >
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${v.included ? 'text-white/60' : 'opacity-30'}`}>{v.verse}</span>
+                                {v.included && <span className="material-icons text-xs">check_circle</span>}
+                              </div>
+                              <p className={`text-[15px] font-medium leading-relaxed ${v.included ? 'text-white' : 'opacity-80'}`}>{v.text}</p>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
