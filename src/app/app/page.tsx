@@ -4,13 +4,13 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 
 const bibleVersions = [
-  { name: '개역개정', code: 'nkrv', lang: 'ko', flag: '🇰🇷', local: true },
-  { name: '현대인', code: 'klb', lang: 'ko', flag: '🇰🇷', local: true },
-  { name: '중국어', code: 'cn', lang: 'zh', flag: '🇨🇳', local: true },
-  { name: '스페인어', code: 'es', lang: 'es', flag: '🇪🇸', local: true },
-  { name: 'ESV', code: 'ESV', lang: 'en', flag: '🇺🇸', local: false },
-  { name: 'NIV', code: 'NIV', lang: 'en', flag: '🇺🇸', local: false },
-  { name: 'KJV', code: 'KJV', lang: 'en', flag: '🇬🇧', local: false },
+  { name: '개역개정 KRV', code: 'nkrv', lang: 'ko', flag: '🇰🇷', local: true },
+  { name: '현대인의 성경 KLB', code: 'klb', lang: 'ko', flag: '🇰🇷', local: true },
+  { name: 'CUV(중국)', code: 'cn', lang: 'zh', flag: '🇨🇳', local: true },
+  { name: 'RVR(스페인)', code: 'es', lang: 'es', flag: '🇪🇸', local: true },
+  { name: 'ESV - English Standard Version(미국)', code: 'ESV', lang: 'en', flag: '🇺🇸', local: false },
+  { name: 'NIV - New International Version(미국)', code: 'NIV', lang: 'en', flag: '🇺🇸', local: false },
+  { name: 'KJV - King James Version(영국)', code: 'KJV', lang: 'en', flag: '🇬🇧', local: false },
 ]
 
 const KOREAN_ABBRS = ["창", "출", "레", "민", "신", "수", "삿", "룻", "삼상", "삼하", "왕상", "왕하", "대상", "대하", "스", "느", "에", "욥", "시", "잠", "전", "아", "사", "렘", "애", "겔", "단", "호", "욜", "암", "옵", "욘", "미", "나", "합", "습", "학", "슥", "말", "마", "막", "눅", "요", "행", "롬", "고전", "고후", "갈", "엡", "빌", "골", "살전", "살후", "딤전", "딤후", "딛", "몬", "히", "약", "벧전", "벧후", "요일", "요이", "요삼", "유", "계"];
