@@ -44,6 +44,7 @@ export default function WorshipPage() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedSet, setSelectedSet] = useState<SetList | null>(null)
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming')
 
   // New Set Form States
   const [newDate, setNewDate] = useState('')
@@ -196,9 +197,14 @@ export default function WorshipPage() {
 
   if (!isLoaded || !currentUser) return null
 
+  const filteredSets = sets.filter(set => {
+    const today = new Date().toISOString().split('T')[0]
+    return activeTab === 'upcoming' ? set.date >= today : set.date < today
+  })
+
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} pb-40 transition-colors duration-500 font-pretendard`}>
-      <header className="px-6 pt-20 pb-8 flex items-center justify-between sticky top-0 z-40 bg-inherit/80 backdrop-blur-md">
+      <header className="px-6 pt-20 pb-4 flex items-center justify-between sticky top-0 z-40 bg-inherit/80 backdrop-blur-md">
         <div>
           <h1 className="text-3xl font-black tracking-tight uppercase">Worship</h1>
           <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">Set List & Practice</p>
@@ -210,8 +216,26 @@ export default function WorshipPage() {
         )}
       </header>
 
-      <section className="px-6 space-y-8">
-        {sets.map(set => {
+      {/* Tab Selector */}
+      <div className="px-6 mb-8 mt-2">
+        <div className={`p-1.5 rounded-full ${isDarkMode ? 'bg-zinc-900/60' : 'bg-slate-100'} flex gap-1`}>
+          <button 
+            onClick={() => setActiveTab('upcoming')}
+            className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'upcoming' ? accentBg + ' shadow-md' : 'opacity-40'}`}
+          >
+            Upcoming
+          </button>
+          <button 
+            onClick={() => setActiveTab('history')}
+            className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? accentBg + ' shadow-md' : 'opacity-40'}`}
+          >
+            History
+          </button>
+        </div>
+      </div>
+
+      <section className="px-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {filteredSets.length > 0 ? filteredSets.map(set => {
           const status = getStatus(set.date)
           return (
             <div 
@@ -276,7 +300,12 @@ export default function WorshipPage() {
               </div>
             </div>
           )
-        })}
+        }) : (
+          <div className="py-20 flex flex-col items-center justify-center opacity-20 space-y-4">
+            <span className="material-icons text-6xl">auto_awesome</span>
+            <p className="text-[10px] font-black uppercase tracking-widest">No sets found in {activeTab}</p>
+          </div>
+        )}
       </section>
 
       {/* Set Details Modal */}
