@@ -139,7 +139,7 @@ export default function CommunityPage() {
             icon: "/images/PF app logo iphone.png",
             badge: "/images/PF app logo iphone.png",
             vibrate: [200, 100, 200]
-          })
+          } as any)
         })
       } else if ("Notification" in window && Notification.permission === "granted") {
         new Notification(title, { body, icon: "/images/PF app logo iphone.png" })
