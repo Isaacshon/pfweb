@@ -4,13 +4,13 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 
 const bibleVersions = [
-  { name: '개역개정 KRV', code: 'nkrv', lang: 'ko', flag: '🇰🇷', local: true },
-  { name: '현대인의 성경 KLB', code: 'klb', lang: 'ko', flag: '🇰🇷', local: true },
-  { name: 'CUV(중국)', code: 'cn', lang: 'zh', flag: '🇨🇳', local: true },
-  { name: 'RVR(스페인)', code: 'es', lang: 'es', flag: '🇪🇸', local: true },
-  { name: 'ESV - English Standard Version(미국)', code: 'ESV', lang: 'en', flag: '🇺🇸', local: false },
-  { name: 'NIV - New International Version(미국)', code: 'NIV', lang: 'en', flag: '🇺🇸', local: false },
-  { name: 'KJV - King James Version(영국)', code: 'KJV', lang: 'en', flag: '🇬🇧', local: false },
+  { name: 'KRV', full: '개역개정', code: 'nkrv', lang: 'ko', flag: '🇰🇷', local: true },
+  { name: 'KLB', full: '현대인의 성경', code: 'klb', lang: 'ko', flag: '🇰🇷', local: true },
+  { name: 'CUV', full: '和合本(중국)', code: 'cn', lang: 'zh', flag: '🇨🇳', local: true },
+  { name: 'RVR', full: 'Reina-Valera(스페인)', code: 'es', lang: 'es', flag: '🇪🇸', local: true },
+  { name: 'ESV', full: 'English Standard Version', code: 'ESV', lang: 'en', flag: '🇺🇸', local: false },
+  { name: 'NIV', full: 'New International Version', code: 'NIV', lang: 'en', flag: '🇺🇸', local: false },
+  { name: 'KJV', full: 'King James Version', code: 'KJV', lang: 'en', flag: '🇬🇧', local: false },
 ]
 
 const KOREAN_ABBRS = ["창", "출", "레", "민", "신", "수", "삿", "룻", "삼상", "삼하", "왕상", "왕하", "대상", "대하", "스", "느", "에", "욥", "시", "잠", "전", "아", "사", "렘", "애", "겔", "단", "호", "욜", "암", "옵", "욘", "미", "나", "합", "습", "학", "슥", "말", "마", "막", "눅", "요", "행", "롬", "고전", "고후", "갈", "엡", "빌", "골", "살전", "살후", "딤전", "딤후", "딛", "몬", "히", "약", "벧전", "벧후", "요일", "요이", "요삼", "유", "계"];
@@ -648,8 +648,15 @@ export default function AppPage() {
             {pickerTab === 'version' && (
               <div className="flex flex-col gap-2">
                 {bibleVersions.map((v) => (
-                  <button key={v.code} onClick={() => { setVersion(v); setPickerTab('book'); }} className={`flex items-center justify-between py-6 px-6 rounded-2xl transition-all ${version.code === v.code ? (isDarkMode ? 'bg-zinc-900 text-brand-yellow border border-brand-yellow/20' : 'bg-slate-50 text-brand-purple border border-brand-purple/20') : 'text-zinc-500 hover:opacity-70'}`}>
-                    <span className="text-lg font-bold tracking-tight">{v.name} ({v.flag})</span>
+                  <button 
+                    key={v.code} 
+                    onClick={() => { setVersion(v); setPickerTab('book'); }} 
+                    className={`flex items-center justify-between py-5 px-6 rounded-2xl transition-all border ${version.code === v.code ? (isDarkMode ? 'bg-zinc-900 text-brand-yellow border-brand-yellow/20' : 'bg-slate-50 text-brand-purple border-brand-purple/20') : 'border-transparent text-zinc-500 hover:opacity-70'}`}
+                  >
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span className="text-lg font-black tracking-tight">{v.name}</span>
+                      <span className="text-[12px] opacity-40 font-medium">{v.full}</span>
+                    </div>
                     {version.code === v.code && <span className="material-icons text-inherit">check_circle</span>}
                   </button>
                 ))}
