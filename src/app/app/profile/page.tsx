@@ -6,47 +6,156 @@ import Link from 'next/link'
 
 export default function ProfilePage() {
   const { isDarkMode } = useTheme()
+  const [user, setUser] = useState<any>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
+  
+  // Signup States
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [nickname, setNickname] = useState('')
+  const [signupPath, setSignupPath] = useState('전도')
+  const [denomination, setDenomination] = useState('')
+
+  // Login States
+  const [loginId, setLoginId] = useState('')
+  const [loginPw, setLoginPw] = useState('')
+
   const [period, setPeriod] = useState<'Weekly' | 'Monthly' | 'Yearly'>('Weekly')
   const [isPraiseTeamMode, setIsPraiseTeamMode] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('pf_auth_user')
+    if (saved) setUser(JSON.parse(saved))
+    setIsLoaded(true)
+  }, [])
+
+  const handleSignup = () => {
+    if (!username || !password || password !== confirmPassword) {
+      alert("Please check your details")
+      return
+    }
+    const newUser = {
+      firstName, lastName, username, password, nickname, signupPath, denomination,
+      role: username.toLowerCase() === 'admin' ? 'praise_team' : 'user'
+    }
+    localStorage.setItem('pf_auth_user', JSON.stringify(newUser))
+    setUser(newUser)
+  }
+
+  const handleLogin = () => {
+    // In a real app, this would be an API call. For now, we use mock logic.
+    if (loginId.toLowerCase() === 'admin' && loginPw === 'admin') {
+      const adminUser = { username: 'admin', nickname: 'Administrator', role: 'praise_team' }
+      localStorage.setItem('pf_auth_user', JSON.stringify(adminUser))
+      setUser(adminUser)
+    } else {
+      // Allow any login for demo
+      const mockUser = { username: loginId, nickname: loginId, role: 'user' }
+      localStorage.setItem('pf_auth_user', JSON.stringify(mockUser))
+      setUser(mockUser)
+    }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('pf_auth_user')
+    setUser(null)
+  }
 
   const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-white'
   const textColor = isDarkMode ? 'text-white' : 'text-zinc-900'
   const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
   const accentBg = isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white'
+  const inputBg = isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'
+
+  if (!isLoaded) return null
+
+  if (!user) {
+    return (
+      <div className={`min-h-screen ${bgColor} ${textColor} p-8 flex flex-col justify-center animate-in fade-in duration-700`}>
+        <div className="flex flex-col items-center mb-12">
+          <img src="/images/PF app logo iphone.png" className="w-24 h-24 mb-6" alt="PF" />
+          <h1 className="text-3xl font-black tracking-tighter mb-2">PASSIONFRUITS</h1>
+          <p className="text-zinc-500 font-bold text-[10px] uppercase tracking-widest">Connect with your faith</p>
+        </div>
+
+        <div className="flex gap-4 mb-10">
+          <button onClick={() => setAuthMode('login')} className={`flex-1 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${authMode === 'login' ? accentBg : 'opacity-30'}`}>Login</button>
+          <button onClick={() => setAuthMode('signup')} className={`flex-1 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${authMode === 'signup' ? accentBg : 'opacity-30'}`}>Signup</button>
+        </div>
+
+        {authMode === 'login' ? (
+          <div className="space-y-4 animate-in slide-in-from-bottom-4">
+            <input type="text" placeholder="ID" value={loginId} onChange={(e)=>setLoginId(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border`} />
+            <input type="password" placeholder="PASSWORD" value={loginPw} onChange={(e)=>setLoginPw(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border`} />
+            <button onClick={handleLogin} className={`w-full py-6 rounded-[32px] font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all mt-6`}>Log In</button>
+          </div>
+        ) : (
+          <div className="space-y-4 overflow-y-auto max-h-[60vh] px-2 no-scrollbar animate-in slide-in-from-bottom-4">
+            <div className="grid grid-cols-2 gap-4">
+              <input type="text" placeholder="FIRST NAME" value={firstName} onChange={(e)=>setFirstName(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+              <input type="text" placeholder="LAST NAME" value={lastName} onChange={(e)=>setLastName(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+            </div>
+            <input type="text" placeholder="ID" value={username} onChange={(e)=>setUsername(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+            <input type="password" placeholder="PASSWORD" value={password} onChange={(e)=>setPassword(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+            <input type="password" placeholder="CONFIRM PASSWORD" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+            <input type="text" placeholder="NICKNAME" value={nickname} onChange={(e)=>setNickname(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+            
+            <div className="space-y-2">
+              <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Signup Path</p>
+              <div className="grid grid-cols-2 gap-2">
+                {['전도', '예배 참여', '유튜브', '인스타'].map(p => (
+                  <button key={p} onClick={()=>setSignupPath(p)} className={`py-3 rounded-xl text-[10px] font-black uppercase transition-all ${signupPath === p ? accentBg : inputBg + ' border opacity-40'}`}>{p}</button>
+                ))}
+              </div>
+            </div>
+
+            <input type="text" placeholder="DENOMINATION (OPTIONAL)" value={denomination} onChange={(e)=>setDenomination(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+            
+            <button onClick={handleSignup} className={`w-full py-6 rounded-[32px] font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all mt-6 mb-10`}>Create Account</button>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
-    <div className={`min-h-screen ${bgColor} ${textColor} pb-32 transition-colors duration-500`}>
-      {/* Profile Header with Optimized Logo */}
+    <div className={`min-h-screen ${bgColor} ${textColor} pb-32 transition-colors duration-500 animate-in fade-in duration-700`}>
+      {/* Profile Header */}
       <section className="px-8 pt-20 pb-12 flex flex-col items-center text-center">
         <div className={`relative w-32 h-32 rounded-[56px] overflow-hidden border-4 ${isDarkMode ? 'border-zinc-900 shadow-brand-yellow/5' : 'border-slate-50 shadow-brand-purple/5'} shadow-2xl mb-8`}>
-          <img 
-            src="/images/PF app logo iphone.png" 
-            alt="PassionFruits Account" 
-            className="w-full h-full object-contain scale-110"
-          />
+          <img src="/images/PF app logo iphone.png" alt="PF" className="w-full h-full object-contain scale-110" />
         </div>
-        <h1 className="text-4xl font-black font-plus-jakarta tracking-tighter mb-2">Test Account</h1>
+        <h1 className="text-4xl font-black font-plus-jakarta tracking-tighter mb-2">{user.nickname || user.username}</h1>
         <div className="flex items-center gap-2">
           <span className={`w-1.5 h-1.5 rounded-full ${isDarkMode ? 'bg-brand-yellow' : 'bg-brand-purple'}`}></span>
-          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em]">PassionFruits (for test.)</p>
+          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em]">{user.role === 'praise_team' ? 'Praise Team Member' : 'PassionFruits Member'}</p>
         </div>
+        <button onClick={handleLogout} className="mt-6 text-[10px] font-black opacity-20 uppercase tracking-[0.4em] hover:opacity-100 transition-opacity">Logout Session</button>
       </section>
 
-      {/* Praise Team Mode Toggle */}
-      <section className="px-8 mb-12 flex flex-col gap-4">
-        <button 
-          onClick={() => setIsPraiseTeamMode(!isPraiseTeamMode)}
-          className={`w-full py-5 rounded-[32px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 ${
-            isPraiseTeamMode 
-              ? `${accentBg} shadow-xl shadow-current/20 scale-[0.98]` 
-              : `${isDarkMode ? 'bg-zinc-900 text-zinc-500 border-zinc-800' : 'bg-slate-50 text-slate-400 border-slate-100'} border`
-          }`}
-        >
-          <span className="material-icons text-lg">{isPraiseTeamMode ? 'music_video' : 'queue_music'}</span>
-          {isPraiseTeamMode ? 'Praise Team Mode Active' : 'Activate Praise Team Mode'}
-        </button>
+      {/* Praise Team Mode Toggle - Only for authorized users */}
+      {user.role === 'praise_team' && (
+        <section className="px-8 mb-12">
+          <button 
+            onClick={() => setIsPraiseTeamMode(!isPraiseTeamMode)}
+            className={`w-full py-5 rounded-[32px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 ${
+              isPraiseTeamMode 
+                ? `${accentBg} shadow-xl shadow-current/20 scale-[0.98]` 
+                : `${isDarkMode ? 'bg-zinc-900 text-zinc-500 border-zinc-800' : 'bg-slate-50 text-slate-400 border-slate-100'} border`
+            }`}
+          >
+            <span className="material-icons text-lg">{isPraiseTeamMode ? 'music_video' : 'queue_music'}</span>
+            {isPraiseTeamMode ? 'Praise Team Mode Active' : 'Activate Praise Team Mode'}
+          </button>
+        </section>
+      )}
 
-        {/* Share App Action (Moved Up & Enhanced) */}
+      {/* Invite Action */}
+      <section className="px-8 mb-12">
         <Link 
           href="/app/download"
           className={`w-full py-6 rounded-[32px] flex items-center justify-between px-8 transition-all active:scale-[0.98] ${isDarkMode ? 'bg-zinc-900 border-brand-yellow/20 shadow-brand-yellow/5' : 'bg-brand-purple/5 border-brand-purple/10 shadow-brand-purple/5'} border shadow-xl`}
@@ -67,15 +176,7 @@ export default function ProfilePage() {
           <h2 className="text-xl font-black font-plus-jakarta tracking-tight">Activity Analysis</h2>
           <div className="flex gap-2">
             {['Weekly', 'Monthly', 'Yearly'].map((p) => (
-              <button 
-                key={p}
-                onClick={() => setPeriod(p as any)}
-                className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full transition-all ${
-                  period === p ? accentColor : 'text-slate-300'
-                }`}
-              >
-                {p}
-              </button>
+              <button key={p} onClick={() => setPeriod(p as any)} className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full transition-all ${period === p ? accentColor : 'text-slate-300'}`}>{p}</button>
             ))}
           </div>
         </div>
@@ -84,40 +185,25 @@ export default function ProfilePage() {
           <div className="flex items-end justify-between h-32 gap-2 mb-6">
             {[40, 70, 45, 90, 65, 30, 80].map((h, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-3">
-                <div 
-                  className={`w-full rounded-2xl transition-all duration-700 ${period === 'Weekly' ? (i === 3 ? accentBg : (isDarkMode ? 'bg-zinc-800' : 'bg-white')) : accentBg} opacity-80`}
-                  style={{ height: `${h}%` }}
-                ></div>
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'][i]}
-                </span>
+                <div className={`w-full rounded-2xl transition-all duration-700 ${period === 'Weekly' ? (i === 3 ? accentBg : (isDarkMode ? 'bg-zinc-800' : 'bg-white')) : accentBg} opacity-80`} style={{ height: `${h}%` }}></div>
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{['S', 'M', 'T', 'W', 'T', 'F', 'S'][i]}</span>
               </div>
             ))}
           </div>
           <div className="flex justify-between items-center pt-6 border-t border-slate-100/10">
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Time (for test.)</p>
-              <p className="text-xl font-black font-space-grotesk tracking-tight">24h 15m</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Growth (for test.)</p>
-              <p className={`text-xl font-black font-space-grotesk tracking-tight ${isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'}`}>+12%</p>
-            </div>
+            <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Time</p><p className="text-xl font-black font-space-grotesk tracking-tight">24h 15m</p></div>
+            <div className="text-right"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Growth</p><p className={`text-xl font-black font-space-grotesk tracking-tight ${isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'}`}>+12%</p></div>
           </div>
         </div>
       </section>
 
       {/* Stats Cards */}
       <section className="px-8 grid grid-cols-2 gap-4">
-        <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border p-8 rounded-[48px] flex flex-col gap-1`}>
-          <p className="text-3xl font-black font-space-grotesk tracking-tighter">12</p>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Shared<br/>Meditations</p>
-        </div>
-        <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border p-8 rounded-[48px] flex flex-col gap-1`}>
-          <p className="text-3xl font-black font-space-grotesk tracking-tighter">85%</p>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Worship<br/>Attendance</p>
-        </div>
+        <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border p-8 rounded-[48px] flex flex-col gap-1`}><p className="text-3xl font-black font-space-grotesk tracking-tighter">12</p><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Shared<br/>Meditations</p></div>
+        <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border p-8 rounded-[48px] flex flex-col gap-1`}><p className="text-3xl font-black font-space-grotesk tracking-tighter">85%</p><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Worship<br/>Attendance</p></div>
       </section>
+
+      <style jsx global>{` .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } .font-plus-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; } .font-space-grotesk { font-family: 'Space Grotesk', sans-serif; } `}</style>
     </div>
   )
 }

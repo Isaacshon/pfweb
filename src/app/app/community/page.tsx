@@ -436,7 +436,7 @@ export default function CommunityPage() {
       isAnonymous: isAnonymous,
       verse: selectedVerseRef || "General Reflection",
       title: draftTitle,
-      content: includedVerses ? `[Scripture]\n${includedVerses}\n\n[Reflection]\n${draftContent}` : draftContent,
+      content: includedVerses ? `[Scripture]\n${includedVerses}\n\n[${activeTab === 'meditation' ? 'Reflection' : 'Prayer Request'}]\n${draftContent}` : draftContent,
       date: "Just now",
       reactions: { Like: 0, Praying: 0, Comforting: 0, Insight: 0, Check: 0 },
       userReaction: null,
