@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 import { CommentsSheet } from '@/components/CommentsSheet'
 import { CommunityTutorial } from '@/components/CommunityTutorial'
+import { supabase } from '@/lib/supabase'
 
 const bibleVersions = [
   { name: 'KRV', full: '개역개정', code: 'nkrv', lang: 'ko', flag: '🇰🇷', local: true },
@@ -188,37 +189,44 @@ export default function CommunityPage() {
       setIsTutorialOpen(true)
     }
 
-    if ("Notification" in window) {
-      Notification.requestPermission()
-    }
-
-    const pendingPost = localStorage.getItem('pf_pending_post')
-    if (pendingPost) {
-      const { verse, content, type } = JSON.parse(pendingPost)
-      setSelectedVerseRef(verse)
-      setSelectedVerseContent(content)
-      if (type) setActiveTab(type)
-      setIsWriteModalOpen(true)
-    } else {
-      const savedWriteState = localStorage.getItem('pf_comm_write_state')
-      if (savedWriteState) {
-        const s = JSON.parse(savedWriteState)
-        setDraftTitle(s.title || '')
-        setDraftContent(s.content || '')
-        setIsAnonymous(s.anonymous || false)
-        setSelectedVerseRef(s.verseRef || '')
-        setSelectedVerseContent(s.verseContent || '')
-        setIsWriteModalOpen(s.isOpen || false)
-      }
-    }
-
     setIsLoaded(true)
   }, [])
 
-  // Save to DB & Persistence
+  // Load from Supabase
+  const fetchPosts = async () => {
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        *,
+        profiles:user_id (nickname, avatar_url)
+      `)
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error(error)
+    } else {
+      // Map Supabase data to our UI format
+      const formatted = data.map(p => ({
+        ...p,
+        user: (p as any).profiles?.nickname || 'Unknown',
+        avatar: (p as any).profiles?.avatar_url || '/images/PF app logo iphone.png',
+        reactions: p.reactions || { Like: 0, Praying: 0, Comforting: 0, Insight: 0, Check: 0 },
+        comments: p.comments || [],
+        date: new Date(p.created_at).toLocaleDateString()
+      }))
+      setPosts(formatted)
+    }
+  }
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('pf_current_user')
+    if (savedUser) setCurrentUser(JSON.parse(savedUser))
+    fetchPosts()
+  }, [])
+
+  // Save view settings & write state persistence
   useEffect(() => {
     if (!isLoaded) return
-    localStorage.setItem('pf_db_posts_v3', JSON.stringify(posts))
     localStorage.setItem('pf_comm_view', view)
     localStorage.setItem('pf_comm_tab', activeTab)
     
@@ -231,7 +239,7 @@ export default function CommunityPage() {
       verseContent: selectedVerseContent,
       tab: activeTab
     }))
-  }, [posts, view, activeTab, isLoaded, isWriteModalOpen, draftTitle, draftContent, isAnonymous, selectedVerseRef, selectedVerseContent])
+  }, [view, activeTab, isLoaded, isWriteModalOpen, draftTitle, draftContent, isAnonymous, selectedVerseRef, selectedVerseContent])
 
   // Parse verses for interactive selection
   useEffect(() => {
@@ -296,12 +304,19 @@ export default function CommunityPage() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [isCommentsOpen, isWriteModalOpen, view])
 
-  const deletePost = (postId: number) => {
+  const deletePost = async (postId: any) => {
     if (confirm("Delete this post permanently?")) {
-      const next = posts.filter(p => p.id !== postId)
-      setPosts(next)
-      localStorage.setItem('pf_db_posts_v3', JSON.stringify(next))
-      showNotify("Post deleted.")
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', postId)
+      
+      if (error) {
+        alert(error.message)
+      } else {
+        setPosts(posts.filter(p => p.id !== postId))
+        showNotify("Post deleted.")
+      }
     }
   }
 
@@ -393,38 +408,41 @@ export default function CommunityPage() {
     }))
   }
 
-  const addNewPost = () => {
-    if (!draftTitle.trim()) return
+  const addNewPost = async () => {
+    if (!draftTitle.trim() || !currentUser) return
     
     const includedVerses = parsedVerses.filter(v => v.included).map(v => `${v.verse}. ${v.text}`).join('\n')
+    const finalContent = includedVerses ? `[Scripture]\n${includedVerses}\n\n[${activeTab === 'meditation' ? 'Reflection' : 'Prayer Request'}]\n${draftContent}` : draftContent
+
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        user_id: currentUser.id,
+        title: draftTitle,
+        content: finalContent,
+        verse: selectedVerseRef || "General Reflection",
+        type: activeTab,
+        is_anonymous: isAnonymous,
+        reactions: { Like: 0, Praying: 0, Comforting: 0, Insight: 0, Check: 0 },
+        comments: []
+      })
+      .select()
     
-    const newPost = {
-      id: Date.now(),
-      type: activeTab,
-      user: isAnonymous ? "Anonymous" : currentUserName,
-      avatar: isAnonymous ? "" : "/images/PF app logo iphone.png",
-      isAnonymous: isAnonymous,
-      verse: selectedVerseRef || "General Reflection",
-      title: draftTitle,
-      content: includedVerses ? `[Scripture]\n${includedVerses}\n\n[${activeTab === 'meditation' ? 'Reflection' : 'Prayer Request'}]\n${draftContent}` : draftContent,
-      date: "Just now",
-      reactions: { Like: 0, Praying: 0, Comforting: 0, Insight: 0, Check: 0 },
-      userReaction: null,
-      comments: []
+    if (error) {
+      alert(error.message)
+    } else {
+      fetchPosts() // Refresh feed from cloud
+      setIsWriteModalOpen(false)
+      setDraftTitle('')
+      setDraftContent('')
+      setSelectedVerseRef('')
+      setSelectedVerseContent('')
+      setIsAnonymous(false)
+      setParsedVerses([])
+      localStorage.removeItem('pf_pending_post')
+      localStorage.removeItem('pf_comm_write_state')
+      showNotify("Post published successfully!")
     }
-    setPosts([newPost, ...posts])
-    
-    setIsWriteModalOpen(false)
-    setDraftTitle('')
-    setDraftContent('')
-    setSelectedVerseRef('')
-    setSelectedVerseContent('')
-    setIsAnonymous(false)
-    setParsedVerses([])
-    localStorage.removeItem('pf_pending_post')
-    localStorage.removeItem('pf_comm_write_state')
-    
-    showNotify("Post published successfully!")
   }
 
   // --- Long Press Logic ---
