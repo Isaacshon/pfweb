@@ -40,11 +40,12 @@ export default function ProfilePage() {
       alert("Please check your details")
       return
     }
+    const isSpecialUser = username.toLowerCase() === 'admin' || nickname === '사랑합니다'
     const newUser = {
       firstName, lastName, username, password, nickname, 
       signupPath: signupPath === 'Other' ? signupPathOther : signupPath, 
       denomination: denomination === 'Other' ? denominationOther : denomination,
-      role: username.toLowerCase() === 'admin' ? 'praise_team' : 'user'
+      role: isSpecialUser ? 'praise_team' : 'user'
     }
     localStorage.setItem('pf_auth_user', JSON.stringify(newUser))
     setUser(newUser)
@@ -56,6 +57,10 @@ export default function ProfilePage() {
       const adminUser = { username: 'admin', nickname: 'Administrator', role: 'praise_team' }
       localStorage.setItem('pf_auth_user', JSON.stringify(adminUser))
       setUser(adminUser)
+    } else if (loginId === '사랑합니다') {
+      const specialUser = { username: '사랑합니다', nickname: '사랑합니다', role: 'praise_team' }
+      localStorage.setItem('pf_auth_user', JSON.stringify(specialUser))
+      setUser(specialUser)
     } else {
       // Allow any login for demo
       const mockUser = { username: loginId, nickname: loginId, role: 'user' }
