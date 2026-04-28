@@ -11,6 +11,7 @@ interface Song {
   key: string
   link: string
   sheetUrl?: string
+  thumbnail?: string
 }
 
 interface TeamMember {
@@ -59,6 +60,7 @@ export default function WorshipPage() {
   const [songTitle, setSongTitle] = useState('')
   const [songArtist, setSongArtist] = useState('')
   const [songKey, setSongKey] = useState('C')
+  const [songThumbnail, setSongThumbnail] = useState('')
   const [isPreviewing, setIsPreviewing] = useState(false)
   const [isPlaylist, setIsPlaylist] = useState(false)
 
@@ -123,7 +125,7 @@ export default function WorshipPage() {
 
   const handleLinkChange = async (url: string) => {
     setSongLink(url)
-    if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('spotify.com')) {
+    if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('music.youtube.com') || url.includes('spotify.com')) {
       setIsPreviewing(true)
       setIsPlaylist(url.includes('playlist') || url.includes('list='));
       
@@ -136,14 +138,19 @@ export default function WorshipPage() {
         
         if (response.ok) {
           const data = await response.json()
-          setSongTitle(data.title || "Unknown Song")
-          setSongArtist(data.artist || "Unknown Artist")
-          setDetectedSongs([]) // oEmbed for single item
+          setSongTitle(data.title || '')
+          setSongArtist(data.artist || '')
+          setSongThumbnail(data.thumbnail || '')
+          setDetectedSongs([])
         } else {
-          console.error("Failed to fetch real metadata")
+          const err = await response.json()
+          console.error('Metadata error:', err.error)
+          setSongTitle('')
+          setSongArtist('')
+          setSongThumbnail('')
         }
       } catch (err) {
-        console.error("Network error fetching metadata", err)
+        console.error('Network error fetching metadata', err)
       } finally {
         setIsPreviewing(false)
       }
@@ -151,7 +158,7 @@ export default function WorshipPage() {
   }
 
   const addSong = (specificSong?: Song) => {
-    const target = specificSong || { title: songTitle, artist: songArtist, key: songKey, link: songLink }
+    const target = specificSong || { title: songTitle, artist: songArtist, key: songKey, link: songLink, thumbnail: songThumbnail }
     if (!target.title) return
     setNewSongs([...newSongs, target])
     if (!specificSong) {
@@ -159,6 +166,7 @@ export default function WorshipPage() {
       setSongArtist('')
       setSongLink('')
       setSongKey('C')
+      setSongThumbnail('')
     }
     setIsPreviewing(false)
   }
@@ -387,32 +395,46 @@ export default function WorshipPage() {
 
             <div className="space-y-6">
               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Songs List</h3>
-              <div className="space-y-4">
-                {selectedSet.songs.map((song, i) => (
-                  <div key={i} className={`p-6 rounded-[32px] border ${cardBg} flex flex-col gap-6`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-6">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black ${isDarkMode ? 'bg-zinc-800 text-zinc-500' : 'bg-white text-slate-300'}`}>
-                          {i + 1}
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-black tracking-tight">{song.title}</h4>
-                          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{song.artist} • <span className={accentColor}>{song.key} Key</span></p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => findSheet(song.title)} className={`w-10 h-10 rounded-full flex items-center justify-center ${isDarkMode ? 'bg-zinc-800' : 'bg-white'} shadow-md`} title="Search Sheet">
-                          <span className="material-icons text-lg">description</span>
-                        </button>
-                        {song.link && (
-                          <a href={song.link} target="_blank" rel="noopener noreferrer" className={`w-10 h-10 rounded-full flex items-center justify-center ${accentBg} shadow-md`}>
-                            <span className="material-icons text-xl">play_arrow</span>
-                          </a>
+              <div className="grid grid-cols-2 gap-4">
+                {selectedSet.songs.map((song, i) => {
+                  const cardColors = [
+                    'bg-[#b8a99a]', 'bg-[#a3aa7e]', 'bg-[#c2a882]',
+                    'bg-[#8a9e8a]', 'bg-[#9a9a9a]', 'bg-[#c9a08a]',
+                    'bg-[#8a8e9e]', 'bg-[#9a8a7a]', 'bg-[#a8967a]'
+                  ]
+                  const cardColor = cardColors[i % cardColors.length]
+                  return (
+                    <div key={i} className={`${cardColor} rounded-[28px] p-4 flex flex-col gap-3 shadow-lg transition-all active:scale-[0.97]`}>
+                      {/* Thumbnail */}
+                      <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center">
+                        {song.thumbnail ? (
+                          <img src={song.thumbnail} alt={song.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="material-icons text-5xl text-white/30">music_note</span>
                         )}
                       </div>
+                      {/* Info */}
+                      <div className="px-1 space-y-0.5 min-h-[40px]">
+                        <p className="text-sm font-black tracking-tight text-white leading-tight line-clamp-1">{song.title}</p>
+                        <p className="text-[10px] font-bold text-white/60 line-clamp-1">{song.artist}</p>
+                      </div>
+                      {/* Action Bar: Key / Sheet / Link */}
+                      <div className="flex items-center justify-between px-1">
+                        <span className="px-3 py-1 rounded-full bg-white/20 text-white text-[9px] font-black tracking-wider">{song.key}</span>
+                        <div className="flex gap-1.5">
+                          <button onClick={(e) => { e.stopPropagation(); findSheet(song.title) }} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            <span className="material-icons text-white text-sm">description</span>
+                          </button>
+                          {song.link && (
+                            <a href={song.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                              <span className="material-icons text-white text-sm">play_arrow</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -442,21 +464,34 @@ export default function WorshipPage() {
             <div className="space-y-6">
               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Songs Management</h3>
               
-              <div className="space-y-3">
-                {newSongs.map((song, i) => (
-                  <div key={i} className={`p-5 rounded-[28px] border ${cardBg} flex items-center justify-between animate-in fade-in slide-in-from-left-4`}>
-                    <div className="flex items-center gap-4">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-[10px] ${isDarkMode ? 'bg-zinc-800 text-zinc-500' : 'bg-white text-slate-300'}`}>
-                        {i + 1}
+              <div className="grid grid-cols-3 gap-3">
+                {newSongs.map((song, i) => {
+                  const cardColors = [
+                    'bg-[#b8a99a]', 'bg-[#a3aa7e]', 'bg-[#c2a882]',
+                    'bg-[#8a9e8a]', 'bg-[#9a9a9a]', 'bg-[#c9a08a]',
+                    'bg-[#8a8e9e]', 'bg-[#9a8a7a]', 'bg-[#a8967a]'
+                  ]
+                  const cc = cardColors[i % cardColors.length]
+                  return (
+                    <div key={i} className={`${cc} rounded-[20px] p-3 flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-300 relative group`}>
+                      <button onClick={() => removeSong(i)} className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <span className="material-icons text-xs">close</span>
+                      </button>
+                      <div className="w-full aspect-square rounded-[14px] overflow-hidden bg-black/10 flex items-center justify-center">
+                        {song.thumbnail ? (
+                          <img src={song.thumbnail} alt={song.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="material-icons text-3xl text-white/30">music_note</span>
+                        )}
                       </div>
-                      <div>
-                        <p className="text-sm font-black tracking-tight">{song.title}</p>
-                        <p className="text-[9px] font-bold opacity-50 uppercase tracking-widest">{song.key} • {song.artist}</p>
+                      <div className="px-0.5">
+                        <p className="text-[11px] font-black text-white leading-tight line-clamp-1">{song.title}</p>
+                        <p className="text-[8px] font-bold text-white/50 line-clamp-1">{song.artist}</p>
                       </div>
+                      <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[8px] font-black self-start">{song.key}</span>
                     </div>
-                    <button onClick={() => removeSong(i)} className="w-10 h-10 rounded-full flex items-center justify-center text-red-500/30 hover:text-red-500 transition-colors"><span className="material-icons text-lg">close</span></button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Add Song Form - The "Magic" Input */}
@@ -520,29 +555,34 @@ export default function WorshipPage() {
                           </div>
                         ) : (
                           <>
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-2xl ${accentBg} flex items-center justify-center`}>
-                                  <span className="material-icons">music_note</span>
-                                </div>
-                                <div>
-                                  <input 
-                                    type="text" 
-                                    value={songTitle} 
-                                    onChange={(e)=>setSongTitle(e.target.value)}
-                                    className="bg-transparent font-black text-lg outline-none w-full"
-                                    placeholder="Edit Title"
-                                  />
-                                  <input 
-                                    type="text" 
-                                    value={songArtist} 
-                                    onChange={(e)=>setSongArtist(e.target.value)}
-                                    className="bg-transparent text-[10px] font-bold opacity-50 uppercase tracking-widest outline-none w-full"
-                                    placeholder="Edit Artist"
-                                  />
-                                </div>
+                            {/* Music Card Preview */}
+                            <div className="bg-[#b8a99a] rounded-[28px] p-5 mx-auto max-w-[220px] space-y-3">
+                              <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center">
+                                {songThumbnail ? (
+                                  <img src={songThumbnail} alt={songTitle} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="material-icons text-5xl text-white/30">music_note</span>
+                                )}
                               </div>
-                              <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest">Detected</div>
+                              <div className="px-1 space-y-1">
+                                <input 
+                                  type="text" 
+                                  value={songTitle} 
+                                  onChange={(e)=>setSongTitle(e.target.value)}
+                                  className="bg-transparent font-black text-sm text-white outline-none w-full placeholder-white/30"
+                                  placeholder="Song Title"
+                                />
+                                <input 
+                                  type="text" 
+                                  value={songArtist} 
+                                  onChange={(e)=>setSongArtist(e.target.value)}
+                                  className="bg-transparent text-[10px] font-bold text-white/60 outline-none w-full placeholder-white/20"
+                                  placeholder="Artist"
+                                />
+                              </div>
+                              <div className="flex items-center justify-between px-1">
+                                <div className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest">Detected</div>
+                              </div>
                             </div>
 
                             <div className="space-y-3">
@@ -562,7 +602,7 @@ export default function WorshipPage() {
 
                             <button 
                               onClick={() => addSong()}
-                              className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all flex items-center justify-center gap-2`}
+                              className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] ${accentBg} shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2`}
                             >
                               <span className="material-icons text-sm">add_task</span>
                               Confirm & Add to Setlist
