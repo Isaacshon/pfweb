@@ -14,7 +14,7 @@ export default function ProfilePage() {
   // Signup States
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [nickname, setNickname] = useState('')
@@ -26,7 +26,7 @@ export default function ProfilePage() {
   const [denominationOther, setDenominationOther] = useState('')
 
   // Login States
-  const [loginId, setLoginId] = useState('')
+  const [loginEmail, setLoginEmail] = useState('')
   const [loginPw, setLoginPw] = useState('')
 
   const [period, setPeriod] = useState<'Weekly' | 'Monthly' | 'Yearly'>('Weekly')
@@ -103,17 +103,17 @@ export default function ProfilePage() {
   }, [nickname])
 
   const handleSignup = async () => {
-    if (!username || !password || !passwordMatch || !nicknameStatus.available) {
+    if (!email || !password || !passwordMatch || !nicknameStatus.available) {
       alert("Please check all fields and ensure nickname is available.")
       return
     }
 
     const { data, error } = await supabase.auth.signUp({
-      email: `${username}@pf.com`, // Mocking email with username
+      email: email,
       password: password,
       options: {
         data: {
-          username: username,
+          username: email.split('@')[0], 
           nickname: nickname,
           first_name: firstName,
           last_name: lastName,
@@ -133,7 +133,7 @@ export default function ProfilePage() {
 
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: `${loginId}@pf.com`,
+      email: loginEmail,
       password: loginPw
     })
 
@@ -179,7 +179,7 @@ export default function ProfilePage() {
 
         {authMode === 'login' ? (
           <div className="space-y-4 animate-in slide-in-from-bottom-4">
-            <input type="text" placeholder="ID" value={loginId} onChange={(e)=>setLoginId(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border`} />
+            <input type="email" placeholder="EMAIL" value={loginEmail} onChange={(e)=>setLoginEmail(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border`} />
             <input type="password" placeholder="PASSWORD" value={loginPw} onChange={(e)=>setLoginPw(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border`} />
             <button onClick={handleLogin} className={`w-full py-6 rounded-[32px] font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all mt-6`}>Log In</button>
           </div>
@@ -189,7 +189,7 @@ export default function ProfilePage() {
               <input type="text" placeholder="FIRST NAME" value={firstName} onChange={(e)=>setFirstName(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
               <input type="text" placeholder="LAST NAME" value={lastName} onChange={(e)=>setLastName(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
             </div>
-            <input type="text" placeholder="ID" value={username} onChange={(e)=>setUsername(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+            <input type="email" placeholder="EMAIL" value={email} onChange={(e)=>setEmail(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
             <div className="space-y-2">
               <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Password</p>
               <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border border-zinc-500/10`} />
