@@ -89,13 +89,22 @@ export default function WorshipPage() {
 
   const handleLinkChange = (url: string) => {
     setSongLink(url)
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('spotify.com')) {
       setIsPreviewing(true)
-      // Mocked metadata fetch
+      // Enhanced Mocked Detection
       setTimeout(() => {
-        setSongTitle("Auto-detected Song Title")
-        setSongArtist("Auto-detected Artist")
-      }, 800)
+        let title = "Detected Praise Song"
+        let artist = "Artist Name"
+        
+        // Simple logic to mock different results based on link hints
+        if (url.includes('v=w')) { title = "Way Maker"; artist = "Leeland" }
+        else if (url.includes('v=g')) { title = "Goodness of God"; artist = "Bethel Music" }
+        else if (url.includes('v=h')) { title = "Hosanna"; artist = "Hillsong Worship" }
+
+        setSongTitle(title)
+        setSongArtist(artist)
+        setIsPreviewing(false)
+      }, 1200)
     }
   }
 
@@ -105,6 +114,7 @@ export default function WorshipPage() {
     setSongTitle('')
     setSongArtist('')
     setSongLink('')
+    setSongKey('C')
     setIsPreviewing(false)
   }
 
@@ -306,44 +316,96 @@ export default function WorshipPage() {
                 ))}
               </div>
 
-              {/* Add Song Form */}
-              <div className={`p-8 rounded-[40px] border ${isDarkMode ? 'bg-zinc-900/30' : 'bg-slate-100/50'} space-y-8`}>
+              {/* Add Song Form - The "Magic" Input */}
+              <div className={`p-8 rounded-[40px] border ${isDarkMode ? 'bg-zinc-900/30' : 'bg-slate-100/50'} space-y-6 relative overflow-hidden`}>
                 <div className="space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-30">1. Paste Link</p>
+                  <div className="flex items-center justify-between px-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-30">Add Song via Link</p>
+                    <div className="flex gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse delay-75"></div>
+                    </div>
+                  </div>
                   <div className="relative">
                     <input 
                       type="text" 
-                      placeholder="YouTube or Spotify Link" 
+                      placeholder="Paste YouTube or Spotify Link here..." 
                       value={songLink} 
                       onChange={(e)=>handleLinkChange(e.target.value)} 
-                      className={`w-full p-5 rounded-2xl outline-none font-bold ${cardBg} border text-xs pr-12`} 
+                      className={`w-full p-6 rounded-[28px] outline-none font-bold ${cardBg} border-2 ${songLink && !isPreviewing ? 'border-brand-yellow/30' : 'border-transparent'} text-sm transition-all pr-12`} 
                     />
-                    {isPreviewing && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin"></div>}
+                    {isPreviewing && (
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                        <span className="material-icons animate-spin text-brand-yellow">sync</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className={`space-y-6 transition-all duration-500 ${songLink ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                  <div className="space-y-3">
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-30">2. Verify & Key</p>
-                    <input type="text" placeholder="Song Title" value={songTitle} onChange={(e)=>setSongTitle(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold ${cardBg} border text-sm`} />
-                    <input type="text" placeholder="Artist" value={songArtist} onChange={(e)=>setSongArtist(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold ${cardBg} border text-xs`} />
-                    
-                    {/* Premium Key Selector */}
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
-                      {KEYS.map(k => (
+                {/* Intelligent Preview Card */}
+                {(songTitle || isPreviewing) && (
+                  <div className={`p-6 rounded-[32px] ${isDarkMode ? 'bg-zinc-800/80' : 'bg-white'} border border-zinc-500/10 animate-in fade-in zoom-in-95 duration-500`}>
+                    {isPreviewing ? (
+                      <div className="flex items-center gap-4 py-2">
+                        <div className="w-12 h-12 rounded-2xl bg-zinc-500/10 animate-pulse"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-1/2 bg-zinc-500/10 rounded animate-pulse"></div>
+                          <div className="h-3 w-1/3 bg-zinc-500/10 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-2xl ${accentBg} flex items-center justify-center`}>
+                              <span className="material-icons">music_note</span>
+                            </div>
+                            <div>
+                              <input 
+                                type="text" 
+                                value={songTitle} 
+                                onChange={(e)=>setSongTitle(e.target.value)}
+                                className="bg-transparent font-black text-lg outline-none w-full"
+                                placeholder="Edit Title"
+                              />
+                              <input 
+                                type="text" 
+                                value={songArtist} 
+                                onChange={(e)=>setSongArtist(e.target.value)}
+                                className="bg-transparent text-[10px] font-bold opacity-50 uppercase tracking-widest outline-none w-full"
+                                placeholder="Edit Artist"
+                              />
+                            </div>
+                          </div>
+                          <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest">Detected</div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30 px-1">Select Performance Key</p>
+                          <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                            {KEYS.map(k => (
+                              <button 
+                                key={k} 
+                                onClick={() => setSongKey(k)}
+                                className={`min-w-[44px] h-10 rounded-xl font-black text-[10px] transition-all ${songKey === k ? accentBg : cardBg + ' border opacity-40'}`}
+                              >
+                                {k}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
                         <button 
-                          key={k} 
-                          onClick={() => setSongKey(k)}
-                          className={`min-w-[48px] h-12 rounded-xl font-black text-xs transition-all ${songKey === k ? accentBg : cardBg + ' border opacity-40'}`}
+                          onClick={addSong}
+                          className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all flex items-center justify-center gap-2`}
                         >
-                          {k}
+                          <span className="material-icons text-sm">add_task</span>
+                          Confirm & Add to Setlist
                         </button>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
-
-                  <button onClick={addSong} className={`w-full py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] ${accentBg} shadow-xl shadow-current/10 active:scale-95 transition-all`}>Add to Setlist</button>
-                </div>
+                )}
               </div>
             </div>
 
