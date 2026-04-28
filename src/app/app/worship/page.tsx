@@ -68,6 +68,18 @@ export default function WorshipPage() {
   const [isPreviewing, setIsPreviewing] = useState(false)
   const [isPlaylist, setIsPlaylist] = useState(false)
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
   useEffect(() => {
     // 1. Instant Load from LocalStorage
     const savedUser = localStorage.getItem('pf_current_user')
@@ -305,17 +317,6 @@ export default function WorshipPage() {
     const today = new Date().toISOString().split('T')[0]
     return activeTab === 'upcoming' ? set.date >= today : set.date < today
   })
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
 
   const handleDragEndNew = (event: DragEndEvent) => {
     const { active, over } = event
