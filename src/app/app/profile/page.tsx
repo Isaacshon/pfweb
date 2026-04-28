@@ -32,6 +32,22 @@ export default function ProfilePage() {
   const PROFANITY_LIST = ['씨발', '병신', '존나', 'fuck', 'shit', 'bitch', 'ㅅㅂ', 'ㅄ', 'ㅈㄴ']
 
   useEffect(() => {
+    // Seed initial users for testing
+    const allUsers = JSON.parse(localStorage.getItem('pf_users') || '[]')
+    const seedUsers = [
+      { username: 'admin', password: 'admin', nickname: 'Administrator', role: 'leader' },
+      { username: '사랑합니다', password: '사랑합니다', nickname: '사랑합니다', role: 'worship_team' }
+    ]
+    
+    let updated = false
+    seedUsers.forEach(s => {
+      if (!allUsers.find((u: any) => u.username === s.username)) {
+        allUsers.push(s)
+        updated = true
+      }
+    })
+    if (updated) localStorage.setItem('pf_users', JSON.stringify(allUsers))
+
     const saved = localStorage.getItem('pf_current_user')
     if (saved) setUser(JSON.parse(saved))
     setIsLoaded(true)
