@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { QRCodeSVG } from 'qrcode.react'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns'
 
 export default function ProfilePage() {
   const { isDarkMode } = useTheme()
@@ -30,6 +32,12 @@ export default function ProfilePage() {
   const [loginPw, setLoginPw] = useState('')
 
   const [period, setPeriod] = useState<'Weekly' | 'Monthly' | 'Yearly'>('Weekly')
+
+  // Attendance States
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false)
+  const [myAttendances, setMyAttendances] = useState<any[]>([])
+  const todayDateString = new Date().toISOString().split('T')[0]
+  const qrUrl = typeof window !== 'undefined' ? `${window.location.origin}/app/attendance?date=${todayDateString}` : ''
 
   const PROFANITY_LIST = ['씨발', '병신', '존나', 'fuck', 'shit', 'bitch', 'ㅅㅂ', 'ㅄ', 'ㅈㄴ']
 
@@ -66,6 +74,21 @@ export default function ProfilePage() {
       authListener.subscription.unsubscribe()
     }
   }, [])
+
+  // Fetch Attendance
+  useEffect(() => {
+    if (user) {
+      const fetchAttendance = async () => {
+        const { data } = await supabase
+          .from('attendance')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+        if (data) setMyAttendances(data)
+      }
+      fetchAttendance()
+    }
+  }, [user])
 
   // Real-time Password Match Check
   useEffect(() => {
@@ -266,6 +289,14 @@ export default function ProfilePage() {
     )
   }
 
+  // Calendar setup
+  const currentDate = new Date()
+  const firstDay = startOfMonth(currentDate)
+  const lastDay = endOfMonth(currentDate)
+  const daysInMonth = eachDayOfInterval({ start: firstDay, end: lastDay })
+  const startOffset = firstDay.getDay() // 0 = Sunday
+  const calendarPadding = Array.from({ length: startOffset }).map((_, i) => i)
+
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} pb-52 transition-colors duration-500 animate-in fade-in duration-700`}>
       {/* Profile Header */}
@@ -300,7 +331,16 @@ export default function ProfilePage() {
       {/* Worship Team Mode Status - Automatically active for Leader & Worship Team */}
       {(user.role === 'leader' || user.role === 'worship_team') && (
         <section className="px-8 mb-12">
-          <div className={`w-full py-6 rounded-[32px] border flex flex-col items-center gap-2 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+          <div className={`w-full py-6 rounded-[32px] border flex flex-col items-center gap-2 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'} relative overflow-hidden`}>
+            {user.role === 'leader' && (
+              <button 
+                onClick={() => setIsQrModalOpen(true)}
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#9a78b4] text-white flex items-center justify-center shadow-lg active:scale-90 transition-all z-10"
+                title="Generate Attendance QR"
+              >
+                <span className="material-icons text-sm">qr_code_scanner</span>
+              </button>
+            )}
             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${accentBg} mb-1`}>
               <span className="material-icons">music_note</span>
             </div>
@@ -357,10 +397,89 @@ export default function ProfilePage() {
       </section>
 
       {/* Stats Cards */}
-      <section className="px-8 grid grid-cols-2 gap-4">
-        <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border p-8 rounded-[48px] flex flex-col gap-1`}><p className="text-3xl font-black font-space-grotesk tracking-tighter">12</p><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Shared<br/>Meditations</p></div>
+      <section className="px-8 grid grid-cols-2 gap-4 mb-12">
+        <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border p-8 rounded-[48px] flex flex-col gap-1`}><p className="text-3xl font-black font-space-grotesk tracking-tighter">{myAttendances.length}</p><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Badges<br/>Collected</p></div>
         <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border p-8 rounded-[48px] flex flex-col gap-1`}><p className="text-3xl font-black font-space-grotesk tracking-tighter">85%</p><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Worship<br/>Attendance</p></div>
       </section>
+
+      {/* Attendance & Badges Section */}
+      <section className="px-8 mb-12">
+        <h2 className="text-xl font-black font-plus-jakarta tracking-tight mb-6">Attendance & Badges</h2>
+        <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-white'} border rounded-[48px] p-8 flex flex-col gap-8`}>
+          
+          {/* Calendar */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs font-black uppercase tracking-widest opacity-50">{format(currentDate, 'MMMM yyyy')}</p>
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center mb-2">
+              {['S','M','T','W','T','F','S'].map(d => <span key={d} className="text-[9px] font-black uppercase tracking-widest opacity-30">{d}</span>)}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {calendarPadding.map(p => <div key={`pad-${p}`} />)}
+              {daysInMonth.map(day => {
+                const dateStr = format(day, 'yyyy-MM-dd')
+                const hasAttended = myAttendances.some(a => a.date === dateStr)
+                return (
+                  <div key={dateStr} className={`aspect-square rounded-full flex items-center justify-center text-xs font-bold ${hasAttended ? 'bg-gradient-to-tr from-yellow-500 to-[#9a78b4] text-white shadow-md' : 'text-slate-400 opacity-60'}`}>
+                    {format(day, 'd')}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Badges Collection */}
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-4">My Collection</p>
+            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4">
+              {myAttendances.length === 0 ? (
+                <div className="w-full text-center py-6 border-2 border-dashed border-zinc-500/20 rounded-[24px]">
+                  <p className="text-xs font-bold opacity-40 uppercase tracking-widest">No Badges Yet</p>
+                </div>
+              ) : (
+                myAttendances.map(record => (
+                  <div key={record.id} className="min-w-[100px] flex flex-col items-center gap-2">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-yellow-500 to-[#9a78b4] flex items-center justify-center shadow-lg relative border-2 border-white/10">
+                      <span className="material-icons text-3xl text-white drop-shadow-md">workspace_premium</span>
+                    </div>
+                    <p className="text-[9px] font-black uppercase tracking-widest opacity-50">{record.date.substring(5)}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* QR Code Modal for Leaders */}
+      {isQrModalOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsQrModalOpen(false)}>
+          <div className={`p-10 rounded-[40px] max-w-sm w-full border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} flex flex-col items-center gap-6 shadow-2xl relative`} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setIsQrModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-zinc-500/10 flex items-center justify-center"><span className="material-icons text-sm">close</span></button>
+            
+            <div className="text-center space-y-1">
+              <h2 className="text-xl font-black tracking-tight">Today's Attendance</h2>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#9a78b4]">{todayDateString}</p>
+            </div>
+
+            <div className="p-4 bg-white rounded-3xl shadow-inner border-4 border-slate-100">
+              <QRCodeSVG value={qrUrl} size={200} level="H" includeMargin={false} />
+            </div>
+
+            <p className="text-[10px] font-bold text-center opacity-50 px-4 leading-relaxed">
+              Have your team members scan this QR code with their camera app to record their attendance and earn today's badge!
+            </p>
+            
+            <button onClick={() => {
+              navigator.clipboard.writeText(qrUrl)
+              alert("Link copied!")
+            }} className="py-3 px-6 rounded-full bg-zinc-100 text-zinc-900 font-black text-[10px] uppercase tracking-widest w-full active:scale-95 transition-all">
+              Copy Link Instead
+            </button>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{` .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } .font-plus-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; } .font-space-grotesk { font-family: 'Space Grotesk', sans-serif; } `}</style>
     </div>
