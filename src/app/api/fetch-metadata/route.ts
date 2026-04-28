@@ -2,61 +2,70 @@ import { NextResponse } from 'next/server'
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 
-// ===== SPOTIFY AUTH (Client Credentials Flow) =====
-async function getSpotifyToken(): Promise<string | null> {
-  const clientId = process.env.SPOTIFY_CLIENT_ID
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET
-  if (!clientId || !clientSecret) return null
+// ===== SPOTIFY: Extract playlist tracks from embed page =====
+async function getSpotifyPlaylistTracks(playlistId: string) {
+  try {
+    const embedUrl = `https://open.spotify.com/embed/playlist/${playlistId}`
+    const res = await fetch(embedUrl, {
+      headers: { 'User-Agent': UA, 'Accept': 'text/html' }
+    })
+    if (!res.ok) return null
 
-  const res = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64')
-    },
-    body: 'grant_type=client_credentials'
-  })
+    const html = await res.text()
+    const nextDataMatch = html.match(/<script\s+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
+    if (!nextDataMatch) return null
 
-  if (!res.ok) return null
-  const data = await res.json()
-  return data.access_token || null
-}
+    const nextData = JSON.parse(nextDataMatch[1])
+    const entity = nextData?.props?.pageProps?.state?.data?.entity
+    if (!entity) return null
 
-// ===== SPOTIFY: Get Playlist Tracks =====
-async function getSpotifyPlaylistTracks(playlistId: string, token: string) {
-  const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}?fields=name,images,tracks.items(track(name,artists(name),album(images)))`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-  if (!res.ok) return null
-  const data = await res.json()
+    const trackList = entity.trackList || []
+    const coverArt = entity.coverArt?.sources?.[0]?.url || ''
 
-  const tracks = data.tracks?.items
-    ?.filter((item: any) => item.track)
-    .map((item: any) => ({
-      title: item.track.name,
-      artist: item.track.artists?.map((a: any) => a.name).join(', ') || '',
-      thumbnail: item.track.album?.images?.[0]?.url || ''
-    })) || []
+    const tracks = trackList
+      .filter((t: any) => t.entityType === 'track')
+      .map((t: any) => ({
+        title: t.title || '',
+        artist: t.subtitle || '',
+        thumbnail: coverArt // Embed page shares playlist cover for all tracks
+      }))
 
-  return {
-    playlistTitle: data.name || 'Spotify Playlist',
-    thumbnail: data.images?.[0]?.url || '',
-    tracks
+    return {
+      playlistTitle: entity.name || entity.title || 'Spotify Playlist',
+      thumbnail: coverArt,
+      tracks
+    }
+  } catch (err) {
+    console.error('Spotify embed extraction error:', err)
+    return null
   }
 }
 
-// ===== SPOTIFY: Get Single Track =====
-async function getSpotifyTrack(trackId: string, token: string) {
-  const res = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-  if (!res.ok) return null
-  const data = await res.json()
+// ===== SPOTIFY: Extract single track from embed page =====
+async function getSpotifyTrack(trackId: string) {
+  try {
+    const embedUrl = `https://open.spotify.com/embed/track/${trackId}`
+    const res = await fetch(embedUrl, {
+      headers: { 'User-Agent': UA, 'Accept': 'text/html' }
+    })
+    if (!res.ok) return null
 
-  return {
-    title: data.name || '',
-    artist: data.artists?.map((a: any) => a.name).join(', ') || '',
-    thumbnail: data.album?.images?.[0]?.url || ''
+    const html = await res.text()
+    const nextDataMatch = html.match(/<script\s+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
+    if (!nextDataMatch) return null
+
+    const nextData = JSON.parse(nextDataMatch[1])
+    const entity = nextData?.props?.pageProps?.state?.data?.entity
+    if (!entity) return null
+
+    return {
+      title: entity.name || entity.title || '',
+      artist: entity.subtitle || entity.artists?.map((a: any) => a.name).join(', ') || '',
+      thumbnail: entity.coverArt?.sources?.[0]?.url || ''
+    }
+  } catch (err) {
+    console.error('Spotify track extraction error:', err)
+    return null
   }
 }
 
@@ -73,17 +82,12 @@ async function getYouTubePlaylistTracks(listId: string) {
     if (!res.ok) return null
 
     const html = await res.text()
-
-    // Extract ytInitialData JSON embedded in the page
     const match = html.match(/var\s+ytInitialData\s*=\s*(\{[\s\S]+?\});\s*<\/script>/)
     if (!match) return null
 
     const data = JSON.parse(match[1])
-
-    // Get playlist title
     const playlistTitle = data?.metadata?.playlistMetadataRenderer?.title || 'YouTube Playlist'
 
-    // Navigate to playlist video items
     const contents = data?.contents
       ?.twoColumnBrowseResultsRenderer?.tabs?.[0]
       ?.tabRenderer?.content
@@ -101,8 +105,6 @@ async function getYouTubePlaylistTracks(listId: string) {
         const artist = video.shortBylineText?.runs?.[0]?.text || ''
         const thumbnails = video.thumbnail?.thumbnails || []
         const thumbnail = thumbnails[thumbnails.length - 1]?.url || ''
-
-        // Try to parse "Artist - Song" from the title
         const parsed = parseYouTubeTitle(title)
 
         return {
@@ -149,81 +151,66 @@ export async function POST(request: Request) {
 
     // ===== SPOTIFY =====
     if (isSpotify) {
-      const token = await getSpotifyToken()
-
       if (isPlaylist) {
         const playlistId = url.match(/playlist\/([a-zA-Z0-9]+)/)?.[1]
-        if (playlistId && token) {
-          const result = await getSpotifyPlaylistTracks(playlistId, token)
-          if (result) return NextResponse.json({ type: 'playlist', ...result })
+        if (playlistId) {
+          const result = await getSpotifyPlaylistTracks(playlistId)
+          if (result && result.tracks.length > 0) {
+            return NextResponse.json({ type: 'playlist', ...result })
+          }
+        }
+        // Fallback: oEmbed for playlist info
+        const oembedRes = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`, { headers: { 'User-Agent': UA } })
+        if (oembedRes.ok) {
+          const data = await oembedRes.json()
+          return NextResponse.json({ type: 'playlist', tracks: [], playlistTitle: data.title || 'Spotify Playlist', thumbnail: data.thumbnail_url || '' })
         }
         return NextResponse.json({ type: 'playlist', tracks: [], playlistTitle: 'Spotify Playlist' })
       }
 
       // Single track
       const trackId = url.match(/track\/([a-zA-Z0-9]+)/)?.[1]
-      if (trackId && token) {
-        const result = await getSpotifyTrack(trackId, token)
+      if (trackId) {
+        const result = await getSpotifyTrack(trackId)
         if (result) return NextResponse.json({ type: 'track', ...result })
       }
 
-      // Fallback to oEmbed
-      const oembedUrl = `https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`
-      const oembedRes = await fetch(oembedUrl, { headers: { 'User-Agent': UA } })
+      // Fallback: oEmbed
+      const oembedRes = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`, { headers: { 'User-Agent': UA } })
       if (oembedRes.ok) {
         const data = await oembedRes.json()
-        return NextResponse.json({
-          type: 'track',
-          title: data.title || '',
-          artist: data.author_name || '',
-          thumbnail: data.thumbnail_url || ''
-        })
+        return NextResponse.json({ type: 'track', title: data.title || '', artist: data.author_name || '', thumbnail: data.thumbnail_url || '' })
       }
     }
 
     // ===== YOUTUBE / YOUTUBE MUSIC =====
     if (isYouTube) {
       if (isPlaylist) {
-        // Extract list ID from various YouTube URL formats
         const listMatch = url.match(/[?&]list=([a-zA-Z0-9_-]+)/)
         const listId = listMatch?.[1]
-
         if (listId) {
           const result = await getYouTubePlaylistTracks(listId)
           if (result && result.tracks.length > 0) {
             return NextResponse.json({ type: 'playlist', ...result })
           }
         }
-
-        // Fallback to oEmbed for just the title
+        // Fallback: oEmbed
         const normalized = url.replace('music.youtube.com', 'www.youtube.com')
-        const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(normalized)}&format=json`
-        const res = await fetch(oembedUrl, { headers: { 'User-Agent': UA } })
-        if (res.ok) {
-          const data = await res.json()
-          return NextResponse.json({
-            type: 'playlist',
-            playlistTitle: data.title || 'YouTube Playlist',
-            thumbnail: data.thumbnail_url || '',
-            tracks: []
-          })
+        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(normalized)}&format=json`, { headers: { 'User-Agent': UA } })
+        if (oembedRes.ok) {
+          const data = await oembedRes.json()
+          return NextResponse.json({ type: 'playlist', playlistTitle: data.title || 'YouTube Playlist', thumbnail: data.thumbnail_url || '', tracks: [] })
         }
         return NextResponse.json({ type: 'playlist', tracks: [], playlistTitle: 'YouTube Playlist' })
       }
 
       // Single video
       const normalized = url.replace('music.youtube.com', 'www.youtube.com')
-      const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(normalized)}&format=json`
-      const res = await fetch(oembedUrl, { headers: { 'User-Agent': UA } })
-      if (res.ok) {
-        const data = await res.json()
+      const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(normalized)}&format=json`, { headers: { 'User-Agent': UA } })
+      if (oembedRes.ok) {
+        const data = await oembedRes.json()
         const parsed = parseYouTubeTitle(data.title || '')
-        return NextResponse.json({
-          type: 'track',
-          title: parsed.title || data.title || '',
-          artist: parsed.artist || data.author_name || '',
-          thumbnail: data.thumbnail_url || ''
-        })
+        return NextResponse.json({ type: 'track', title: parsed.title || data.title || '', artist: parsed.artist || data.author_name || '', thumbnail: data.thumbnail_url || '' })
       }
     }
 
