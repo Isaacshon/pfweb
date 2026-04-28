@@ -30,7 +30,6 @@ export default function ProfilePage() {
   const [loginPw, setLoginPw] = useState('')
 
   const [period, setPeriod] = useState<'Weekly' | 'Monthly' | 'Yearly'>('Weekly')
-  const [isPraiseTeamMode, setIsPraiseTeamMode] = useState(false)
 
   const PROFANITY_LIST = ['씨발', '병신', '존나', 'fuck', 'shit', 'bitch', 'ㅅㅂ', 'ㅄ', 'ㅈㄴ']
 
@@ -295,20 +294,19 @@ export default function ProfilePage() {
         <button onClick={handleLogout} className="mt-6 text-[10px] font-black opacity-20 uppercase tracking-[0.4em] hover:opacity-100 transition-opacity">Logout Session</button>
       </section>
 
-      {/* Praise Team Mode Toggle - Only for authorized users (Leader & Worship Team) */}
+      {/* Worship Team Mode Status - Automatically active for Leader & Worship Team */}
       {(user.role === 'leader' || user.role === 'worship_team') && (
         <section className="px-8 mb-12">
-          <button 
-            onClick={() => setIsPraiseTeamMode(!isPraiseTeamMode)}
-            className={`w-full py-5 rounded-[32px] font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 ${
-              isPraiseTeamMode 
-                ? `${accentBg} shadow-xl shadow-current/20 scale-[0.98]` 
-                : `${isDarkMode ? 'bg-zinc-900 text-zinc-500 border-zinc-800' : 'bg-slate-50 text-slate-400 border-slate-100'} border`
-            }`}
-          >
-            <span className="material-icons text-lg">{isPraiseTeamMode ? 'music_video' : 'queue_music'}</span>
-            {isPraiseTeamMode ? 'Praise Team Mode Active' : 'Activate Praise Team Mode'}
-          </button>
+          <div className={`w-full py-6 rounded-[32px] border flex flex-col items-center gap-2 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}>
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${accentBg} mb-1`}>
+              <span className="material-icons">music_note</span>
+            </div>
+            <h3 className="text-xs font-black uppercase tracking-[0.2em]">Worship Team Mode</h3>
+            <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Successfully Activated
+            </p>
+          </div>
         </section>
       )}
 

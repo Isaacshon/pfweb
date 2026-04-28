@@ -23,17 +23,23 @@ export function AppNavBar() {
     if (saved) {
       const user = JSON.parse(saved)
       setCurrentUser(user)
+      
+      // Dynamic navigation items based on role
+      const baseItems = [
+        { label: 'Home', icon: 'home', path: '/app' },
+        { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
+        { label: 'Community', icon: 'groups', path: '/app/community' },
+        { label: 'My', icon: 'person', path: '/app/profile' },
+      ]
+
       if (user.role === 'leader' || user.role === 'worship_team') {
-        setNavItems([
-          { label: 'Home', icon: 'home', path: '/app' },
-          { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
-          { label: 'Worship', icon: 'music_note', path: '/app/worship' },
-          { label: 'Community', icon: 'groups', path: '/app/community' },
-          { label: 'My', icon: 'person', path: '/app/profile' },
-        ])
+        const worshipItem = { label: 'Worship', icon: 'music_note', path: '/app/worship' }
+        // Insert Worship before Community
+        baseItems.splice(2, 0, worshipItem)
       }
+      setNavItems(baseItems)
     }
-  }, [pathname]) // Re-check on navigation
+  }, [pathname])
   const [isScanOpen, setIsScanOpen] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [pullDistance, setPullDistance] = useState(0)
