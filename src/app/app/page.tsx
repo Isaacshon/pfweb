@@ -51,7 +51,8 @@ export default function AppPage() {
   const [selectedColor, setSelectedColor] = useState('#fffbbd')
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
-  const [historyTab, setHistoryTab] = useState<'time' | 'book'>('time')
+  const [historySort, setHistorySort] = useState<'time' | 'book'>('time')
+  const [historyFilter, setHistoryFilter] = useState<'highlight' | 'note'>('highlight')
 
   // Appearance
   const [fontSize, setFontSize] = useState(20)
@@ -565,11 +566,11 @@ export default function AppPage() {
           <div className={`absolute bottom-28 left-6 right-6 p-8 rounded-[40px] shadow-2xl border transition-all animate-in slide-in-from-bottom-4 duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-50'}`} onClick={e => e.stopPropagation()}>
             <div className="flex flex-col gap-6">
               <div className="grid grid-cols-2 gap-3 mb-2">
-                <button onClick={() => { setOpenUI(null); setIsHistoryOpen(true); setHistoryTab('time'); }} className={`h-14 rounded-2xl border flex items-center justify-center gap-2 font-black text-[13px] tracking-tight transition-all active:scale-95 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
+                <button onClick={() => { setOpenUI(null); setHistoryFilter('highlight'); setIsHistoryOpen(true); }} className={`h-14 rounded-2xl border flex items-center justify-center gap-2 font-black text-[13px] tracking-tight transition-all active:scale-95 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
                   <span className="material-icons text-lg">history_edu</span>
                   HIGHLIGHTS
                 </button>
-                <button onClick={() => { setOpenUI(null); setIsHistoryOpen(true); setHistoryTab('time'); }} className={`h-14 rounded-2xl border flex items-center justify-center gap-2 font-black text-[13px] tracking-tight transition-all active:scale-95 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
+                <button onClick={() => { setOpenUI(null); setHistoryFilter('note'); setIsHistoryOpen(true); }} className={`h-14 rounded-2xl border flex items-center justify-center gap-2 font-black text-[13px] tracking-tight transition-all active:scale-95 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
                   <span className="material-icons text-lg">sticky_note_2</span>
                   NOTES
                 </button>
@@ -665,37 +666,36 @@ export default function AppPage() {
           <div className={`relative w-full max-w-lg h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-500 ${isDarkMode ? 'bg-[#151515]' : 'bg-[#fcfcfc]'}`}>
             <div className={`shrink-0 h-20 px-8 flex items-center justify-between border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
               <button onClick={() => setIsHistoryOpen(false)} className="material-icons text-slate-400">close</button>
-              <h2 className="font-plus-jakarta font-black text-lg tracking-tight">Study History</h2>
+              <h2 className="font-plus-jakarta font-black text-lg tracking-tight uppercase">
+                My {historyFilter === 'highlight' ? 'Highlights' : 'Notes'}
+              </h2>
               <div className="w-6"></div>
             </div>
 
             <div className={`flex h-14 border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
               <button 
-                onClick={() => setHistoryTab('time')}
-                className={`flex-1 font-bold text-[13px] transition-all relative ${historyTab === 'time' ? accentColor : 'text-slate-400'}`}
+                onClick={() => setHistorySort('time')}
+                className={`flex-1 font-black text-[10px] uppercase tracking-widest transition-all relative ${historySort === 'time' ? accentColor : 'text-slate-400'}`}
               >
                 By Time
-                {historyTab === 'time' && <div className={`absolute bottom-0 left-0 right-0 h-1 ${accentBg}`}></div>}
+                {historySort === 'time' && <div className={`absolute bottom-0 left-0 right-0 h-1 ${accentBg}`}></div>}
               </button>
               <button 
-                onClick={() => setHistoryTab('book')}
-                className={`flex-1 font-bold text-[13px] transition-all relative ${historyTab === 'book' ? accentColor : 'text-slate-400'}`}
+                onClick={() => setHistorySort('book')}
+                className={`flex-1 font-black text-[10px] uppercase tracking-widest transition-all relative ${historySort === 'book' ? accentColor : 'text-slate-400'}`}
               >
                 By Book
-                {historyTab === 'book' && <div className={`absolute bottom-0 left-0 right-0 h-1 ${accentBg}`}></div>}
+                {historySort === 'book' && <div className={`absolute bottom-0 left-0 right-0 h-1 ${accentBg}`}></div>}
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto no-scrollbar pb-24">
               {(() => {
-                const hItems = [
-                  ...Object.entries(highlights).map(([key, val]) => ({ key, type: 'highlight', ...val })),
-                  ...Object.entries(notes).map(([key, val]) => ({ key, type: 'note', ...val }))
-                ].filter((item, index, self) => 
-                  index === self.findIndex((t) => t.key === item.key)
-                );
+                const hItems = historyFilter === 'highlight' 
+                  ? Object.entries(highlights).filter(([k,v]) => v && v !== '').map(([key, val]) => ({ key, type: 'highlight', ...val }))
+                  : Object.entries(notes).map(([key, val]) => ({ key, type: 'note', ...val }));
 
-                if (historyTab === 'time') {
+                if (historySort === 'time') {
                   hItems.sort((a, b) => (b.time || 0) - (a.time || 0));
                 } else {
                   hItems.sort((a, b) => {
@@ -710,8 +710,8 @@ export default function AppPage() {
                 if (hItems.length === 0) {
                   return (
                     <div className="flex flex-col items-center justify-center h-full opacity-30 gap-4">
-                      <span className="material-icons text-6xl">history_edu</span>
-                      <p className="font-bold">No history yet</p>
+                      <span className="material-icons text-6xl">{historyFilter === 'highlight' ? 'history_edu' : 'sticky_note_2'}</span>
+                      <p className="font-bold">No {historyFilter}s yet</p>
                     </div>
                   );
                 }
