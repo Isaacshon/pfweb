@@ -2,6 +2,27 @@ import { NextResponse } from 'next/server'
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 
+// ===== SPOTIFY: Get individual track album art from embed =====
+async function getSpotifyTrackArt(trackId: string): Promise<string> {
+  try {
+    const res = await fetch(`https://open.spotify.com/embed/track/${trackId}`, {
+      headers: { 'User-Agent': UA, 'Accept': 'text/html' }
+    })
+    if (!res.ok) return ''
+    const html = await res.text()
+    const match = html.match(/<script\s+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
+    if (!match) return ''
+    const data = JSON.parse(match[1])
+    const images = data?.props?.pageProps?.state?.data?.entity?.visualIdentity?.image
+    if (images && images.length > 0) {
+      // Pick the 300px version (index 0) or largest available
+      const best = images.find((img: any) => img.maxHeight === 300) || images[0]
+      return best?.url || ''
+    }
+    return ''
+  } catch { return '' }
+}
+
 // ===== SPOTIFY: Extract playlist tracks from embed page =====
 async function getSpotifyPlaylistTracks(playlistId: string) {
   try {
@@ -20,19 +41,26 @@ async function getSpotifyPlaylistTracks(playlistId: string) {
     if (!entity) return null
 
     const trackList = entity.trackList || []
-    const coverArt = entity.coverArt?.sources?.[0]?.url || ''
+    const playlistCover = entity.coverArt?.sources?.[0]?.url || ''
 
-    const tracks = trackList
-      .filter((t: any) => t.entityType === 'track')
-      .map((t: any) => ({
-        title: t.title || '',
-        artist: t.subtitle || '',
-        thumbnail: coverArt // Embed page shares playlist cover for all tracks
-      }))
+    // Fetch individual album art for each track in parallel
+    const trackItems = trackList.filter((t: any) => t.entityType === 'track')
+    const albumArts = await Promise.all(
+      trackItems.map((t: any) => {
+        const id = t.uri?.split(':')?.[2]
+        return id ? getSpotifyTrackArt(id) : Promise.resolve('')
+      })
+    )
+
+    const tracks = trackItems.map((t: any, i: number) => ({
+      title: t.title || '',
+      artist: t.subtitle || '',
+      thumbnail: albumArts[i] || playlistCover // Fallback to playlist cover
+    }))
 
     return {
       playlistTitle: entity.name || entity.title || 'Spotify Playlist',
-      thumbnail: coverArt,
+      thumbnail: playlistCover,
       tracks
     }
   } catch (err) {
@@ -40,6 +68,7 @@ async function getSpotifyPlaylistTracks(playlistId: string) {
     return null
   }
 }
+
 
 // ===== SPOTIFY: Extract single track from embed page =====
 async function getSpotifyTrack(trackId: string) {
@@ -58,10 +87,14 @@ async function getSpotifyTrack(trackId: string) {
     const entity = nextData?.props?.pageProps?.state?.data?.entity
     if (!entity) return null
 
+    const albumArt = entity.visualIdentity?.image?.find((img: any) => img.maxHeight === 300)?.url
+      || entity.visualIdentity?.image?.[0]?.url
+      || entity.coverArt?.sources?.[0]?.url || ''
+
     return {
       title: entity.name || entity.title || '',
       artist: entity.subtitle || entity.artists?.map((a: any) => a.name).join(', ') || '',
-      thumbnail: entity.coverArt?.sources?.[0]?.url || ''
+      thumbnail: albumArt
     }
   } catch (err) {
     console.error('Spotify track extraction error:', err)
