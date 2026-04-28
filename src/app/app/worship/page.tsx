@@ -47,6 +47,7 @@ export default function WorshipPage() {
   const [sets, setSets] = useState<SetList[]>([])
   const [teamOptions, setTeamOptions] = useState<any[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isFetchingSets, setIsFetchingSets] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedSet, setSelectedSet] = useState<SetList | null>(null)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>(() => {
@@ -146,8 +147,10 @@ export default function WorshipPage() {
   }, [])
 
   const fetchSets = async () => {
+    setIsFetchingSets(true)
     const { data: setsData } = await supabase.from('worship_sets').select('*').order('date', { ascending: false })
     if (setsData) setSets(setsData)
+    setIsFetchingSets(false)
   }
 
   const handleLinkChange = async (url: string) => {
@@ -438,7 +441,15 @@ export default function WorshipPage() {
               </div>
             </div>
           )
-        }) : (
+        }) : isFetchingSets ? (
+          <div className={`rounded-[36px] overflow-hidden border ${cardBg} shadow-sm p-8 space-y-6 animate-pulse`}>
+            <div className="h-8 w-1/3 bg-zinc-500/20 rounded-full"></div>
+            <div className="space-y-3">
+              <div className="h-6 w-3/4 bg-zinc-500/20 rounded-lg"></div>
+              <div className="h-4 w-1/2 bg-zinc-500/20 rounded-lg"></div>
+            </div>
+          </div>
+        ) : (
           <div className="py-20 flex flex-col items-center justify-center opacity-20 space-y-4">
             <span className="material-icons text-6xl">auto_awesome</span>
             <p className="text-[10px] font-black uppercase tracking-widest">No sets found in {activeTab}</p>
