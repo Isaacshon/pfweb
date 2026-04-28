@@ -63,25 +63,39 @@ export default function WorshipPage() {
   const [isPlaylist, setIsPlaylist] = useState(false)
 
   useEffect(() => {
+    // 1. Instant Load from LocalStorage
+    const savedUser = localStorage.getItem('pf_current_user')
+    if (savedUser) {
+      const user = JSON.parse(savedUser)
+      setCurrentUser(user)
+      // If not authorized, redirect early
+      if (user.role !== 'leader' && user.role !== 'worship_team') {
+        router.push('/app')
+      }
+    }
+
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        router.push('/app/profile')
+        if (!savedUser) router.push('/app/profile')
         return
       }
 
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
-      if (profile) {
-        setCurrentUser({ ...session.user, ...profile })
-        if (profile.role !== 'leader' && profile.role !== 'worship_team') {
-          router.push('/app')
-          return
-        }
+      const user = profile ? { ...session.user, ...profile } : session.user
+      setCurrentUser(user)
+      localStorage.setItem('pf_current_user', JSON.stringify(user))
+
+      if (user.role !== 'leader' && user.role !== 'worship_team') {
+        router.push('/app')
+        return
       }
 
+      // Fetch Sets
       const { data: setsData } = await supabase.from('worship_sets').select('*').order('date', { ascending: false })
       if (setsData) setSets(setsData)
 
+      // Fetch Team Options
       const { data: members } = await supabase.from('profiles').select('id, nickname').in('role', ['leader', 'worship_team'])
       if (members) setTeamOptions(members)
 
@@ -195,7 +209,15 @@ export default function WorshipPage() {
   const accentBg = isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-yellow text-black'
   const cardBg = isDarkMode ? 'bg-zinc-900/40 border-zinc-500/10' : 'bg-white border-slate-200'
 
-  if (!isLoaded || !currentUser) return null
+  // Safety Render: Only show loading if we literally have zero user info
+  if (!currentUser && !isLoaded) {
+    return (
+      <div className={`min-h-screen ${bgColor} flex flex-col items-center justify-center p-8 text-center`}>
+        <div className="w-12 h-12 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-6"></div>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Verifying Authorization...</p>
+      </div>
+    )
+  }
 
   const filteredSets = sets.filter(set => {
     const today = new Date().toISOString().split('T')[0]
