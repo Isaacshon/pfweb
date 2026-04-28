@@ -76,6 +76,9 @@ export default function CommunityPage() {
   const [selectedVerseRef, setSelectedVerseRef] = useState('')
   const [selectedVerseContent, setSelectedVerseContent] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
+  const [draftTitle, setDraftTitle] = useState('')
+  const [draftContent, setDraftContent] = useState('')
+  const [parsedVerses, setParsedVerses] = useState<any[]>([])
 
   const currentUserName = "Isaac Shon"
 
@@ -111,7 +114,18 @@ export default function CommunityPage() {
       setSelectedVerseContent(content)
       if (type) setActiveTab(type)
       setIsWriteModalOpen(true)
-      localStorage.removeItem('pf_pending_post')
+      // We keep pf_pending_post until submitted or manually closed to allow persistence on refresh
+    } else {
+      const savedWriteState = localStorage.getItem('pf_comm_write_state')
+      if (savedWriteState) {
+        const s = JSON.parse(savedWriteState)
+        setDraftTitle(s.title || '')
+        setDraftContent(s.content || '')
+        setIsAnonymous(s.anonymous || false)
+        setSelectedVerseRef(s.verseRef || '')
+        setSelectedVerseContent(s.verseContent || '')
+        setIsWriteModalOpen(s.isOpen || false)
+      }
     }
 
     setIsLoaded(true)
@@ -123,7 +137,32 @@ export default function CommunityPage() {
     localStorage.setItem('pf_db_posts_v3', JSON.stringify(posts))
     localStorage.setItem('pf_comm_view', view)
     localStorage.setItem('pf_comm_tab', activeTab)
-  }, [posts, view, activeTab, isLoaded])
+    
+    localStorage.setItem('pf_comm_write_state', JSON.stringify({
+      isOpen: isWriteModalOpen,
+      title: draftTitle,
+      content: draftContent,
+      anonymous: isAnonymous,
+      verseRef: selectedVerseRef,
+      verseContent: selectedVerseContent,
+      tab: activeTab
+    }))
+  }, [posts, view, activeTab, isLoaded, isWriteModalOpen, draftTitle, draftContent, isAnonymous, selectedVerseRef, selectedVerseContent])
+
+  // Parse verses for interactive selection
+  useEffect(() => {
+    if (selectedVerseContent) {
+      const lines = selectedVerseContent.split('\n').filter(l => l.trim())
+      const parsed = lines.map(l => {
+        const match = l.match(/^(\d+)\.\s(.*)/)
+        if (match) return { verse: match[1], text: match[2], included: true }
+        return { verse: '?', text: l, included: true }
+      })
+      setParsedVerses(parsed)
+    } else {
+      setParsedVerses([])
+    }
+  }, [selectedVerseContent])
 
   const showNotify = useCallback((msg: string) => {
     setNotification(msg)
@@ -261,26 +300,38 @@ export default function CommunityPage() {
     }))
   }
 
-  const addNewPost = (title: string, content: string, type: 'meditation' | 'prayer', anonymous: boolean) => {
+  const addNewPost = () => {
+    if (!draftTitle.trim()) return
+    
+    const includedVerses = parsedVerses.filter(v => v.included).map(v => `${v.verse}. ${v.text}`).join('\n')
+    
     const newPost = {
       id: Date.now(),
-      type,
-      user: anonymous ? "Anonymous" : currentUserName,
-      avatar: anonymous ? "" : "/images/PF app logo iphone.png",
-      isAnonymous: anonymous,
+      type: activeTab,
+      user: isAnonymous ? "Anonymous" : currentUserName,
+      avatar: isAnonymous ? "" : "/images/PF app logo iphone.png",
+      isAnonymous: isAnonymous,
       verse: selectedVerseRef || "General Reflection",
-      title,
-      content: selectedVerseContent ? `[Scripture]\n${selectedVerseContent}\n\n[Reflection]\n${content}` : content,
+      title: draftTitle,
+      content: includedVerses ? `[Scripture]\n${includedVerses}\n\n[Reflection]\n${draftContent}` : draftContent,
       date: "Just now",
       reactions: { Like: 0, Praying: 0, Comforting: 0, Insight: 0, Check: 0 },
       userReaction: null,
       comments: []
     }
     setPosts([newPost, ...posts])
+    
+    // Clear
     setIsWriteModalOpen(false)
+    setDraftTitle('')
+    setDraftContent('')
     setSelectedVerseRef('')
     setSelectedVerseContent('')
     setIsAnonymous(false)
+    setParsedVerses([])
+    localStorage.removeItem('pf_pending_post')
+    localStorage.removeItem('pf_comm_write_state')
+    
     showNotify("Post published successfully!")
   }
 
@@ -485,14 +536,10 @@ export default function CommunityPage() {
       {isWriteModalOpen && (
         <div className={`fixed inset-0 z-[120] animate-in fade-in zoom-in duration-300 flex flex-col ${isDarkMode ? 'bg-[#050505]' : 'bg-white'}`}>
           <header className="px-6 pt-16 pb-6 flex items-center justify-between border-b border-zinc-500/10">
-            <button onClick={() => setIsWriteModalOpen(false)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
+            <button onClick={() => { setIsWriteModalOpen(false); localStorage.removeItem('pf_pending_post'); localStorage.removeItem('pf_comm_write_state'); setDraftTitle(''); setDraftContent(''); setSelectedVerseRef(''); setSelectedVerseContent(''); }} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
             <h2 className="text-sm font-black uppercase tracking-widest opacity-40">New {activeTab}</h2>
             <button 
-              onClick={() => { 
-                const title = (document.getElementById('new-post-title') as HTMLInputElement).value; 
-                const content = (document.getElementById('new-post-content') as HTMLTextAreaElement).value; 
-                if (title && content) addNewPost(title, content, activeTab, isAnonymous); 
-              }} 
+              onClick={addNewPost} 
               className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${accentBg} text-white shadow-lg active:scale-90 transition-all`}
             >
               Post
@@ -501,7 +548,8 @@ export default function CommunityPage() {
 
           <div className="flex-1 overflow-y-auto px-8 py-10 space-y-10 no-scrollbar">
             <input 
-              id="new-post-title" 
+              value={draftTitle}
+              onChange={(e) => setDraftTitle(e.target.value)}
               type="text" 
               placeholder="TITLE" 
               className="w-full text-4xl font-black bg-transparent outline-none placeholder:opacity-10 uppercase tracking-tighter" 
@@ -509,16 +557,48 @@ export default function CommunityPage() {
             />
 
             {selectedVerseRef && (
-              <div className="space-y-4 animate-in slide-in-from-left-4 duration-500">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${accentBg}`}></span>
-                  <span className={`text-[11px] font-black uppercase tracking-widest ${accentColor}`}>{selectedVerseRef}</span>
+              <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${accentBg}`}></span>
+                    <span className={`text-[11px] font-black uppercase tracking-widest ${accentColor}`}>{selectedVerseRef}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {parsedVerses.map((v, i) => (
+                      <button 
+                        key={i}
+                        onClick={() => {
+                          const next = [...parsedVerses]
+                          next[i].included = !next[i].included
+                          setParsedVerses(next)
+                        }}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black transition-all border ${v.included ? accentBg + ' text-white border-transparent shadow-lg shadow-current/20' : 'bg-transparent text-zinc-500 border-zinc-500/20'}`}
+                      >
+                        {v.verse}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className={`p-6 rounded-[32px] ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} border border-zinc-500/5`}>
-                  <p className="text-[15px] leading-relaxed opacity-60 italic font-medium">"{selectedVerseContent}"</p>
+                <div className={`p-8 rounded-[32px] ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} border border-zinc-500/5 relative overflow-hidden`}>
+                  <div className="absolute top-0 left-0 w-1 h-full bg-current opacity-10"></div>
+                  <p className="text-[16px] leading-relaxed opacity-80 italic font-medium">
+                    {parsedVerses.filter(v => v.included).map(v => `[${v.verse}] ${v.text}`).join(' ')}
+                  </p>
                 </div>
               </div>
             )}
+
+            <div className="flex items-center gap-4 py-4 border-y border-zinc-500/5">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Post Anonymously</span>
+              <button onClick={() => setIsAnonymous(!isAnonymous)} className={`w-12 h-6 rounded-full relative transition-all ${isAnonymous ? accentBg : 'bg-zinc-500/20'}`}><div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isAnonymous ? 'left-7' : 'left-1'}`}></div></button>
+            </div>
+
+            <textarea 
+              value={draftContent}
+              onChange={(e) => setDraftContent(e.target.value)}
+              placeholder="What's on your mind?" 
+              className="w-full h-64 bg-transparent outline-none text-xl font-medium leading-relaxed placeholder:opacity-20 resize-none"
+            />
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
