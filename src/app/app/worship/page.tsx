@@ -214,6 +214,30 @@ export default function WorshipPage() {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(title + " 악보 sheet music")}&tbm=isch`, '_blank')
   }
 
+  const [isUploadingSheet, setIsUploadingSheet] = useState<number | null>(null)
+  
+  const uploadSheet = async (index: number, file: File) => {
+    if (!file) return
+    setIsUploadingSheet(index)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `sheets/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      
+      // Using 'gallery' bucket as it's the standard public bucket in this app
+      const { data, error } = await supabase.storage.from('gallery').upload(fileName, file)
+      
+      if (error) throw error
+      
+      const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(fileName)
+      updateSong(index, 'sheetUrl', publicUrl)
+    } catch (error: any) {
+      console.error("Upload failed", error)
+      alert("Sheet upload failed: " + error.message)
+    } finally {
+      setIsUploadingSheet(null)
+    }
+  }
+
   const addTeamMember = (userId: string, nickname: string) => {
     if (newTeam.some(m => m.userId === userId)) return
     setNewTeam([...newTeam, { userId, nickname, role: 'Vocal (Sub)' }])
@@ -526,6 +550,8 @@ export default function WorshipPage() {
                         updateSong={updateSong} 
                         removeSong={removeSong} 
                         findSheet={findSheet} 
+                        uploadSheet={uploadSheet}
+                        isUploading={isUploadingSheet === i}
                       />
                     ))}
                   </div>
@@ -701,9 +727,11 @@ interface SortableSongCardProps {
   updateSong: (index: number, field: keyof Song, value: string) => void
   removeSong: (index: number) => void
   findSheet: (title: string) => void
+  uploadSheet: (index: number, file: File) => void
+  isUploading?: boolean
 }
 
-function SortableSongCard({ song, index, updateSong, removeSong, findSheet }: SortableSongCardProps) {
+function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uploadSheet, isUploading }: SortableSongCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: song.id as string })
   
   const style = {
@@ -782,11 +810,50 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet }: So
           <button 
             onClick={(e) => { e.stopPropagation(); findSheet(song.title); }} 
             onPointerDown={(e) => e.stopPropagation()}
-            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" 
-            title="Search Sheet Music"
+            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors" 
+            title="Search Web for Sheet"
           >
-            <span className="material-icons text-white text-sm">description</span>
+            <span className="material-icons text-sm">search</span>
           </button>
+          
+          <input 
+            type="file" 
+            accept="image/*,application/pdf" 
+            className="hidden" 
+            id={`sheet-upload-${song.id}`}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) uploadSheet(index, file);
+              e.target.value = ''; // Reset input
+            }}
+          />
+          <label 
+            htmlFor={`sheet-upload-${song.id}`}
+            onPointerDown={(e) => e.stopPropagation()}
+            className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all ${song.sheetUrl ? 'bg-green-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'} ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+            title={song.sheetUrl ? "Sheet Uploaded (Click to replace)" : "Upload Sheet File"}
+          >
+            {isUploading ? (
+              <span className="material-icons text-sm animate-spin">sync</span>
+            ) : (
+              <span className="material-icons text-sm">{song.sheetUrl ? "check" : "upload_file"}</span>
+            )}
+          </label>
+
+          {song.sheetUrl && (
+            <a 
+              href={song.sheetUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="w-8 h-8 rounded-full bg-green-500/20 text-green-300 flex items-center justify-center hover:bg-green-500/30 transition-colors" 
+              title="View Sheet"
+            >
+              <span className="material-icons text-sm">visibility</span>
+            </a>
+          )}
+
           {song.link && (
             <a 
               href={song.link} 
