@@ -49,7 +49,18 @@ export default function WorshipPage() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedSet, setSelectedSet] = useState<SetList | null>(null)
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming')
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('pf_worship_tab') as 'upcoming' | 'history') || 'upcoming'
+    }
+    return 'upcoming'
+  })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pf_worship_tab', activeTab)
+    }
+  }, [activeTab])
 
   // New Set Form States
   const [newDate, setNewDate] = useState('')

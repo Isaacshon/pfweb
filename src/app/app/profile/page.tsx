@@ -54,23 +54,48 @@ export default function ProfilePage() {
     if (remEmail) setLoginEmail(remEmail)
     if (remPw) setLoginPw(remPw)
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-        
-        const combinedUser = { ...session.user, ...profile }
-        setUser(combinedUser)
-        localStorage.setItem('pf_current_user', JSON.stringify(combinedUser))
-      } else {
-        setUser(null)
-        localStorage.removeItem('pf_current_user')
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+          const combinedUser = { ...session.user, ...profile }
+          setUser(combinedUser)
+          localStorage.setItem('pf_current_user', JSON.stringify(combinedUser))
+        } else {
+          setUser(null)
+          localStorage.removeItem('pf_current_user')
+        }
+      } catch (err) {
+        console.error("Auth init error:", err)
+      } finally {
+        setIsLoaded(true)
+        setMounted(true)
       }
-      setIsLoaded(true)
-      setMounted(true)
+    }
+
+    initAuth()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event !== 'INITIAL_SESSION') {
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+          const combinedUser = { ...session.user, ...profile }
+          setUser(combinedUser)
+          localStorage.setItem('pf_current_user', JSON.stringify(combinedUser))
+        } else {
+          setUser(null)
+          localStorage.removeItem('pf_current_user')
+        }
+      }
     })
 
     return () => {
