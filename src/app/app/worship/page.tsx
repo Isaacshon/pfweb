@@ -140,37 +140,34 @@ export default function WorshipPage() {
         if (response.ok) {
           const data = await response.json()
           
-          if (data.type === 'playlist') {
-            // Playlist response - populate detectedSongs
-            if (data.tracks && data.tracks.length > 0) {
-              setDetectedSongs(data.tracks.map((t: any) => ({
-                title: t.title || '',
-                artist: t.artist || '',
-                key: 'C',
-                link: url,
-                thumbnail: t.thumbnail || ''
-              })))
-            } else {
-              // Playlist detected but no tracks extracted - show playlist info
-              setDetectedSongs([])
-              setSongTitle(data.playlistTitle || 'Playlist')
-              setSongArtist('')
-              setSongThumbnail(data.thumbnail || '')
-            }
-          } else {
-            // Single track response
-            setSongTitle(data.title || '')
+          if (data.type === 'playlist' && data.tracks && data.tracks.length > 0) {
+            // Playlist: auto-add ALL tracks directly as individual cards
+            const tracks: Song[] = data.tracks.map((t: any) => ({
+              title: t.title || '',
+              artist: t.artist || '',
+              key: 'C',
+              link: url,
+              thumbnail: t.thumbnail || ''
+            }))
+            setNewSongs(prev => [...prev, ...tracks])
+            // Clear input for next use
+            setSongLink('')
+            setSongTitle('')
+            setSongArtist('')
+            setSongThumbnail('')
+            setIsPlaylist(false)
+          } else if (data.type === 'track' || (data.type === 'playlist' && (!data.tracks || data.tracks.length === 0))) {
+            // Single track or failed playlist extraction → show single track preview
+            setIsPlaylist(false)
+            setSongTitle(data.title || data.playlistTitle || '')
             setSongArtist(data.artist || '')
             setSongThumbnail(data.thumbnail || '')
-            setDetectedSongs([])
           }
         } else {
-          const err = await response.json()
-          console.error('Metadata error:', err.error)
+          console.error('Metadata error')
           setSongTitle('')
           setSongArtist('')
           setSongThumbnail('')
-          setDetectedSongs([])
         }
       } catch (err) {
         console.error('Network error fetching metadata', err)
@@ -588,120 +585,68 @@ export default function WorshipPage() {
                   </div>
                 </div>
 
-                {/* Intelligent Preview Card */}
-                {(songTitle || detectedSongs.length > 0 || isPreviewing) && (
+                {/* Single Track Preview Card */}
+                {(songTitle || isPreviewing) && (
                   <div className={`p-6 rounded-[32px] ${isDarkMode ? 'bg-zinc-800/80' : 'bg-white'} border border-zinc-500/10 animate-in fade-in zoom-in-95 duration-500`}>
                     {isPreviewing ? (
                       <div className="flex flex-col items-center gap-6 py-6">
-                        <div className="w-16 h-16 rounded-full border-4 border-brand-yellow/20 border-t-brand-yellow animate-spin"></div>
+                        <div className={`w-16 h-16 rounded-full border-4 border-[${themeColor}]/20 border-t-[${themeColor}] animate-spin`}></div>
                         <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50">
                           {isPlaylist ? "Extracting Playlist Tracks..." : "Detecting Song Metadata..."}
                         </p>
                       </div>
                     ) : (
                       <div className="space-y-6">
-                        {isPlaylist ? (
-                          <div className="space-y-4">
-                            {detectedSongs.length > 0 ? (
-                              <>
-                                <div className="flex items-center justify-between mb-2">
-                                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Playlist Detected ({detectedSongs.length} Songs)</p>
-                                  <button onClick={addAllDetected} className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest ${accentBg}`}>Add All</button>
-                                </div>
-                                <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar">
-                                  {detectedSongs.map((ds, idx) => (
-                                    <div key={idx} className={`p-3 rounded-2xl border ${cardBg} flex items-center gap-3`}>
-                                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-zinc-500/10 flex-shrink-0">
-                                        {ds.thumbnail ? (
-                                          <img src={ds.thumbnail} alt={ds.title} className="w-full h-full object-cover" />
-                                        ) : (
-                                          <div className="w-full h-full flex items-center justify-center"><span className="material-icons text-sm opacity-20">music_note</span></div>
-                                        )}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-black truncate">{ds.title}</p>
-                                        <p className="text-[8px] font-bold opacity-40 uppercase truncate">{ds.artist}</p>
-                                      </div>
-                                      <button onClick={() => {
-                                        addSong(ds);
-                                        setDetectedSongs(detectedSongs.filter((_, i) => i !== idx));
-                                      }} className="text-emerald-500 flex-shrink-0"><span className="material-icons text-sm">add_circle</span></button>
-                                    </div>
-                                  ))}
-                                </div>
-                              </>
+                        {/* Music Card Preview */}
+                        <div className="bg-[#b8a99a] rounded-[28px] p-5 mx-auto max-w-[220px] space-y-3">
+                          <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center">
+                            {songThumbnail ? (
+                              <img src={songThumbnail} alt={songTitle} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="text-center py-6 space-y-4">
-                                {songThumbnail && (
-                                  <img src={songThumbnail} alt="Playlist" className="w-24 h-24 rounded-2xl mx-auto object-cover" />
-                                )}
-                                <p className="text-sm font-black">{songTitle || 'Playlist Detected'}</p>
-                                <p className="text-[9px] font-bold opacity-40">Playlist tracks could not be auto-extracted. You can add songs manually below, or try pasting individual track links instead.</p>
-                                <button 
-                                  onClick={() => { setIsPlaylist(false); setSongTitle(''); setSongArtist(''); setSongThumbnail(''); }}
-                                  className={`px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest ${accentBg}`}
-                                >
-                                  Switch to Manual Entry
-                                </button>
-                              </div>
+                              <span className="material-icons text-5xl text-white/30">music_note</span>
                             )}
                           </div>
-                        ) : (
-                          <>
-                            {/* Music Card Preview */}
-                            <div className="bg-[#b8a99a] rounded-[28px] p-5 mx-auto max-w-[220px] space-y-3">
-                              <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center">
-                                {songThumbnail ? (
-                                  <img src={songThumbnail} alt={songTitle} className="w-full h-full object-cover" />
-                                ) : (
-                                  <span className="material-icons text-5xl text-white/30">music_note</span>
-                                )}
-                              </div>
-                              <div className="px-1 space-y-1">
-                                <input 
-                                  type="text" 
-                                  value={songTitle} 
-                                  onChange={(e)=>setSongTitle(e.target.value)}
-                                  className="bg-transparent font-black text-sm text-white outline-none w-full placeholder-white/30"
-                                  placeholder="Song Title"
-                                />
-                                <input 
-                                  type="text" 
-                                  value={songArtist} 
-                                  onChange={(e)=>setSongArtist(e.target.value)}
-                                  className="bg-transparent text-[10px] font-bold text-white/60 outline-none w-full placeholder-white/20"
-                                  placeholder="Artist"
-                                />
-                              </div>
-                              <div className="flex items-center justify-between px-1">
-                                <div className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest">Detected</div>
-                              </div>
-                            </div>
+                          <div className="px-1 space-y-1">
+                            <input 
+                              type="text" 
+                              value={songTitle} 
+                              onChange={(e)=>setSongTitle(e.target.value)}
+                              className="bg-transparent font-black text-sm text-white outline-none w-full placeholder-white/30"
+                              placeholder="Song Title"
+                            />
+                            <input 
+                              type="text" 
+                              value={songArtist} 
+                              onChange={(e)=>setSongArtist(e.target.value)}
+                              className="bg-transparent text-[10px] font-bold text-white/60 outline-none w-full placeholder-white/20"
+                              placeholder="Artist"
+                            />
+                          </div>
+                          <div className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest inline-block">Detected</div>
+                        </div>
 
-                            <div className="space-y-3">
-                              <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30 px-1">Select Performance Key</p>
-                              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-                                {KEYS.map(k => (
-                                  <button 
-                                    key={k} 
-                                    onClick={() => setSongKey(k)}
-                                    className={`min-w-[44px] h-10 rounded-xl font-black text-[10px] transition-all ${songKey === k ? accentBg : cardBg + ' border opacity-40'}`}
-                                  >
-                                    {k}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
+                        <div className="space-y-3">
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30 px-1">Select Performance Key</p>
+                          <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                            {KEYS.map(k => (
+                              <button 
+                                key={k} 
+                                onClick={() => setSongKey(k)}
+                                className={`min-w-[44px] h-10 rounded-xl font-black text-[10px] transition-all ${songKey === k ? accentBg : cardBg + ' border opacity-40'}`}
+                              >
+                                {k}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
 
-                            <button 
-                              onClick={() => addSong()}
-                              className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] ${accentBg} shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2`}
-                            >
-                              <span className="material-icons text-sm">add_task</span>
-                              Confirm & Add to Setlist
-                            </button>
-                          </>
-                        )}
+                        <button 
+                          onClick={() => addSong()}
+                          className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] ${accentBg} shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2`}
+                        >
+                          <span className="material-icons text-sm">add_task</span>
+                          Confirm & Add to Setlist
+                        </button>
                       </div>
                     )}
                   </div>
