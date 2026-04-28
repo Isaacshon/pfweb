@@ -6,16 +6,34 @@ import { usePathname } from 'next/navigation'
 import { ScanOverlay } from './ScanOverlay'
 import { useTheme } from '@/context/ThemeContext'
 
-const navItems = [
-  { label: 'Home', icon: 'home', path: '/app' },
-  { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
-  { label: 'Community', icon: 'groups', path: '/app/community' },
-  { label: 'My', icon: 'person', path: '/app/profile' },
-]
-
 export function AppNavBar() {
   const pathname = usePathname()
   const { isDarkMode, mounted } = useTheme()
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  
+  const [navItems, setNavItems] = useState([
+    { label: 'Home', icon: 'home', path: '/app' },
+    { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
+    { label: 'Community', icon: 'groups', path: '/app/community' },
+    { label: 'My', icon: 'person', path: '/app/profile' },
+  ])
+
+  useEffect(() => {
+    const saved = localStorage.getItem('pf_current_user')
+    if (saved) {
+      const user = JSON.parse(saved)
+      setCurrentUser(user)
+      if (user.role === 'leader' || user.role === 'worship_team') {
+        setNavItems([
+          { label: 'Home', icon: 'home', path: '/app' },
+          { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
+          { label: 'Worship', icon: 'music_note', path: '/app/worship' },
+          { label: 'Community', icon: 'groups', path: '/app/community' },
+          { label: 'My', icon: 'person', path: '/app/profile' },
+        ])
+      }
+    }
+  }, [pathname]) // Re-check on navigation
   const [isScanOpen, setIsScanOpen] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [pullDistance, setPullDistance] = useState(0)

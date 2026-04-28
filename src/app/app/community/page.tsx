@@ -142,6 +142,7 @@ export default function CommunityPage() {
   const { isDarkMode } = useTheme()
   const [view, setView] = useState<'selection' | 'feed'>('selection')
   const [activeTab, setActiveTab] = useState<'meditation' | 'prayer'>('meditation')
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [posts, setPosts] = useState<any[]>([])
   const [notification, setNotification] = useState<string | null>(null)
   
@@ -207,6 +208,9 @@ export default function CommunityPage() {
 
   // Load from DB & State Persistence
   useEffect(() => {
+    const savedUser = localStorage.getItem('pf_current_user')
+    if (savedUser) setCurrentUser(JSON.parse(savedUser))
+
     const savedPosts = localStorage.getItem('pf_db_posts_v3')
     if (savedPosts) {
       setPosts(JSON.parse(savedPosts))
@@ -237,7 +241,6 @@ export default function CommunityPage() {
       setSelectedVerseContent(content)
       if (type) setActiveTab(type)
       setIsWriteModalOpen(true)
-      // We keep pf_pending_post until submitted or manually closed to allow persistence on refresh
     } else {
       const savedWriteState = localStorage.getItem('pf_comm_write_state')
       if (savedWriteState) {
@@ -334,6 +337,15 @@ export default function CommunityPage() {
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
   }, [isCommentsOpen, isWriteModalOpen, view])
+
+  const deletePost = (postId: number) => {
+    if (confirm("Delete this post permanently?")) {
+      const next = posts.filter(p => p.id !== postId)
+      setPosts(next)
+      localStorage.setItem('pf_db_posts_v3', JSON.stringify(next))
+      showNotify("Post deleted.")
+    }
+  }
 
   const handleBack = () => {
     if (isWriteModalOpen) {
@@ -444,7 +456,6 @@ export default function CommunityPage() {
     }
     setPosts([newPost, ...posts])
     
-    // Clear
     setIsWriteModalOpen(false)
     setDraftTitle('')
     setDraftContent('')
@@ -527,19 +538,14 @@ export default function CommunityPage() {
     return (
       <div className="fixed inset-0 z-[50] flex flex-col overflow-hidden animate-in fade-in duration-700 bg-black font-pretendard">
         <div className="flex-1 flex overflow-hidden pb-24 relative"> 
-          {/* Sacred Cross Elements - Lengthened Horizontal Bar */}
           <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10 z-20" />
           <div className="absolute left-[30%] right-[30%] top-[28%] h-px bg-white/40 z-20 shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
-
-          {/* Left: Meditation */}
           <button onClick={() => navigateToFeed('meditation')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex flex-col items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(154, 120, 180, 0.85)' }}>
             <div className="w-16 h-16 border border-white/20 rounded-2xl flex items-center justify-center animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.1)] mb-6" style={{ animationDuration: '4s' }}>
               <span className="material-icons text-white/40 text-3xl">auto_stories</span>
             </div>
             <h2 className="text-xl md:text-3xl font-extralight tracking-[0.2em] md:tracking-[0.4em] text-white/90">MEDITATION</h2>
           </button>
-
-          {/* Right: Prayer */}
           <button onClick={() => navigateToFeed('prayer')} className="flex-1 relative group transition-all duration-1000 hover:flex-[1.1] flex flex-col items-center justify-center overflow-hidden px-4" style={{ backgroundColor: 'rgba(255, 251, 189, 0.85)' }}>
             <div className="w-16 h-16 border border-white/20 rounded-full flex items-center justify-center rotate-12 animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.1)] mb-6" style={{ animationDuration: '4.5s' }}>
               <span className="material-icons text-white/40 text-3xl">volunteer_activism</span>
@@ -630,11 +636,19 @@ export default function CommunityPage() {
                     <span className="material-icons text-[24px]">chat_bubble_outline</span>
                     {p.comments.length > 0 && <span className="text-xs font-bold">{p.comments.length}</span>}
                   </button>
+
+                  {currentUser?.role === 'leader' && (
+                    <button onClick={() => deletePost(p.id)} className="flex items-center justify-center w-10 h-10 rounded-full bg-red-500/10 text-red-500 active:scale-90 transition-transform">
+                      <span className="material-icons text-[20px]">delete_outline</span>
+                    </button>
+                  )}
                 </div>
 
-                <button onClick={() => sharePost(p)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10 text-zinc-400 active:scale-90 transition-transform">
-                  <span className="material-icons text-xl">send</span>
-                </button>
+                <div className="flex items-center gap-4">
+                  <button onClick={() => sharePost(p)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10 text-zinc-400 active:scale-90 transition-transform">
+                    <span className="material-icons text-xl">send</span>
+                  </button>
+                </div>
               </div>
             </div>
           )
