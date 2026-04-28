@@ -152,39 +152,42 @@ export default function CommunityPage() {
   // Navigation & Native Back Button
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
-      // Priority 1: Close comments modal
+      if (isWriteModalOpen) {
+        setIsWriteModalOpen(false)
+        window.history.pushState(null, '', window.location.pathname)
+        return
+      }
       if (isCommentsOpen) {
         setIsCommentsOpen(false)
         return
       }
-      
-      // Priority 2: Return to selection from feed
       if (view === 'feed') {
         setView('selection')
+        window.history.pushState(null, '', window.location.pathname)
         return
-      } 
-      
-      // Priority 3: Exit app handling
-      if (view === 'selection') {
-        const now = Date.now()
-        if (now - lastBackPress < 2000) {
-          showNotify("Exiting...")
-          setTimeout(() => {
-            if (window.confirm("앱을 종료하시겠습니까?")) {
-              window.close()
-            }
-          }, 500)
-        } else {
-          setLastBackPress(now)
-          showNotify("한 번 더 누르면 종료됩니다")
-          window.history.pushState({ pf_view: 'selection' }, '')
-        }
       }
+      window.location.href = '/app'
     }
 
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [view, lastBackPress, showNotify, isCommentsOpen])
+  }, [isCommentsOpen, isWriteModalOpen, view])
+
+  const handleBack = () => {
+    if (isWriteModalOpen) {
+      setIsWriteModalOpen(false)
+      return
+    }
+    if (isCommentsOpen) {
+      setIsCommentsOpen(false)
+      return
+    }
+    if (view === 'feed') {
+      setView('selection')
+      return
+    }
+    window.location.href = '/app'
+  }
 
   const navigateToFeed = (tab: 'meditation' | 'prayer') => {
     setActiveTab(tab)
@@ -385,7 +388,7 @@ export default function CommunityPage() {
       
       <header className="px-6 pt-16 pb-4 flex items-center justify-between sticky top-0 z-40 bg-inherit/80 backdrop-blur-md border-b border-zinc-500/10">
         <div className="flex items-center gap-4">
-          <button onClick={() => window.history.back()} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">arrow_back</span></button>
+          <button onClick={handleBack} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">arrow_back</span></button>
           <h1 className="text-xl font-black tracking-tight">{activeTab.toUpperCase()}</h1>
         </div>
       </header>

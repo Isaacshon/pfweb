@@ -6,8 +6,8 @@ import { useTheme } from '@/context/ThemeContext'
 const bibleVersions = [
   { name: 'KRV', full: '개역개정', code: 'nkrv', lang: 'ko', flag: '🇰🇷', local: true },
   { name: 'KLB', full: '현대인의 성경', code: 'klb', lang: 'ko', flag: '🇰🇷', local: true },
-  { name: 'CUV', full: '和合本(중국)', code: 'cn', lang: 'zh', flag: '🇨🇳', local: true },
-  { name: 'RVR', full: 'Reina-Valera(스페인)', code: 'es', lang: 'es', flag: '🇪🇸', local: true },
+  { name: 'CUV', full: '和合本', code: 'cn', lang: 'zh', flag: '🇨🇳', local: true },
+  { name: 'RVR', full: 'Reina-Valera', code: 'es', lang: 'es', flag: '🇪🇸', local: true },
   { name: 'ESV', full: 'English Standard Version', code: 'ESV', lang: 'en', flag: '🇺🇸', local: false },
   { name: 'NIV', full: 'New International Version', code: 'NIV', lang: 'en', flag: '🇺🇸', local: false },
   { name: 'KJV', full: 'King James Version', code: 'KJV', lang: 'en', flag: '🇬🇧', local: false },
@@ -638,7 +638,6 @@ export default function AppPage() {
               <div className="flex flex-col gap-10">
                 <h3 className="text-xl font-bold">{isEn ? book.eng : book.name}</h3>
                 <div className="grid grid-cols-5 gap-3">
-                  <button className={`${isDarkMode ? 'bg-zinc-900 text-zinc-600' : 'bg-slate-50 text-slate-300'} aspect-square rounded-lg flex items-center justify-center font-bold text-[14px]`}>Intro</button>
                   {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
                     <button key={c} onClick={() => { setChapter(c); setOpenUI(null); }} className={`aspect-square rounded-lg flex items-center justify-center font-bold text-[17px] transition-all ${chapter === c ? (isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white') : (isDarkMode ? 'bg-zinc-900 text-zinc-500' : 'bg-slate-50 text-slate-400')}`}>{c}</button>
                   ))}
