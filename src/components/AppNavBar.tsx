@@ -20,6 +20,7 @@ export function AppNavBar() {
   ])
 
   useEffect(() => {
+    // Single stable listener for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const { data: profile } = await supabase
@@ -28,8 +29,9 @@ export function AppNavBar() {
           .eq('id', session.user.id)
           .single()
         
-        const user = { ...session.user, ...profile }
+        const user = profile ? { ...session.user, ...profile } : session.user
         setCurrentUser(user)
+        localStorage.setItem('pf_current_user', JSON.stringify(user))
 
         const baseItems = [
           { label: 'Home', icon: 'home', path: '/app' },
@@ -45,6 +47,7 @@ export function AppNavBar() {
         setNavItems(baseItems)
       } else {
         setCurrentUser(null)
+        localStorage.removeItem('pf_current_user')
         setNavItems([
           { label: 'Home', icon: 'home', path: '/app' },
           { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
@@ -57,7 +60,7 @@ export function AppNavBar() {
     return () => {
       authListener.subscription.unsubscribe()
     }
-  }, [pathname])
+  }, []) // Mount once
   const [isScanOpen, setIsScanOpen] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [pullDistance, setPullDistance] = useState(0)
