@@ -75,7 +75,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className={`min-h-screen ${bgColor} ${textColor} p-8 flex flex-col justify-center animate-in fade-in duration-700`}>
+      <div className={`min-h-screen ${bgColor} ${textColor} px-8 pt-24 pb-48 flex flex-col animate-in fade-in duration-700 overflow-y-auto no-scrollbar`}>
         <div className="flex flex-col items-center mb-12">
           <img src="/images/PF app logo iphone.png" className="w-24 h-24 mb-6" alt="PF" />
           <h1 className="text-3xl font-black tracking-tighter mb-2">PASSIONFRUITS</h1>
@@ -107,7 +107,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Signup Path</p>
               <div className="grid grid-cols-2 gap-2">
-                {['전도', '예배 참여', '유튜브', '인스타'].map(p => (
+                {['Invitation', 'Worship', 'YouTube', 'Instagram'].map(p => (
                   <button key={p} onClick={()=>setSignupPath(p)} className={`py-3 rounded-xl text-[10px] font-black uppercase transition-all ${signupPath === p ? accentBg : inputBg + ' border opacity-40'}`}>{p}</button>
                 ))}
               </div>
@@ -123,7 +123,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} ${textColor} pb-32 transition-colors duration-500 animate-in fade-in duration-700`}>
+    <div className={`min-h-screen ${bgColor} ${textColor} pb-52 transition-colors duration-500 animate-in fade-in duration-700`}>
       {/* Profile Header */}
       <section className="px-8 pt-20 pb-12 flex flex-col items-center text-center">
         <div className={`relative w-32 h-32 rounded-[56px] overflow-hidden border-4 ${isDarkMode ? 'border-zinc-900 shadow-brand-yellow/5' : 'border-slate-50 shadow-brand-purple/5'} shadow-2xl mb-8`}>
