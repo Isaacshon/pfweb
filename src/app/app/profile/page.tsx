@@ -36,6 +36,7 @@ export default function ProfilePage() {
   // Attendance States
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [myAttendances, setMyAttendances] = useState<any[]>([])
+  const [lobbyUsers, setLobbyUsers] = useState<{id: string, nickname: string}[]>([])
   const todayDateString = new Date().toISOString().split('T')[0]
   const qrUrl = typeof window !== 'undefined' ? `${window.location.origin}/app/attendance?date=${todayDateString}` : ''
 
@@ -89,6 +90,64 @@ export default function ProfilePage() {
       fetchAttendance()
     }
   }, [user])
+
+  // Live QR Lobby Realtime
+  useEffect(() => {
+    if (!isQrModalOpen) {
+      setLobbyUsers([])
+      return
+    }
+
+    let isMounted = true
+
+    const fetchInitialLobby = async () => {
+      const { data: attendanceData } = await supabase
+        .from('attendance')
+        .select('user_id')
+        .eq('date', todayDateString)
+
+      if (attendanceData && attendanceData.length > 0) {
+        const userIds = attendanceData.map(a => a.user_id)
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, nickname')
+          .in('id', userIds)
+        if (profiles && isMounted) {
+          setLobbyUsers(profiles)
+        }
+      }
+    }
+
+    fetchInitialLobby()
+
+    const channel = supabase.channel('lobby-updates')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'attendance', 
+        filter: `date=eq.${todayDateString}` 
+      }, async (payload) => {
+        const newUserId = payload.new.user_id
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, nickname')
+          .eq('id', newUserId)
+          .single()
+        
+        if (profile && isMounted) {
+          setLobbyUsers(prev => {
+            if (prev.some(u => u.id === profile.id)) return prev;
+            return [...prev, profile]
+          })
+        }
+      })
+      .subscribe()
+
+    return () => {
+      isMounted = false
+      supabase.removeChannel(channel)
+    }
+  }, [isQrModalOpen, todayDateString])
 
   // Real-time Password Match Check
   useEffect(() => {
@@ -455,7 +514,7 @@ export default function ProfilePage() {
       {/* QR Code Modal for Leaders */}
       {isQrModalOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsQrModalOpen(false)}>
-          <div className={`p-10 rounded-[40px] max-w-sm w-full border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} flex flex-col items-center gap-6 shadow-2xl relative`} onClick={e => e.stopPropagation()}>
+          <div className={`p-8 rounded-[40px] max-w-sm w-full border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} flex flex-col items-center gap-6 shadow-2xl relative`} onClick={e => e.stopPropagation()}>
             <button onClick={() => setIsQrModalOpen(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-zinc-500/10 flex items-center justify-center"><span className="material-icons text-sm">close</span></button>
             
             <div className="text-center space-y-1">
@@ -463,20 +522,35 @@ export default function ProfilePage() {
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#9a78b4]">{todayDateString}</p>
             </div>
 
-            <div className="p-4 bg-white rounded-3xl shadow-inner border-4 border-slate-100">
-              <QRCodeSVG value={qrUrl} size={200} level="H" includeMargin={false} />
+            <div className="p-3 bg-white rounded-3xl shadow-inner border-4 border-slate-100 flex-shrink-0">
+              <QRCodeSVG value={qrUrl} size={160} level="H" includeMargin={false} />
+            </div>
+            
+            {/* Live Lobby Section */}
+            <div className={`w-full rounded-[24px] p-4 min-h-[140px] flex flex-wrap gap-2 content-start border-2 border-dashed ${isDarkMode ? 'bg-zinc-800/30 border-zinc-700/50' : 'bg-slate-50 border-slate-200'} relative`}>
+              <p className="w-full text-center text-[10px] font-black uppercase tracking-widest opacity-40 mb-1 flex items-center justify-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                Live Lobby ({lobbyUsers.length})
+              </p>
+              {lobbyUsers.length === 0 ? (
+                <p className="w-full text-center text-xs opacity-40 font-bold py-6">Waiting for scans...</p>
+              ) : (
+                lobbyUsers.map((user) => (
+                  <div key={user.id} className="animate-in zoom-in duration-500 fade-in slide-in-from-bottom-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-brand-yellow to-[#9a78b4] text-white text-xs font-black tracking-tight shadow-md">
+                    {user.nickname || 'Unknown'}
+                  </div>
+                ))
+              )}
             </div>
 
-            <p className="text-[10px] font-bold text-center opacity-50 px-4 leading-relaxed">
-              Have your team members scan this QR code with their camera app to record their attendance and earn today's badge!
-            </p>
-            
-            <button onClick={() => {
-              navigator.clipboard.writeText(qrUrl)
-              alert("Link copied!")
-            }} className="py-3 px-6 rounded-full bg-zinc-100 text-zinc-900 font-black text-[10px] uppercase tracking-widest w-full active:scale-95 transition-all">
-              Copy Link Instead
-            </button>
+            <div className="w-full flex gap-2">
+              <button onClick={() => {
+                navigator.clipboard.writeText(qrUrl)
+                alert("Link copied!")
+              }} className={`flex-1 py-3 px-4 rounded-full font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-100 text-zinc-900'}`}>
+                Copy Link
+              </button>
+            </div>
           </div>
         </div>
       )}

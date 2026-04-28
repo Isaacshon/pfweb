@@ -273,14 +273,14 @@ export function AppNavBar() {
               <div className="space-y-2">
                 <h2 className="text-2xl font-black font-plus-jakarta tracking-tight">Pull Up like a Card</h2>
                 <p className="text-sm text-zinc-500 leading-relaxed font-medium">
-                  삼성페이처럼 하단 바를 위로 밀어 올리면<br/>스캔 카드가 나타납니다.
+                  Swipe up from the bottom bar<br/>to open your scan card.
                 </p>
               </div>
               <button 
                 onClick={closeTutorial}
                 className={`w-full py-5 rounded-[24px] font-black text-xs uppercase tracking-widest ${activeBg} text-white shadow-xl active:scale-95 transition-all`}
               >
-                확인했습니다!
+                Got it!
               </button>
             </div>
           </div>
