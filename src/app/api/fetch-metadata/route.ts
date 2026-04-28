@@ -27,7 +27,6 @@ async function getSpotifyPlaylistTracks(playlistId: string, token: string) {
   const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}?fields=name,images,tracks.items(track(name,artists(name),album(images)))`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
-
   if (!res.ok) return null
   const data = await res.json()
 
@@ -51,7 +50,6 @@ async function getSpotifyTrack(trackId: string, token: string) {
   const res = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
-
   if (!res.ok) return null
   const data = await res.json()
 
@@ -59,6 +57,65 @@ async function getSpotifyTrack(trackId: string, token: string) {
     title: data.name || '',
     artist: data.artists?.map((a: any) => a.name).join(', ') || '',
     thumbnail: data.album?.images?.[0]?.url || ''
+  }
+}
+
+// ===== YOUTUBE: Get Playlist Tracks by parsing page HTML =====
+async function getYouTubePlaylistTracks(listId: string) {
+  try {
+    const res = await fetch(`https://www.youtube.com/playlist?list=${listId}`, {
+      headers: {
+        'User-Agent': UA,
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept': 'text/html,application/xhtml+xml'
+      }
+    })
+    if (!res.ok) return null
+
+    const html = await res.text()
+
+    // Extract ytInitialData JSON embedded in the page
+    const match = html.match(/var\s+ytInitialData\s*=\s*(\{.+?\});\s*<\/script>/s)
+    if (!match) return null
+
+    const data = JSON.parse(match[1])
+
+    // Get playlist title
+    const playlistTitle = data?.metadata?.playlistMetadataRenderer?.title || 'YouTube Playlist'
+
+    // Navigate to playlist video items
+    const contents = data?.contents
+      ?.twoColumnBrowseResultsRenderer?.tabs?.[0]
+      ?.tabRenderer?.content
+      ?.sectionListRenderer?.contents?.[0]
+      ?.itemSectionRenderer?.contents?.[0]
+      ?.playlistVideoListRenderer?.contents
+
+    if (!contents || !Array.isArray(contents)) return { playlistTitle, tracks: [] }
+
+    const tracks = contents
+      .filter((item: any) => item.playlistVideoRenderer)
+      .map((item: any) => {
+        const video = item.playlistVideoRenderer
+        const title = video.title?.runs?.[0]?.text || ''
+        const artist = video.shortBylineText?.runs?.[0]?.text || ''
+        const thumbnails = video.thumbnail?.thumbnails || []
+        const thumbnail = thumbnails[thumbnails.length - 1]?.url || ''
+
+        // Try to parse "Artist - Song" from the title
+        const parsed = parseYouTubeTitle(title)
+
+        return {
+          title: parsed.title || title,
+          artist: parsed.artist || artist,
+          thumbnail
+        }
+      })
+
+    return { playlistTitle, tracks }
+  } catch (err) {
+    console.error('YouTube playlist extraction error:', err)
+    return null
   }
 }
 
@@ -98,9 +155,7 @@ export async function POST(request: Request) {
         const playlistId = url.match(/playlist\/([a-zA-Z0-9]+)/)?.[1]
         if (playlistId && token) {
           const result = await getSpotifyPlaylistTracks(playlistId, token)
-          if (result) {
-            return NextResponse.json({ type: 'playlist', ...result })
-          }
+          if (result) return NextResponse.json({ type: 'playlist', ...result })
         }
         return NextResponse.json({ type: 'playlist', tracks: [], playlistTitle: 'Spotify Playlist' })
       }
@@ -109,9 +164,7 @@ export async function POST(request: Request) {
       const trackId = url.match(/track\/([a-zA-Z0-9]+)/)?.[1]
       if (trackId && token) {
         const result = await getSpotifyTrack(trackId, token)
-        if (result) {
-          return NextResponse.json({ type: 'track', ...result })
-        }
+        if (result) return NextResponse.json({ type: 'track', ...result })
       }
 
       // Fallback to oEmbed
@@ -128,9 +181,21 @@ export async function POST(request: Request) {
       }
     }
 
-    // ===== YOUTUBE =====
+    // ===== YOUTUBE / YOUTUBE MUSIC =====
     if (isYouTube) {
       if (isPlaylist) {
+        // Extract list ID from various YouTube URL formats
+        const listMatch = url.match(/[?&]list=([a-zA-Z0-9_-]+)/)
+        const listId = listMatch?.[1]
+
+        if (listId) {
+          const result = await getYouTubePlaylistTracks(listId)
+          if (result && result.tracks.length > 0) {
+            return NextResponse.json({ type: 'playlist', ...result })
+          }
+        }
+
+        // Fallback to oEmbed for just the title
         const normalized = url.replace('music.youtube.com', 'www.youtube.com')
         const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(normalized)}&format=json`
         const res = await fetch(oembedUrl, { headers: { 'User-Agent': UA } })
