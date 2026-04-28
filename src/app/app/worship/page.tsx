@@ -51,6 +51,7 @@ export default function WorshipPage() {
   const [newNotes, setNewNotes] = useState('')
   const [newSongs, setNewSongs] = useState<Song[]>([])
   const [newTeam, setNewTeam] = useState<TeamMember[]>([])
+  const [detectedSongs, setDetectedSongs] = useState<Song[]>([])
   
   // Song Input States
   const [songLink, setSongLink] = useState('')
@@ -58,6 +59,7 @@ export default function WorshipPage() {
   const [songArtist, setSongArtist] = useState('')
   const [songKey, setSongKey] = useState('C')
   const [isPreviewing, setIsPreviewing] = useState(false)
+  const [isPlaylist, setIsPlaylist] = useState(false)
 
   useEffect(() => {
     const init = async () => {
@@ -91,31 +93,50 @@ export default function WorshipPage() {
     setSongLink(url)
     if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('spotify.com')) {
       setIsPreviewing(true)
+      setIsPlaylist(url.includes('playlist') || url.includes('list='));
+      
       // Enhanced Mocked Detection
       setTimeout(() => {
-        let title = "Detected Praise Song"
-        let artist = "Artist Name"
-        
-        // Simple logic to mock different results based on link hints
-        if (url.includes('v=w')) { title = "Way Maker"; artist = "Leeland" }
-        else if (url.includes('v=g')) { title = "Goodness of God"; artist = "Bethel Music" }
-        else if (url.includes('v=h')) { title = "Hosanna"; artist = "Hillsong Worship" }
-
-        setSongTitle(title)
-        setSongArtist(artist)
+        if (url.includes('playlist') || url.includes('list=')) {
+          // Mock Playlist Extraction
+          setDetectedSongs([
+            { title: "Way Maker", artist: "Leeland", key: "G", link: url },
+            { title: "Goodness of God", artist: "Bethel Music", key: "Ab", link: url },
+            { title: "Build My Life", artist: "Pat Barrett", key: "G", link: url }
+          ])
+        } else {
+          let title = "Detected Praise Song"
+          let artist = "Artist Name"
+          if (url.includes('v=w') || url.includes('track/w')) { title = "Way Maker"; artist = "Leeland" }
+          else if (url.includes('v=g') || url.includes('track/g')) { title = "Goodness of God"; artist = "Bethel Music" }
+          else if (url.includes('v=b') || url.includes('track/b')) { title = "Build My Life"; artist = "Pat Barrett" }
+          
+          setSongTitle(title)
+          setSongArtist(artist)
+          setDetectedSongs([])
+        }
         setIsPreviewing(false)
-      }, 1200)
+      }, 1500)
     }
   }
 
-  const addSong = () => {
-    if (!songTitle) return
-    setNewSongs([...newSongs, { title: songTitle, artist: songArtist, key: songKey, link: songLink }])
-    setSongTitle('')
-    setSongArtist('')
-    setSongLink('')
-    setSongKey('C')
+  const addSong = (specificSong?: Song) => {
+    const target = specificSong || { title: songTitle, artist: songArtist, key: songKey, link: songLink }
+    if (!target.title) return
+    setNewSongs([...newSongs, target])
+    if (!specificSong) {
+      setSongTitle('')
+      setSongArtist('')
+      setSongLink('')
+      setSongKey('C')
+    }
     setIsPreviewing(false)
+  }
+
+  const addAllDetected = () => {
+    setNewSongs([...newSongs, ...detectedSongs])
+    setDetectedSongs([])
+    setSongLink('')
   }
 
   const removeSong = (index: number) => {
@@ -343,65 +364,89 @@ export default function WorshipPage() {
                 </div>
 
                 {/* Intelligent Preview Card */}
-                {(songTitle || isPreviewing) && (
+                {(songTitle || detectedSongs.length > 0 || isPreviewing) && (
                   <div className={`p-6 rounded-[32px] ${isDarkMode ? 'bg-zinc-800/80' : 'bg-white'} border border-zinc-500/10 animate-in fade-in zoom-in-95 duration-500`}>
                     {isPreviewing ? (
-                      <div className="flex items-center gap-4 py-2">
-                        <div className="w-12 h-12 rounded-2xl bg-zinc-500/10 animate-pulse"></div>
-                        <div className="flex-1 space-y-2">
-                          <div className="h-4 w-1/2 bg-zinc-500/10 rounded animate-pulse"></div>
-                          <div className="h-3 w-1/3 bg-zinc-500/10 rounded animate-pulse"></div>
-                        </div>
+                      <div className="flex flex-col items-center gap-6 py-6">
+                        <div className="w-16 h-16 rounded-full border-4 border-brand-yellow/20 border-t-brand-yellow animate-spin"></div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50">
+                          {isPlaylist ? "Extracting Playlist Tracks..." : "Detecting Song Metadata..."}
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-2xl ${accentBg} flex items-center justify-center`}>
-                              <span className="material-icons">music_note</span>
+                        {isPlaylist ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Playlist Detected ({detectedSongs.length} Songs)</p>
+                              <button onClick={addAllDetected} className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest ${accentBg}`}>Add All</button>
                             </div>
-                            <div>
-                              <input 
-                                type="text" 
-                                value={songTitle} 
-                                onChange={(e)=>setSongTitle(e.target.value)}
-                                className="bg-transparent font-black text-lg outline-none w-full"
-                                placeholder="Edit Title"
-                              />
-                              <input 
-                                type="text" 
-                                value={songArtist} 
-                                onChange={(e)=>setSongArtist(e.target.value)}
-                                className="bg-transparent text-[10px] font-bold opacity-50 uppercase tracking-widest outline-none w-full"
-                                placeholder="Edit Artist"
-                              />
+                            <div className="space-y-2">
+                              {detectedSongs.map((ds, idx) => (
+                                <div key={idx} className={`p-4 rounded-2xl border ${cardBg} flex items-center justify-between`}>
+                                  <div>
+                                    <p className="text-xs font-black">{ds.title}</p>
+                                    <p className="text-[8px] font-bold opacity-40 uppercase">{ds.artist}</p>
+                                  </div>
+                                  <button onClick={() => {
+                                    addSong(ds);
+                                    setDetectedSongs(detectedSongs.filter((_, i) => i !== idx));
+                                  }} className="text-emerald-500"><span className="material-icons text-sm">add_circle</span></button>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                          <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest">Detected</div>
-                        </div>
+                        ) : (
+                          <>
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-2xl ${accentBg} flex items-center justify-center`}>
+                                  <span className="material-icons">music_note</span>
+                                </div>
+                                <div>
+                                  <input 
+                                    type="text" 
+                                    value={songTitle} 
+                                    onChange={(e)=>setSongTitle(e.target.value)}
+                                    className="bg-transparent font-black text-lg outline-none w-full"
+                                    placeholder="Edit Title"
+                                  />
+                                  <input 
+                                    type="text" 
+                                    value={songArtist} 
+                                    onChange={(e)=>setSongArtist(e.target.value)}
+                                    className="bg-transparent text-[10px] font-bold opacity-50 uppercase tracking-widest outline-none w-full"
+                                    placeholder="Edit Artist"
+                                  />
+                                </div>
+                              </div>
+                              <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest">Detected</div>
+                            </div>
 
-                        <div className="space-y-3">
-                          <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30 px-1">Select Performance Key</p>
-                          <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-                            {KEYS.map(k => (
-                              <button 
-                                key={k} 
-                                onClick={() => setSongKey(k)}
-                                className={`min-w-[44px] h-10 rounded-xl font-black text-[10px] transition-all ${songKey === k ? accentBg : cardBg + ' border opacity-40'}`}
-                              >
-                                {k}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                            <div className="space-y-3">
+                              <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30 px-1">Select Performance Key</p>
+                              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                                {KEYS.map(k => (
+                                  <button 
+                                    key={k} 
+                                    onClick={() => setSongKey(k)}
+                                    className={`min-w-[44px] h-10 rounded-xl font-black text-[10px] transition-all ${songKey === k ? accentBg : cardBg + ' border opacity-40'}`}
+                                  >
+                                    {k}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
 
-                        <button 
-                          onClick={addSong}
-                          className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all flex items-center justify-center gap-2`}
-                        >
-                          <span className="material-icons text-sm">add_task</span>
-                          Confirm & Add to Setlist
-                        </button>
+                            <button 
+                              onClick={() => addSong()}
+                              className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all flex items-center justify-center gap-2`}
+                            >
+                              <span className="material-icons text-sm">add_task</span>
+                              Confirm & Add to Setlist
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
