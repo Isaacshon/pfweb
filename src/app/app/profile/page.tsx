@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
 
 export default function ProfilePage() {
   const { isDarkMode } = useTheme()
@@ -32,14 +33,30 @@ export default function ProfilePage() {
   const PROFANITY_LIST = ['씨발', '병신', '존나', 'fuck', 'shit', 'bitch', 'ㅅㅂ', 'ㅄ', 'ㅈㄴ']
 
   useEffect(() => {
-    const saved = localStorage.getItem('pf_current_user')
-    if (saved) setUser(JSON.parse(saved))
-    setIsLoaded(true)
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        // Fetch profile to get role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+        
+        if (profile) {
+          setUser({ ...session.user, ...profile })
+        } else {
+          setUser(session.user)
+        }
+      }
+      setIsLoaded(true)
+    }
+    checkUser()
   }, [])
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!username || !password || password !== confirmPassword) {
-      alert("Password confirmation does not match.")
+      alert("Please check your details.")
       return
     }
 
@@ -48,52 +65,50 @@ export default function ProfilePage() {
       return
     }
 
-    // Mock Nickname Uniqueness Check
-    const allUsers = JSON.parse(localStorage.getItem('pf_users') || '[]')
-    if (allUsers.some((u: any) => u.nickname === nickname)) {
-      alert("This nickname is already taken.")
-      return
-    }
+    const { data, error } = await supabase.auth.signUp({
+      email: `${username}@pf.com`, // Mocking email with username
+      password: password,
+      options: {
+        data: {
+          username: username,
+          nickname: nickname,
+          first_name: firstName,
+          last_name: lastName,
+          signup_path: signupPath === 'Other' ? signupPathOther : signupPath,
+          denomination: denomination === 'Other' ? denominationOther : denomination,
+        }
+      }
+    })
 
-    const isLeader = username.toLowerCase() === 'admin'
-    const isWorship = nickname === '사랑합니다'
-    
-    const newUser = {
-      firstName, lastName, username, password, nickname, 
-      signupPath: signupPath === 'Other' ? signupPathOther : signupPath, 
-      denomination: denomination === 'Other' ? denominationOther : denomination,
-      role: isLeader ? 'leader' : (isWorship ? 'worship_team' : 'user')
-    }
-
-    // Save to user list and set as current
-    allUsers.push(newUser)
-    localStorage.setItem('pf_users', JSON.stringify(allUsers))
-    localStorage.setItem('pf_current_user', JSON.stringify(newUser))
-    setUser(newUser)
-  }
-
-  const handleLogin = () => {
-    const allUsers = JSON.parse(localStorage.getItem('pf_users') || '[]')
-    const found = allUsers.find((u: any) => u.username === loginId && u.password === loginPw)
-
-    if (loginId.toLowerCase() === 'admin' && loginPw === 'admin') {
-      const adminUser = { username: 'admin', nickname: 'Administrator', role: 'leader' }
-      localStorage.setItem('pf_current_user', JSON.stringify(adminUser))
-      setUser(adminUser)
-    } else if (loginId === '사랑합니다') {
-      const specialUser = { username: '사랑합니다', nickname: '사랑합니다', role: 'worship_team' }
-      localStorage.setItem('pf_current_user', JSON.stringify(specialUser))
-      setUser(specialUser)
-    } else if (found) {
-      localStorage.setItem('pf_current_user', JSON.stringify(found))
-      setUser(found)
+    if (error) {
+      alert(error.message)
     } else {
-      alert("Invalid ID or Password")
+      alert("Signup successful! Please login.")
+      setAuthMode('login')
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('pf_current_user')
+  const handleLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: `${loginId}@pf.com`,
+      password: loginPw
+    })
+
+    if (error) {
+      alert(error.message)
+    } else if (data.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single()
+      
+      setUser({ ...data.user, ...profile })
+    }
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
     setUser(null)
   }
 
