@@ -17,8 +17,10 @@ export default function ProfilePage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [nickname, setNickname] = useState('')
-  const [signupPath, setSignupPath] = useState('전도')
-  const [denomination, setDenomination] = useState('')
+  const [signupPath, setSignupPath] = useState('Invitation')
+  const [signupPathOther, setSignupPathOther] = useState('')
+  const [denomination, setDenomination] = useState('None')
+  const [denominationOther, setDenominationOther] = useState('')
 
   // Login States
   const [loginId, setLoginId] = useState('')
@@ -39,7 +41,9 @@ export default function ProfilePage() {
       return
     }
     const newUser = {
-      firstName, lastName, username, password, nickname, signupPath, denomination,
+      firstName, lastName, username, password, nickname, 
+      signupPath: signupPath === 'Other' ? signupPathOther : signupPath, 
+      denomination: denomination === 'Other' ? denominationOther : denomination,
       role: username.toLowerCase() === 'admin' ? 'praise_team' : 'user'
     }
     localStorage.setItem('pf_auth_user', JSON.stringify(newUser))
@@ -104,16 +108,29 @@ export default function ProfilePage() {
             <input type="password" placeholder="CONFIRM PASSWORD" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
             <input type="text" placeholder="NICKNAME" value={nickname} onChange={(e)=>setNickname(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
             
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Signup Path</p>
-              <div className="grid grid-cols-2 gap-2">
-                {['Invitation', 'Worship', 'YouTube', 'Instagram'].map(p => (
-                  <button key={p} onClick={()=>setSignupPath(p)} className={`py-3 rounded-xl text-[10px] font-black uppercase transition-all ${signupPath === p ? accentBg : inputBg + ' border opacity-40'}`}>{p}</button>
+              <div className="flex flex-wrap gap-2">
+                {['Invitation', 'Worship', 'YouTube', 'Instagram', 'Other'].map(p => (
+                  <button key={p} onClick={()=>setSignupPath(p)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${signupPath === p ? accentBg : inputBg + ' border opacity-40'}`}>{p}</button>
                 ))}
               </div>
+              {signupPath === 'Other' && (
+                <input type="text" placeholder="Specify Path" value={signupPathOther} onChange={(e)=>setSignupPathOther(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold text-sm ${inputBg} border animate-in zoom-in-95 duration-300`} />
+              )}
             </div>
 
-            <input type="text" placeholder="DENOMINATION (OPTIONAL)" value={denomination} onChange={(e)=>setDenomination(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+            <div className="space-y-3">
+              <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Denomination</p>
+              <div className="flex flex-wrap gap-2">
+                {['Presbyterian', 'Methodist', 'Baptist', 'Pentecostal', 'Holiness', 'Anglican', 'None', 'Private', 'Other'].map(d => (
+                  <button key={d} onClick={()=>setDenomination(d)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${denomination === d ? accentBg : inputBg + ' border opacity-40'}`}>{d}</button>
+                ))}
+              </div>
+              {denomination === 'Other' && (
+                <input type="text" placeholder="Specify Denomination" value={denominationOther} onChange={(e)=>setDenominationOther(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold text-sm ${inputBg} border animate-in zoom-in-95 duration-300`} />
+              )}
+            </div>
             
             <button onClick={handleSignup} className={`w-full py-6 rounded-[32px] font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all mt-6 mb-10`}>Create Account</button>
           </div>
