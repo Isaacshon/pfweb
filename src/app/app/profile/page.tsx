@@ -18,6 +18,8 @@ export default function ProfilePage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [nickname, setNickname] = useState('')
+  const [nicknameStatus, setNicknameStatus] = useState<{ loading: boolean, available: boolean | null, message: string }>({ loading: false, available: null, message: '' })
+  const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null)
   const [signupPath, setSignupPath] = useState('Invitation')
   const [signupPathOther, setSignupPathOther] = useState('')
   const [denomination, setDenomination] = useState('None')
@@ -33,6 +35,11 @@ export default function ProfilePage() {
   const PROFANITY_LIST = ['씨발', '병신', '존나', 'fuck', 'shit', 'bitch', 'ㅅㅂ', 'ㅄ', 'ㅈㄴ']
 
   useEffect(() => {
+    // Clear legacy mock data for clean start
+    localStorage.removeItem('pf_users')
+    localStorage.removeItem('pf_db_posts_v3')
+    localStorage.removeItem('pf_auth_user')
+
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
@@ -54,14 +61,50 @@ export default function ProfilePage() {
     checkUser()
   }, [])
 
-  const handleSignup = async () => {
-    if (!username || !password || password !== confirmPassword) {
-      alert("Please check your details.")
+  // Real-time Password Match Check
+  useEffect(() => {
+    if (!password && !confirmPassword) {
+      setPasswordMatch(null)
+    } else {
+      setPasswordMatch(password === confirmPassword)
+    }
+  }, [password, confirmPassword])
+
+  // Real-time Nickname Availability Check
+  useEffect(() => {
+    if (nickname.length < 2) {
+      setNicknameStatus({ loading: false, available: null, message: '' })
       return
     }
 
     if (PROFANITY_LIST.some(word => nickname.toLowerCase().includes(word))) {
-      alert("Please choose a appropriate nickname.")
+      setNicknameStatus({ loading: false, available: false, message: 'Inappropriate nickname.' })
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      setNicknameStatus(prev => ({ ...prev, loading: true }))
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('nickname', nickname)
+        .maybeSingle()
+
+      if (error) {
+        setNicknameStatus({ loading: false, available: null, message: 'Check failed' })
+      } else if (data) {
+        setNicknameStatus({ loading: false, available: false, message: 'Already taken' })
+      } else {
+        setNicknameStatus({ loading: false, available: true, message: 'Available!' })
+      }
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [nickname])
+
+  const handleSignup = async () => {
+    if (!username || !password || !passwordMatch || !nicknameStatus.available) {
+      alert("Please check all fields and ensure nickname is available.")
       return
     }
 
@@ -147,9 +190,28 @@ export default function ProfilePage() {
               <input type="text" placeholder="LAST NAME" value={lastName} onChange={(e)=>setLastName(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
             </div>
             <input type="text" placeholder="ID" value={username} onChange={(e)=>setUsername(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
-            <input type="password" placeholder="PASSWORD" value={password} onChange={(e)=>setPassword(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
-            <input type="password" placeholder="CONFIRM PASSWORD" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
-            <input type="text" placeholder="NICKNAME" value={nickname} onChange={(e)=>setNickname(e.target.value)} className={`w-full p-5 rounded-2xl outline-none font-bold text-sm ${inputBg} border`} />
+            <div className="space-y-2">
+              <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Password</p>
+              <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border border-zinc-500/10`} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Confirm Password</p>
+              <input type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border ${passwordMatch === null ? 'border-zinc-500/10' : (passwordMatch ? 'border-emerald-500/50' : 'border-red-500/50')}`} />
+              {passwordMatch !== null && (
+                <p className={`text-[9px] font-bold uppercase tracking-wider pl-4 ${passwordMatch ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {passwordMatch ? 'Passwords match' : 'Passwords do not match'}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Nickname</p>
+              <input type="text" placeholder="Display name" value={nickname} onChange={(e)=>setNickname(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border ${nicknameStatus.available === null ? 'border-zinc-500/10' : (nicknameStatus.available ? 'border-emerald-500/50' : 'border-red-500/50')}`} />
+              {nicknameStatus.message && (
+                <p className={`text-[9px] font-bold uppercase tracking-wider pl-4 ${nicknameStatus.available ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {nicknameStatus.message}
+                </p>
+              )}
+            </div>
             
             <div className="space-y-3">
               <p className="text-[10px] font-black opacity-30 uppercase tracking-widest pl-2">Signup Path</p>
