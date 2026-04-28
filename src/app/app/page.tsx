@@ -366,15 +366,6 @@ export default function AppPage() {
     ;(window as any)._noteVerseText = verses.find(x => x.verse === vNums[0])?.text
   }
 
-  const openNoteModal = (num: number, verseText: string) => {
-    const key = `${book.id}_${chapter}_${num}`
-    setActiveMenuVerse(null)
-    setIsPaletteOpen(false)
-    setCurrentNote(notes[key]?.text || '')
-    setIsNoteModalOpen(true)
-    ;(window as any)._noteVerse = num
-    ;(window as any)._noteVerseText = verseText
-  }
 
   const shareToCommunity = () => {
     if (selectedVerses.length === 0) return
