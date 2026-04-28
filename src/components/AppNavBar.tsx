@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ScanOverlay } from './ScanOverlay'
 import { useTheme } from '@/context/ThemeContext'
+import { supabase } from '@/lib/supabase'
 
 export function AppNavBar() {
   const pathname = usePathname()
