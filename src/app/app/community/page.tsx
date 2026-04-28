@@ -101,6 +101,20 @@ export default function CommunityPage() {
       Notification.requestPermission()
     }
 
+    const pendingPost = localStorage.getItem('pf_pending_post')
+    if (pendingPost) {
+      const { verse, content } = JSON.parse(pendingPost)
+      setIsWriteModalOpen(true)
+      // We'll use a small timeout to ensure DOM is ready for pre-filling if needed
+      setTimeout(() => {
+        const titleEl = document.getElementById('new-post-title') as HTMLInputElement
+        const contentEl = document.getElementById('new-post-content') as HTMLTextAreaElement
+        if (titleEl) titleEl.value = `Reflection on ${verse}`
+        if (contentEl) contentEl.value = `[Verse]\n${content}\n\n[My Reflection]\n`
+      }, 100)
+      localStorage.removeItem('pf_pending_post')
+    }
+
     setIsLoaded(true)
   }, [])
 
