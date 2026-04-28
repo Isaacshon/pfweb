@@ -75,6 +75,7 @@ export default function CommunityPage() {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
   const [selectedVerseRef, setSelectedVerseRef] = useState('')
   const [selectedVerseContent, setSelectedVerseContent] = useState('')
+  const [isAnonymous, setIsAnonymous] = useState(false)
 
   const currentUserName = "Isaac Shon"
 
@@ -131,7 +132,16 @@ export default function CommunityPage() {
 
   const triggerPush = (title: string, body: string) => {
     try {
-      if ("Notification" in window && Notification.permission === "granted") {
+      if ("serviceWorker" in navigator && Notification.permission === "granted") {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification(title, {
+            body,
+            icon: "/images/PF app logo iphone.png",
+            badge: "/images/PF app logo iphone.png",
+            vibrate: [200, 100, 200]
+          })
+        })
+      } else if ("Notification" in window && Notification.permission === "granted") {
         new Notification(title, { body, icon: "/images/PF app logo iphone.png" })
       }
     } catch (err) {
@@ -195,8 +205,8 @@ export default function CommunityPage() {
         if (next) {
           updatedReactions[next] = (updatedReactions[next] || 0) + 1
           if (p.type === 'prayer') {
-            showNotify("한 명이 당신을 위해 함께 기도합니다.")
-            triggerPush("PassionFruits", "당신의 글에 누군가 함께 기도하고 있습니다.")
+            showNotify("Someone is praying for you.")
+            triggerPush("PassionFruits", "Someone is praying for you.")
           }
         }
         
@@ -248,17 +258,17 @@ export default function CommunityPage() {
     }))
   }
 
-  const addNewPost = (title: string, content: string, type: 'meditation' | 'prayer') => {
+  const addNewPost = (title: string, content: string, type: 'meditation' | 'prayer', anonymous: boolean) => {
     const newPost = {
       id: Date.now(),
       type,
-      user: currentUserName,
-      avatar: "/images/PF app logo iphone.png",
-      isAnonymous: false,
+      user: anonymous ? "Anonymous" : currentUserName,
+      avatar: anonymous ? "" : "/images/PF app logo iphone.png",
+      isAnonymous: anonymous,
       verse: selectedVerseRef || "General Reflection",
       title,
       content: selectedVerseContent ? `[Scripture]\n${selectedVerseContent}\n\n[Reflection]\n${content}` : content,
-      date: "방금 전",
+      date: "Just now",
       reactions: { Like: 0, Praying: 0, Comforting: 0, Insight: 0, Check: 0 },
       userReaction: null,
       comments: []
@@ -267,7 +277,8 @@ export default function CommunityPage() {
     setIsWriteModalOpen(false)
     setSelectedVerseRef('')
     setSelectedVerseContent('')
-    showNotify("포스트가 게시되었습니다!")
+    setIsAnonymous(false)
+    showNotify("Post published successfully!")
   }
 
   // --- Long Press Logic ---
@@ -477,7 +488,7 @@ export default function CommunityPage() {
               onClick={() => { 
                 const title = (document.getElementById('new-post-title') as HTMLInputElement).value; 
                 const content = (document.getElementById('new-post-content') as HTMLTextAreaElement).value; 
-                if (title && content) addNewPost(title, content, activeTab); 
+                if (title && content) addNewPost(title, content, activeTab, isAnonymous); 
               }} 
               className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${accentBg} text-white shadow-lg active:scale-90 transition-all`}
             >
@@ -507,7 +518,16 @@ export default function CommunityPage() {
             )}
 
             <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-20">Your Heart</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-20">Your Heart</p>
+                <button 
+                  onClick={() => setIsAnonymous(!isAnonymous)}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all border ${isAnonymous ? 'bg-zinc-800 border-zinc-700 text-brand-yellow' : 'bg-transparent border-zinc-200 text-zinc-400'}`}
+                >
+                  <span className="material-icons text-sm">{isAnonymous ? 'visibility_off' : 'visibility'}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{isAnonymous ? 'Anonymous' : 'Public'}</span>
+                </button>
+              </div>
               <textarea 
                 id="new-post-content" 
                 placeholder="Write your heart here..." 
