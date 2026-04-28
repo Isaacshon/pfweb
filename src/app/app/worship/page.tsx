@@ -204,6 +204,10 @@ export default function WorshipPage() {
     setNewSongs(newSongs.filter((_, i) => i !== index))
   }
 
+  const updateSong = (index: number, field: keyof Song, value: string) => {
+    setNewSongs(newSongs.map((s, i) => i === index ? { ...s, [field]: value } : s))
+  }
+
   const findSheet = (title: string) => {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(title + " 악보 sheet music")}&tbm=isch`, '_blank')
   }
@@ -487,7 +491,7 @@ export default function WorshipPage() {
             <div className="space-y-6">
               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Songs Management</h3>
               
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 {newSongs.map((song, i) => {
                   const cardColors = [
                     'bg-[#b8a99a]', 'bg-[#a3aa7e]', 'bg-[#c2a882]',
@@ -496,22 +500,63 @@ export default function WorshipPage() {
                   ]
                   const cc = cardColors[i % cardColors.length]
                   return (
-                    <div key={i} className={`${cc} rounded-[20px] p-3 flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-300 relative group`}>
-                      <button onClick={() => removeSong(i)} className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <span className="material-icons text-xs">close</span>
+                    <div key={i} className={`${cc} rounded-[28px] p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-300 relative group shadow-lg`}>
+                      {/* Delete Button */}
+                      <button 
+                        onClick={() => removeSong(i)} 
+                        className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 backdrop-blur-sm"
+                      >
+                        <span className="material-icons text-sm">close</span>
                       </button>
-                      <div className="w-full aspect-square rounded-[14px] overflow-hidden bg-black/10 flex items-center justify-center">
+
+                      {/* Thumbnail */}
+                      <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center">
                         {song.thumbnail ? (
                           <img src={song.thumbnail} alt={song.title} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="material-icons text-3xl text-white/30">music_note</span>
+                          <span className="material-icons text-5xl text-white/30">music_note</span>
                         )}
                       </div>
-                      <div className="px-0.5">
-                        <p className="text-[11px] font-black text-white leading-tight line-clamp-1">{song.title}</p>
-                        <p className="text-[8px] font-bold text-white/50 line-clamp-1">{song.artist}</p>
+
+                      {/* Editable Title & Artist */}
+                      <div className="px-1 space-y-1">
+                        <input 
+                          type="text"
+                          value={song.title}
+                          onChange={(e) => updateSong(i, 'title', e.target.value)}
+                          className="bg-transparent font-black text-sm text-white outline-none w-full placeholder-white/30 leading-tight"
+                          placeholder="Song Title"
+                        />
+                        <input 
+                          type="text"
+                          value={song.artist}
+                          onChange={(e) => updateSong(i, 'artist', e.target.value)}
+                          className="bg-transparent text-[10px] font-bold text-white/60 outline-none w-full placeholder-white/20"
+                          placeholder="Artist"
+                        />
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[8px] font-black self-start">{song.key}</span>
+
+                      {/* Bottom Action Bar: Key / Sheet / Link */}
+                      <div className="flex items-center justify-between px-1 pt-1">
+                        {/* Key Selector */}
+                        <select
+                          value={song.key}
+                          onChange={(e) => updateSong(i, 'key', e.target.value)}
+                          className="bg-white/20 text-white text-[9px] font-black rounded-full px-3 py-1.5 outline-none cursor-pointer appearance-none text-center"
+                        >
+                          {KEYS.map(k => <option key={k} value={k} className="text-black">{k}</option>)}
+                        </select>
+                        <div className="flex gap-1.5">
+                          <button onClick={() => findSheet(song.title)} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" title="Search Sheet Music">
+                            <span className="material-icons text-white text-sm">description</span>
+                          </button>
+                          {song.link && (
+                            <a href={song.link} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" title="Open Original">
+                              <span className="material-icons text-white text-sm">play_arrow</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )
                 })}
