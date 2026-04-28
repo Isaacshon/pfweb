@@ -724,7 +724,7 @@ export default function CommunityPage() {
 
             {/* Scripture Picker Inside Write Modal */}
             {isScripturePickerOpen && (
-              <div className="fixed inset-0 z-[200] flex flex-col animate-in fade-in slide-in-from-bottom-10 duration-500 bg-inherit">
+              <div className={`fixed inset-0 z-[200] flex flex-col animate-in fade-in slide-in-from-bottom-10 duration-500 ${bgColor}`}>
                 <header className="px-6 pt-16 pb-6 flex items-center justify-between border-b border-zinc-500/10">
                   <button onClick={() => setIsScripturePickerOpen(false)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
                   <h2 className="text-sm font-black uppercase tracking-widest opacity-40">Select Scripture</h2>
@@ -818,33 +818,22 @@ export default function CommunityPage() {
               </div>
             )}
 
-            <div className="flex items-center gap-4 py-4 border-y border-zinc-500/5">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Post Anonymously</span>
-              <button onClick={() => setIsAnonymous(!isAnonymous)} className={`w-12 h-6 rounded-full relative transition-all ${isAnonymous ? accentBg : 'bg-zinc-500/20'}`}><div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isAnonymous ? 'left-7' : 'left-1'}`}></div></button>
-            </div>
-
-            <textarea 
-              value={draftContent}
-              onChange={(e) => setDraftContent(e.target.value)}
-              placeholder="What's on your mind?" 
-              className="w-full h-64 bg-transparent outline-none text-xl font-medium leading-relaxed placeholder:opacity-20 resize-none"
-            />
-
-            <div className="space-y-4">
+            <div className="space-y-4 pt-4 border-t border-zinc-500/5">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-20">Your Heart</p>
                 <button 
                   onClick={() => setIsAnonymous(!isAnonymous)}
-                  className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all border ${isAnonymous ? 'bg-zinc-800 border-zinc-700 text-brand-yellow' : 'bg-transparent border-zinc-200 text-zinc-400'}`}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all border ${isAnonymous ? (isDarkMode ? 'bg-zinc-800 border-zinc-700 text-brand-yellow' : 'bg-slate-100 border-slate-200 text-brand-purple') : 'bg-transparent border-zinc-200 text-zinc-400'}`}
                 >
                   <span className="material-icons text-sm">{isAnonymous ? 'visibility_off' : 'visibility'}</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest">{isAnonymous ? 'Anonymous' : 'Public'}</span>
                 </button>
               </div>
               <textarea 
-                id="new-post-content" 
+                value={draftContent}
+                onChange={(e) => setDraftContent(e.target.value)}
                 placeholder="Write your heart here..." 
-                className="w-full h-[40vh] bg-transparent outline-none resize-none placeholder:opacity-10 text-xl font-medium leading-relaxed" 
+                className="w-full h-[50vh] bg-transparent outline-none resize-none placeholder:opacity-10 text-xl font-medium leading-relaxed" 
               />
             </div>
           </div>
