@@ -46,6 +46,7 @@ export default function AppPage() {
   const [notes, setNotes] = useState<Record<string, any>>({})
   const [selectedVerses, setSelectedVerses] = useState<number[]>([])
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false)
+  const [isCommunityPaletteOpen, setIsCommunityPaletteOpen] = useState(false)
   const [currentNote, setCurrentNote] = useState('')
   const [selectedColor, setSelectedColor] = useState('#fffbbd')
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
@@ -367,7 +368,7 @@ export default function AppPage() {
   }
 
 
-  const shareToCommunity = () => {
+  const shareToCommunity = (type: 'meditation' | 'prayer') => {
     if (selectedVerses.length === 0) return
     const vTexts = selectedVerses.sort((a, b) => a - b).map(v => {
       const text = verses.find(x => x.verse === v)?.text
@@ -377,7 +378,8 @@ export default function AppPage() {
     
     localStorage.setItem('pf_pending_post', JSON.stringify({
       verse: ref,
-      content: vTexts
+      content: vTexts,
+      type: type
     }))
     window.location.href = '/app/community'
   }
@@ -463,48 +465,72 @@ export default function AppPage() {
                     )}
                   </div>
 
-                  {/* Context Menu (Floating Menu) - Multi-selection support */}
+                  {/* Context Menu (Floating Menu) - Slim & Refined */}
                   {selectedVerses.length > 0 && selectedVerses[selectedVerses.length - 1] === v.verse && (
-                    <div className={`fixed bottom-32 left-1/2 -translate-x-1/2 bg-white rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] z-[1000] animate-in slide-in-from-bottom-4 duration-300 border border-slate-100/50 overflow-visible flex flex-col items-center`}>
-                      <div className="flex items-center gap-4 px-6 py-4 border-b border-slate-50 w-full justify-between">
-                        <span className="text-slate-400 font-black text-[10px] uppercase tracking-widest">{selectedVerses.length} selected</span>
-                        <button onClick={() => setSelectedVerses([])} className="material-icons text-slate-300 text-lg hover:text-slate-600 transition-colors">close</button>
+                    <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 bg-white rounded-[24px] shadow-[0_15px_45px_rgba(0,0,0,0.2)] z-[1000] animate-in slide-in-from-bottom-2 duration-300 border border-slate-100/50 overflow-visible flex flex-col items-center scale-90`}>
+                      <div className="flex items-center gap-3 px-5 py-2.5 border-b border-slate-50 w-full justify-between">
+                        <span className="text-slate-400 font-black text-[9px] uppercase tracking-[0.2em]">{selectedVerses.length} SELECTED</span>
+                        <button onClick={() => setSelectedVerses([])} className="material-icons text-slate-300 text-base hover:text-slate-600 transition-colors">close</button>
                       </div>
 
-                      <div className="flex items-center gap-2 px-4 py-3">
+                      <div className="flex items-center gap-1.5 px-3 py-2">
                         <button 
                           onClick={(e) => { e.stopPropagation(); removeHighlight(); }}
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50 active:scale-90 transition-all"
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50 active:scale-90 transition-all"
                         >
-                          <span className="material-icons text-[22px]">delete_outline</span>
+                          <span className="material-icons text-[20px]">delete_outline</span>
                         </button>
 
-                        <div className="w-px h-6 bg-slate-100 mx-1"></div>
+                        <div className="w-px h-5 bg-slate-100 mx-0.5"></div>
 
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); toggleHighlight('#fffbbd'); }}
-                          className="w-10 h-10 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-110 transition-all"
-                        />
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); toggleHighlight('#9a78b4'); }}
-                          className="w-10 h-10 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-110 transition-all"
-                        />
+                        <div className="flex gap-1.5">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); toggleHighlight('#fffbbd'); }}
+                            className="w-8 h-8 rounded-full bg-[#fffbbd] border-2 border-white shadow-sm active:scale-110 transition-all"
+                          />
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); toggleHighlight('#9a78b4'); }}
+                            className="w-8 h-8 rounded-full bg-[#9a78b4] border-2 border-white shadow-sm active:scale-110 transition-all"
+                          />
+                        </div>
 
-                        <div className="w-px h-6 bg-slate-100 mx-1"></div>
+                        <div className="w-px h-5 bg-slate-100 mx-0.5"></div>
 
                         <button 
                           onClick={(e) => { e.stopPropagation(); openNoteModal(selectedVerses); }} 
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50 active:scale-90 transition-all"
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50 active:scale-90 transition-all"
                         >
-                          <span className="material-icons text-[22px]">sticky_note_2</span>
+                          <span className="material-icons text-[20px]">sticky_note_2</span>
                         </button>
                         
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); shareToCommunity(); }} 
-                          className="w-12 h-12 rounded-full flex items-center justify-center bg-brand-purple text-white shadow-lg shadow-brand-purple/20 active:scale-90 transition-all"
-                        >
-                          <span className="material-icons text-[22px]">forum</span>
-                        </button>
+                        <div className="relative flex items-center">
+                          {isCommunityPaletteOpen ? (
+                            <div className="flex gap-1.5 bg-brand-purple/10 p-1 rounded-full animate-in slide-in-from-right-2 duration-300">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); shareToCommunity('meditation'); }}
+                                className="w-9 h-9 rounded-full bg-brand-purple text-white flex items-center justify-center active:scale-90 shadow-sm"
+                              >
+                                <span className="material-icons text-base">auto_stories</span>
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); shareToCommunity('prayer'); }}
+                                className="w-9 h-9 rounded-full bg-brand-yellow text-brand-dark flex items-center justify-center active:scale-90 shadow-sm"
+                              >
+                                <span className="material-icons text-base">volunteer_activism</span>
+                              </button>
+                              <button onClick={() => setIsCommunityPaletteOpen(false)} className="w-9 h-9 flex items-center justify-center text-slate-400">
+                                <span className="material-icons text-base">close</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setIsCommunityPaletteOpen(true); }} 
+                              className="w-10 h-10 rounded-full flex items-center justify-center bg-brand-purple text-white shadow-lg shadow-brand-purple/20 active:scale-90 transition-all"
+                            >
+                              <span className="material-icons text-[20px]">forum</span>
+                            </button>
+                          )}
+                        </div>
 
                         <button 
                           onClick={(e) => { 
@@ -513,9 +539,9 @@ export default function AppPage() {
                             navigator.clipboard.writeText(text); 
                             setSelectedVerses([]); 
                           }} 
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50 active:scale-90 transition-all"
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50 active:scale-90 transition-all"
                         >
-                          <span className="material-icons text-[22px]">content_copy</span>
+                          <span className="material-icons text-[20px]">content_copy</span>
                         </button>
                       </div>
                     </div>

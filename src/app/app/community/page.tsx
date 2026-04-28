@@ -69,10 +69,12 @@ export default function CommunityPage() {
   const [pickerPostId, setPickerPostId] = useState<number | null>(null)
   const [lastBackPress, setLastBackPress] = useState(0)
   
+  const [activeCommentsPostId, setActiveCommentsPostId] = useState<number | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isTutorialOpen, setIsTutorialOpen] = useState(false)
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
-  const [activeCommentsPostId, setActiveCommentsPostId] = useState<number | null>(null)
+  const [selectedVerseRef, setSelectedVerseRef] = useState('')
+  const [selectedVerseContent, setSelectedVerseContent] = useState('')
 
   const currentUserName = "Isaac Shon"
 
@@ -103,15 +105,11 @@ export default function CommunityPage() {
 
     const pendingPost = localStorage.getItem('pf_pending_post')
     if (pendingPost) {
-      const { verse, content } = JSON.parse(pendingPost)
+      const { verse, content, type } = JSON.parse(pendingPost)
+      setSelectedVerseRef(verse)
+      setSelectedVerseContent(content)
+      if (type) setActiveTab(type)
       setIsWriteModalOpen(true)
-      // We'll use a small timeout to ensure DOM is ready for pre-filling if needed
-      setTimeout(() => {
-        const titleEl = document.getElementById('new-post-title') as HTMLInputElement
-        const contentEl = document.getElementById('new-post-content') as HTMLTextAreaElement
-        if (titleEl) titleEl.value = `Reflection on ${verse}`
-        if (contentEl) contentEl.value = `[Verse]\n${content}\n\n[My Reflection]\n`
-      }, 100)
       localStorage.removeItem('pf_pending_post')
     }
 
@@ -257,9 +255,9 @@ export default function CommunityPage() {
       user: currentUserName,
       avatar: "/images/PF app logo iphone.png",
       isAnonymous: false,
-      verse: "오늘의 묵상",
+      verse: selectedVerseRef || "General Reflection",
       title,
-      content,
+      content: selectedVerseContent ? `[Scripture]\n${selectedVerseContent}\n\n[Reflection]\n${content}` : content,
       date: "방금 전",
       reactions: { Like: 0, Praying: 0, Comforting: 0, Insight: 0, Check: 0 },
       userReaction: null,
@@ -267,6 +265,8 @@ export default function CommunityPage() {
     }
     setPosts([newPost, ...posts])
     setIsWriteModalOpen(false)
+    setSelectedVerseRef('')
+    setSelectedVerseContent('')
     showNotify("포스트가 게시되었습니다!")
   }
 
@@ -469,12 +469,51 @@ export default function CommunityPage() {
       {isTutorialOpen && <CommunityTutorial onClose={closeTutorial} />}
 
       {isWriteModalOpen && (
-        <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-md flex items-end animate-in fade-in duration-300">
-          <div className={`w-full max-w-md mx-auto p-8 rounded-t-[48px] animate-in slide-in-from-bottom-10 duration-500 ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`}>
-            <div className="flex justify-between items-center mb-10"><h2 className="text-xl font-black uppercase tracking-tight">New {activeTab === 'meditation' ? 'Meditation' : 'Prayer'}</h2><button onClick={() => setIsWriteModalOpen(false)} className="material-icons opacity-40">close</button></div>
-            <input id="new-post-title" type="text" placeholder="TITLE" className="w-full text-2xl font-black mb-6 bg-transparent outline-none placeholder:opacity-10 uppercase tracking-tighter" />
-            <textarea id="new-post-content" placeholder="Share your light..." className="w-full h-40 bg-transparent outline-none resize-none mb-10 placeholder:opacity-10 text-lg font-medium" />
-            <button onClick={() => { const title = (document.getElementById('new-post-title') as HTMLInputElement).value; const content = (document.getElementById('new-post-content') as HTMLTextAreaElement).value; if (title && content) addNewPost(title, content, activeTab); }} className={`w-full py-5 rounded-3xl font-black uppercase tracking-widest text-xs ${accentBg} text-white shadow-xl`}>Post Now</button>
+        <div className={`fixed inset-0 z-[120] animate-in fade-in zoom-in duration-300 flex flex-col ${isDarkMode ? 'bg-[#050505]' : 'bg-white'}`}>
+          <header className="px-6 pt-16 pb-6 flex items-center justify-between border-b border-zinc-500/10">
+            <button onClick={() => setIsWriteModalOpen(false)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
+            <h2 className="text-sm font-black uppercase tracking-widest opacity-40">New {activeTab}</h2>
+            <button 
+              onClick={() => { 
+                const title = (document.getElementById('new-post-title') as HTMLInputElement).value; 
+                const content = (document.getElementById('new-post-content') as HTMLTextAreaElement).value; 
+                if (title && content) addNewPost(title, content, activeTab); 
+              }} 
+              className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${accentBg} text-white shadow-lg active:scale-90 transition-all`}
+            >
+              Post
+            </button>
+          </header>
+
+          <div className="flex-1 overflow-y-auto px-8 py-10 space-y-10 no-scrollbar">
+            <input 
+              id="new-post-title" 
+              type="text" 
+              placeholder="TITLE" 
+              className="w-full text-4xl font-black bg-transparent outline-none placeholder:opacity-10 uppercase tracking-tighter" 
+              autoFocus
+            />
+
+            {selectedVerseRef && (
+              <div className="space-y-4 animate-in slide-in-from-left-4 duration-500">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${accentBg}`}></span>
+                  <span className={`text-[11px] font-black uppercase tracking-widest ${accentColor}`}>{selectedVerseRef}</span>
+                </div>
+                <div className={`p-6 rounded-[32px] ${isDarkMode ? 'bg-zinc-900' : 'bg-slate-50'} border border-zinc-500/5`}>
+                  <p className="text-[15px] leading-relaxed opacity-60 italic font-medium">"{selectedVerseContent}"</p>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-20">Your Heart</p>
+              <textarea 
+                id="new-post-content" 
+                placeholder="Write your heart here..." 
+                className="w-full h-[40vh] bg-transparent outline-none resize-none placeholder:opacity-10 text-xl font-medium leading-relaxed" 
+              />
+            </div>
           </div>
         </div>
       )}
