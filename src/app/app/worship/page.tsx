@@ -198,22 +198,22 @@ export default function WorshipPage() {
 
   const getStatus = (date: string) => {
     const today = new Date().toISOString().split('T')[0]
-    if (date === today) return { label: 'TODAY', color: 'bg-brand-yellow text-black' }
-    if (date > today) return { label: 'UPCOMING', color: 'bg-emerald-500 text-white' }
+    if (date === today) return { label: 'TODAY', color: 'bg-[#9a78b4] text-white' }
+    if (date > today) return { label: 'UPCOMING', color: 'bg-[#9a78b4] text-white' }
     return { label: 'COMPLETED', color: 'bg-zinc-500/20 text-zinc-500' }
   }
 
   const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-[#F8FAFC]'
   const textColor = isDarkMode ? 'text-white' : 'text-zinc-900'
-  const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-yellow'
-  const accentBg = isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-yellow text-black'
+  const accentColor = 'text-[#9a78b4]'
+  const accentBg = 'bg-[#9a78b4] text-white'
   const cardBg = isDarkMode ? 'bg-zinc-900/40 border-zinc-500/10' : 'bg-white border-slate-200'
 
   // Safety Render: Only show loading if we literally have zero user info
   if (!currentUser && !isLoaded) {
     return (
       <div className={`min-h-screen ${bgColor} flex flex-col items-center justify-center p-8 text-center`}>
-        <div className="w-12 h-12 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-6"></div>
+        <div className="w-12 h-12 border-4 border-[#9a78b4] border-t-transparent rounded-full animate-spin mb-6"></div>
         <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Verifying Authorization...</p>
       </div>
     )
