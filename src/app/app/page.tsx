@@ -16,19 +16,72 @@ const bibleVersions = [
 const KOREAN_ABBRS = ["창", "출", "레", "민", "신", "수", "삿", "룻", "삼상", "삼하", "왕상", "왕하", "대상", "대하", "스", "느", "에", "욥", "시", "잠", "전", "아", "사", "렘", "애", "겔", "단", "호", "욜", "암", "옵", "욘", "미", "나", "합", "습", "학", "슥", "말", "마", "막", "눅", "요", "행", "롬", "고전", "고후", "갈", "엡", "빌", "골", "살전", "살후", "딤전", "딤후", "딛", "몬", "히", "약", "벧전", "벧후", "요일", "요이", "요삼", "유", "계"];
 
 const bibleBooks = [
-  { id: 1, name: "창세기", eng: "Genesis" }, { id: 2, name: "출애굽기", eng: "Exodus" }, { id: 3, name: "레위기", eng: "Leviticus" }, { id: 4, name: "민수기", eng: "Numbers" }, { id: 5, name: "신명기", eng: "Deuteronomy" },
-  { id: 6, name: "여호수아", eng: "Joshua" }, { id: 7, name: "사사기", eng: "Judges" }, { id: 8, name: "룻기", eng: "Ruth" }, { id: 9, name: "사무엘상", eng: "1 Samuel" }, { id: 10, name: "사무엘하", eng: "2 Samuel" },
-  { id: 11, name: "열왕기상", eng: "1 Kings" }, { id: 12, name: "열왕기하", eng: "2 Kings" }, { id: 13, name: "역대상", eng: "1 Chronicles" }, { id: 14, name: "역대하", eng: "2 Chronicles" }, { id: 15, name: "에스라", eng: "Ezra" },
-  { id: 16, name: "느헤미야", eng: "Nehemiah" }, { id: 17, name: "에스더", eng: "Esther" }, { id: 18, name: "욥기", eng: "Job" }, { id: 19, name: "시편", eng: "Psalms" }, { id: 20, name: "잠언", eng: "Proverbs" },
-  { id: 21, name: "전도서", eng: "Ecclesiastes" }, { id: 22, name: "아가", eng: "Song of Solomon" }, { id: 23, name: "이사야", eng: "Isaiah" }, { id: 24, name: "예레미야", eng: "Jeremiah" }, { id: 25, name: "예레미야 애가", eng: "Lamentations" },
-  { id: 26, name: "에스겔", eng: "Ezekiel" }, { id: 27, name: "다니엘", eng: "Daniel" }, { id: 28, name: "호세아", eng: "Hosea" }, { id: 29, name: "요엘", eng: "Joel" }, { id: 30, name: "아모스", eng: "Amos" },
-  { id: 31, name: "오바댜", eng: "Obadiah" }, { id: 32, name: "요나", eng: "Jonah" }, { id: 33, name: "미가", eng: "Micah" }, { id: 34, name: "나훔", eng: "Nahum" }, { id: 35, name: "하박국", eng: "Habakkuk" },
-  { id: 36, name: "스바냐", eng: "Zephaniah" }, { id: 37, name: "학개", eng: "Haggai" }, { id: 38, name: "스가랴", eng: "Zechariah" }, { id: 39, name: "말라기", eng: "Malachi" }, { id: 40, name: "마태복음", eng: "Matthew" },
-  { id: 41, name: "마가복음", eng: "Mark" }, { id: 42, name: "누가복음", eng: "Luke" }, { id: 43, name: "요한복음", eng: "John" }, { id: 44, name: "사도행전", eng: "Acts" }, { id: 45, name: "로마서", eng: "Romans" },
-  { id: 46, name: "고린도전서", eng: "1 Corinthians" }, { id: 47, name: "고린도후서", eng: "2 Corinthians" }, { id: 48, name: "갈라디아서", eng: "Galatians" }, { id: 49, name: "에베소서", eng: "Ephesians" }, { id: 50, name: "빌립보서", eng: "Philippians" },
-  { id: 51, name: "골로새서", eng: "Colossians" }, { id: 52, name: "데살로니가전서", eng: "1 Thessalonians" }, { id: 53, name: "데살로니가후서", eng: "2 Thessalonians" }, { id: 54, name: "디모데전서", eng: "1 Timothy" }, { id: 55, name: "디모데후서", eng: "2 Timothy" },
-  { id: 56, name: "디도서", eng: "Titus" }, { id: 57, name: "빌레몬서", eng: "Philemon" }, { id: 58, name: "히브리서", eng: "Hebrews" }, { id: 59, name: "야고보서", eng: "James" }, { id: 60, name: "베드로전서", eng: "1 Peter" },
-  { id: 61, name: "베드로후서", eng: "2 Peter" }, { id: 62, name: "요한일서", eng: "1 John" }, { id: 63, name: "요한이서", eng: "2 John" }, { id: 64, name: "요한삼서", eng: "3 John" }, { id: 65, name: "유다서", eng: "Jude" }, { id: 66, name: "요한계시록", eng: "Revelation" }
+  { id: 1, name: "창세기", eng: "Genesis", zh: "创世记", es: "Génesis" },
+  { id: 2, name: "출애굽기", eng: "Exodus", zh: "出埃及记", es: "Éxodo" },
+  { id: 3, name: "레위기", eng: "Leviticus", zh: "利未记", es: "Levítico" },
+  { id: 4, name: "민수기", eng: "Numbers", zh: "民数记", es: "Números" },
+  { id: 5, name: "신명기", eng: "Deuteronomy", zh: "申命记", es: "Deuteronomio" },
+  { id: 6, name: "여호수아", eng: "Joshua", zh: "约书亚记", es: "Josué" },
+  { id: 7, name: "사사기", eng: "Judges", zh: "士师记", es: "Jueces" },
+  { id: 8, name: "룻기", eng: "Ruth", zh: "路得记", es: "Rut" },
+  { id: 9, name: "사무엘상", eng: "1 Samuel", zh: "撒母耳记上", es: "1 Samuel" },
+  { id: 10, name: "사무엘하", eng: "2 Samuel", zh: "撒母耳记下", es: "2 Samuel" },
+  { id: 11, name: "열왕기상", eng: "1 Kings", zh: "列王纪上", es: "1 Reyes" },
+  { id: 12, name: "열왕기하", eng: "2 Kings", zh: "列王纪下", es: "2 Reyes" },
+  { id: 13, name: "역대상", eng: "1 Chronicles", zh: "历代志上", es: "1 Crónicas" },
+  { id: 14, name: "역대하", eng: "2 Chronicles", zh: "历代志下", es: "2 Crónicas" },
+  { id: 15, name: "에스라", eng: "Ezra", zh: "以斯拉记", es: "Esdras" },
+  { id: 16, name: "느헤미야", eng: "Nehemiah", zh: "느헤미야", es: "Nehemías" },
+  { id: 17, name: "에스더", eng: "Esther", zh: "以斯帖记", es: "Ester" },
+  { id: 18, name: "욥기", eng: "Job", zh: "约伯记", es: "Job" },
+  { id: 19, name: "시편", eng: "Psalms", zh: "诗篇", es: "Salmos" },
+  { id: 20, name: "잠언", eng: "Proverbs", zh: "箴言", es: "Proverbios" },
+  { id: 21, name: "전도서", eng: "Ecclesiastes", zh: "传道书", es: "Eclesiastés" },
+  { id: 22, name: "아가", eng: "Song of Solomon", zh: "雅歌", es: "Cantar de los Cantares" },
+  { id: 23, name: "이사야", eng: "Isaiah", zh: "以赛亚书", es: "Isaías" },
+  { id: 24, name: "예레미야", eng: "Jeremiah", zh: "耶利米书", es: "Jeremías" },
+  { id: 25, name: "예레미야 애가", eng: "Lamentations", zh: "耶利米哀歌", es: "Lamentaciones" },
+  { id: 26, name: "에스겔", eng: "Ezekiel", zh: "以西结书", es: "Ezequiel" },
+  { id: 27, name: "다니엘", eng: "Daniel", zh: "但以理书", es: "Daniel" },
+  { id: 28, name: "호세아", eng: "Hosea", zh: "何西阿书", es: "Oseas" },
+  { id: 29, name: "요엘", eng: "Joel", zh: "约珥书", es: "Joel" },
+  { id: 30, name: "아모스", eng: "Amos", zh: "阿摩司书", es: "Amós" },
+  { id: 31, name: "오바댜", eng: "Obadiah", zh: "俄巴底亚书", es: "Abdías" },
+  { id: 32, name: "요나", eng: "Jonah", zh: "约拿书", es: "Jonás" },
+  { id: 33, name: "미가", eng: "Micah", zh: "弥迦书", es: "Miqueas" },
+  { id: 34, name: "나훔", eng: "Nahum", zh: "那鸿书", es: "Nahúm" },
+  { id: 35, name: "하박국", eng: "Habakkuk", zh: "哈巴谷书", es: "Habacuc" },
+  { id: 36, name: "스바냐", eng: "Zephaniah", zh: "西番雅书", es: "Sofonías" },
+  { id: 37, name: "학개", eng: "Haggai", zh: "哈该书", es: "Hageo" },
+  { id: 38, name: "스가랴", eng: "Zechariah", zh: "撒迦利亚书", es: "Zacarías" },
+  { id: 39, name: "말라기", eng: "Malachi", zh: "玛拉基书", es: "Malaquías" },
+  { id: 40, name: "마태복음", eng: "Matthew", zh: "马太福音", es: "Mateo" },
+  { id: 41, name: "마가복음", eng: "Mark", zh: "马可福音", es: "Marcos" },
+  { id: 42, name: "누가복음", eng: "Luke", zh: "路加福音", es: "Lucas" },
+  { id: 43, name: "요한복음", eng: "John", zh: "约翰福音", es: "Juan" },
+  { id: 44, name: "사도행전", eng: "Acts", zh: "使徒行传", es: "Hechos" },
+  { id: 45, name: "로마서", eng: "Romans", zh: "罗马书", es: "Romanos" },
+  { id: 46, name: "고린도전서", eng: "1 Corinthians", zh: "哥林多前书", es: "1 Corintios" },
+  { id: 47, name: "고린도후서", eng: "2 Corinthians", zh: "哥林多后书", es: "2 Corintios" },
+  { id: 48, name: "갈라디아서", eng: "Galatians", zh: "加拉太书", es: "Gálatas" },
+  { id: 49, name: "에베소서", eng: "Ephesians", zh: "以弗所书", es: "Efesios" },
+  { id: 50, name: "빌립보서", eng: "Philippians", zh: "腓立比书", es: "Filipenses" },
+  { id: 51, name: "골로새서", eng: "Colossians", zh: "歌罗西书", es: "Colosenses" },
+  { id: 52, name: "데살로니가전서", eng: "1 Thessalonians", zh: "帖撒罗尼迦前书", es: "1 Tesalonicenses" },
+  { id: 53, name: "데살로니가후서", eng: "2 Thessalonians", zh: "帖撒罗尼迦后书", es: "2 Tesalonicenses" },
+  { id: 54, name: "디모데전서", eng: "1 Timothy", zh: "提摩太前书", es: "1 Timoteo" },
+  { id: 55, name: "디모데후서", eng: "2 Timothy", zh: "提摩太后书", es: "2 Timoteo" },
+  { id: 56, name: "디도서", eng: "Titus", zh: "提多书", es: "Tito" },
+  { id: 57, name: "빌레몬서", eng: "Philemon", zh: "腓利门书", es: "Filemón" },
+  { id: 58, name: "히브리서", eng: "Hebrews", zh: "希伯来书", es: "Hebreos" },
+  { id: 59, name: "야고보서", eng: "James", zh: "雅各书", es: "Santiago" },
+  { id: 60, name: "베드로전서", eng: "1 Peter", zh: "彼得前书", es: "1 Pedro" },
+  { id: 61, name: "베드로후서", eng: "2 Peter", zh: "彼得后书", es: "2 Pedro" },
+  { id: 62, name: "요한일서", eng: "1 John", zh: "约翰一书", es: "1 Juan" },
+  { id: 63, name: "요한이서", eng: "2 John", zh: "约翰二书", es: "2 Juan" },
+  { id: 64, name: "요한삼서", eng: "3 John", zh: "约翰三书", es: "3 Juan" },
+  { id: 65, name: "유다서", eng: "Jude", zh: "犹大书", es: "Judas" },
+  { id: 66, name: "요한계시록", eng: "Revelation", zh: "启示录", es: "Apocalipsis" }
 ]
 
 export default function AppPage() {
@@ -68,6 +121,14 @@ export default function AppPage() {
   const [isLoaded, setIsLoaded] = useState(false)
   const longPressTimer = useRef<any>(null)
   const isLongPressing = useRef(false)
+
+  const isEn = version.lang === 'en'
+  const getBName = (b: any) => {
+    if (version.lang === 'zh') return b.zh || b.name;
+    if (version.lang === 'es') return b.es || b.name;
+    if (version.lang === 'en') return b.eng || b.name;
+    return b.name;
+  }
 
   useEffect(() => {
     const savedVersion = localStorage.getItem('pf_bible_version')
@@ -375,7 +436,7 @@ export default function AppPage() {
       const text = verses.find(x => x.verse === v)?.text
       return `${v}. ${text}`
     }).join('\n')
-    const ref = `${book.name} ${chapter}:${selectedVerses.sort((a, b) => a - b).join(', ')}`
+    const ref = `${getBName(book)} ${chapter}:${selectedVerses.sort((a, b) => a - b).join(', ')}`
     
     localStorage.setItem('pf_pending_post', JSON.stringify({
       verse: ref,
@@ -409,7 +470,7 @@ export default function AppPage() {
 
         <button onClick={() => { setOpenUI('picker'); setPickerTab('book'); }} className="flex items-center gap-2 active:scale-95 transition-all">
           <span className="font-plus-jakarta font-black text-[16px] tracking-tight">
-            {isEn ? book.eng : book.name}
+            {getBName(book)}
           </span>
           <span className={`w-1 h-1 rounded-full ${accentBg}`}></span>
           <span className={`font-plus-jakarta font-black text-[16px] tracking-tight ${accentColor}`}>{chapter}{isEn ? ' Ch' : '장'}</span>
@@ -596,7 +657,7 @@ export default function AppPage() {
             <div className="flex flex-col gap-10">
               {searchResults.map((res: any, idx) => (
                 <button key={idx} onClick={() => { const b = bibleBooks.find(b => b.id === res.book); if (b) { setBook(b); setChapter(res.chapter); setOpenUI(null); } }} className="text-left group active:opacity-50">
-                  <p className={`font-black text-[9px] ${accentColor} uppercase tracking-[0.3em] mb-3`}>{isEn ? bibleBooks.find(b => b.id === res.book)?.eng : bibleBooks.find(b => b.id === res.book)?.name} {res.chapter}:{res.verse}</p>
+                  <p className={`font-black text-[9px] ${accentColor} uppercase tracking-[0.3em] mb-3`}>{(() => { const b = bibleBooks.find(x => x.id === res.book); return b ? getBName(b) : ''; })()} {res.chapter}:{res.verse}</p>
                   <p className="text-[16px] font-medium leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity">{res.text}</p>
                 </button>
               ))}
@@ -628,7 +689,7 @@ export default function AppPage() {
               <div className="flex flex-col">
                 {filteredBooks.map((b) => (
                   <button key={b.id} onClick={() => { setBook(b); setPickerTab('chapter'); setBookSearch(''); }} className="flex items-center justify-between py-5 group active:opacity-50 transition-all">
-                    <span className={`text-[17px] font-medium tracking-tight ${book.id === b.id ? accentColor + ' font-bold' : 'text-zinc-500'}`}>{isEn ? b.eng : b.name}</span>
+                    <span className={`text-[17px] font-medium tracking-tight ${book.id === b.id ? accentColor + ' font-bold' : 'text-zinc-500'}`}>{getBName(b)}</span>
                     <span className={`text-[11px] font-black uppercase tracking-widest ${isDarkMode ? 'text-zinc-800' : 'text-slate-100'}`}>{isEn ? b.name : b.eng}</span>
                   </button>
                 ))}
@@ -636,7 +697,7 @@ export default function AppPage() {
             )}
             {pickerTab === 'chapter' && (
               <div className="flex flex-col gap-10">
-                <h3 className="text-xl font-bold">{isEn ? book.eng : book.name}</h3>
+                <h3 className="text-xl font-bold">{getBName(book)}</h3>
                 <div className="grid grid-cols-5 gap-3">
                   {Array.from({ length: maxChapters }, (_, i) => i + 1).map(c => (
                     <button key={c} onClick={() => { setChapter(c); setOpenUI(null); }} className={`aspect-square rounded-lg flex items-center justify-center font-bold text-[17px] transition-all ${chapter === c ? (isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white') : (isDarkMode ? 'bg-zinc-900 text-zinc-500' : 'bg-slate-50 text-slate-400')}`}>{c}</button>
@@ -747,7 +808,7 @@ export default function AppPage() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className={`font-black text-[13px] ${accentColor}`}>
-                          {isEn ? b?.eng : b?.name} {cNum}:{vNum}
+                          {getBName(b)} {cNum}:{vNum}
                         </span>
                         <span className="text-[11px] opacity-40 font-medium tracking-tight">{dateStr}</span>
                       </div>
