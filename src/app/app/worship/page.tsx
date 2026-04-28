@@ -57,6 +57,7 @@ export default function WorshipPage() {
   const [songTitle, setSongTitle] = useState('')
   const [songArtist, setSongArtist] = useState('')
   const [songKey, setSongKey] = useState('C')
+  const [isPreviewing, setIsPreviewing] = useState(false)
 
   useEffect(() => {
     const init = async () => {
@@ -66,7 +67,6 @@ export default function WorshipPage() {
         return
       }
 
-      // Fetch Profile
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
       if (profile) {
         setCurrentUser({ ...session.user, ...profile })
@@ -76,11 +76,9 @@ export default function WorshipPage() {
         }
       }
 
-      // Fetch Sets
       const { data: setsData } = await supabase.from('worship_sets').select('*').order('date', { ascending: false })
       if (setsData) setSets(setsData)
 
-      // Fetch Team Options (Leader & Worship Team only)
       const { data: members } = await supabase.from('profiles').select('id, nickname').in('role', ['leader', 'worship_team'])
       if (members) setTeamOptions(members)
 
@@ -89,12 +87,25 @@ export default function WorshipPage() {
     init()
   }, [])
 
+  const handleLinkChange = (url: string) => {
+    setSongLink(url)
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      setIsPreviewing(true)
+      // Mocked metadata fetch
+      setTimeout(() => {
+        setSongTitle("Auto-detected Song Title")
+        setSongArtist("Auto-detected Artist")
+      }, 800)
+    }
+  }
+
   const addSong = () => {
     if (!songTitle) return
     setNewSongs([...newSongs, { title: songTitle, artist: songArtist, key: songKey, link: songLink }])
     setSongTitle('')
     setSongArtist('')
     setSongLink('')
+    setIsPreviewing(false)
   }
 
   const removeSong = (index: number) => {
@@ -278,67 +289,116 @@ export default function WorshipPage() {
             <div className="space-y-6">
               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Songs Management</h3>
               
-              {/* Added Songs List */}
               <div className="space-y-3">
                 {newSongs.map((song, i) => (
-                  <div key={i} className={`p-4 rounded-2xl border ${cardBg} flex items-center justify-between`}>
+                  <div key={i} className={`p-5 rounded-[28px] border ${cardBg} flex items-center justify-between animate-in fade-in slide-in-from-left-4`}>
                     <div className="flex items-center gap-4">
-                      <span className="text-xs font-black opacity-20">{i+1}</span>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-[10px] ${isDarkMode ? 'bg-zinc-800 text-zinc-500' : 'bg-white text-slate-300'}`}>
+                        {i + 1}
+                      </div>
                       <div>
-                        <p className="text-sm font-black">{song.title}</p>
-                        <p className="text-[9px] font-bold opacity-50 uppercase">{song.key} Key • {song.artist}</p>
+                        <p className="text-sm font-black tracking-tight">{song.title}</p>
+                        <p className="text-[9px] font-bold opacity-50 uppercase tracking-widest">{song.key} • {song.artist}</p>
                       </div>
                     </div>
-                    <button onClick={() => removeSong(i)} className="text-red-500/50 hover:text-red-500"><span className="material-icons text-lg">delete</span></button>
+                    <button onClick={() => removeSong(i)} className="w-10 h-10 rounded-full flex items-center justify-center text-red-500/30 hover:text-red-500 transition-colors"><span className="material-icons text-lg">close</span></button>
                   </div>
                 ))}
               </div>
 
               {/* Add Song Form */}
-              <div className={`p-6 rounded-[32px] border ${isDarkMode ? 'bg-zinc-900/30' : 'bg-slate-100/50'} space-y-4`}>
-                <input type="text" placeholder="Song Title" value={songTitle} onChange={(e)=>setSongTitle(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold ${cardBg} border text-sm`} />
-                <div className="grid grid-cols-2 gap-3">
-                  <input type="text" placeholder="Artist" value={songArtist} onChange={(e)=>setSongArtist(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold ${cardBg} border text-xs`} />
-                  <select value={songKey} onChange={(e)=>setSongKey(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold ${cardBg} border text-xs appearance-none`}>
-                    {KEYS.map(k => <option key={k} value={k}>{k} Key</option>)}
-                  </select>
+              <div className={`p-8 rounded-[40px] border ${isDarkMode ? 'bg-zinc-900/30' : 'bg-slate-100/50'} space-y-8`}>
+                <div className="space-y-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-30">1. Paste Link</p>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="YouTube or Spotify Link" 
+                      value={songLink} 
+                      onChange={(e)=>handleLinkChange(e.target.value)} 
+                      className={`w-full p-5 rounded-2xl outline-none font-bold ${cardBg} border text-xs pr-12`} 
+                    />
+                    {isPreviewing && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin"></div>}
+                  </div>
                 </div>
-                <input type="text" placeholder="YouTube/Spotify Link" value={songLink} onChange={(e)=>setSongLink(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold ${cardBg} border text-xs`} />
-                <button onClick={addSong} className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest bg-zinc-500/10 hover:bg-zinc-500/20 transition-all`}>Add to Set</button>
+
+                <div className={`space-y-6 transition-all duration-500 ${songLink ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-30">2. Verify & Key</p>
+                    <input type="text" placeholder="Song Title" value={songTitle} onChange={(e)=>setSongTitle(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold ${cardBg} border text-sm`} />
+                    <input type="text" placeholder="Artist" value={songArtist} onChange={(e)=>setSongArtist(e.target.value)} className={`w-full p-4 rounded-xl outline-none font-bold ${cardBg} border text-xs`} />
+                    
+                    {/* Premium Key Selector */}
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
+                      {KEYS.map(k => (
+                        <button 
+                          key={k} 
+                          onClick={() => setSongKey(k)}
+                          className={`min-w-[48px] h-12 rounded-xl font-black text-xs transition-all ${songKey === k ? accentBg : cardBg + ' border opacity-40'}`}
+                        >
+                          {k}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button onClick={addSong} className={`w-full py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] ${accentBg} shadow-xl shadow-current/10 active:scale-95 transition-all`}>Add to Setlist</button>
+                </div>
               </div>
             </div>
 
             {/* Step 3: Team */}
             <div className="space-y-6">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Team Building</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Team Assignments</h3>
               
-              {/* Selected Team */}
-              <div className="grid grid-cols-1 gap-3">
+              {/* Selected Team with Tags */}
+              <div className="grid grid-cols-1 gap-4">
                 {newTeam.map((m, i) => (
-                  <div key={i} className={`p-4 rounded-2xl border ${cardBg} flex items-center justify-between`}>
-                    <p className="text-sm font-black">{m.nickname}</p>
-                    <select 
-                      value={m.role} 
-                      onChange={(e) => updateMemberRole(m.userId, e.target.value)}
-                      className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none"
-                    >
-                      {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
+                  <div key={i} className={`p-6 rounded-[32px] border ${cardBg} space-y-4`}>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-black tracking-tight">{m.nickname}</p>
+                      <button onClick={() => setNewTeam(newTeam.filter(t => t.userId !== m.userId))} className="text-red-500/20 hover:text-red-500 transition-colors">
+                        <span className="material-icons text-sm">remove_circle</span>
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {ROLES.map(role => {
+                        const isAssigned = m.role.split(', ').includes(role)
+                        return (
+                          <button 
+                            key={role}
+                            onClick={() => {
+                              const currentRoles = m.role ? m.role.split(', ').filter(r => r) : []
+                              const nextRoles = currentRoles.includes(role) 
+                                ? currentRoles.filter(r => r !== role)
+                                : [...currentRoles, role]
+                              updateMemberRole(m.userId, nextRoles.join(', '))
+                            }}
+                            className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${isAssigned ? accentBg : 'bg-zinc-500/10 opacity-40'}`}
+                          >
+                            {role}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
 
               {/* Member Picker */}
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                {teamOptions.map(opt => (
-                  <button 
-                    key={opt.id} 
-                    onClick={() => addTeamMember(opt.id, opt.nickname)}
-                    className={`px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${newTeam.some(m => m.userId === opt.id) ? accentBg : 'bg-zinc-500/10'}`}
-                  >
-                    {opt.nickname}
-                  </button>
-                ))}
+              <div className="space-y-4">
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-30">Add Members</p>
+                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                  {teamOptions.map(opt => (
+                    <button 
+                      key={opt.id} 
+                      onClick={() => addTeamMember(opt.id, opt.nickname)}
+                      className={`px-6 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${newTeam.some(m => m.userId === opt.id) ? accentBg : 'bg-zinc-500/10 border border-zinc-500/5'}`}
+                    >
+                      {opt.nickname}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
