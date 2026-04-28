@@ -181,11 +181,18 @@ export default function WorshipPage() {
     }
   }
 
-  const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-white'
+  const getStatus = (date: string) => {
+    const today = new Date().toISOString().split('T')[0]
+    if (date === today) return { label: 'TODAY', color: 'bg-brand-yellow text-black' }
+    if (date > today) return { label: 'UPCOMING', color: 'bg-emerald-500 text-white' }
+    return { label: 'COMPLETED', color: 'bg-zinc-500/20 text-zinc-500' }
+  }
+
+  const bgColor = isDarkMode ? 'bg-[#050505]' : 'bg-[#F8FAFC]'
   const textColor = isDarkMode ? 'text-white' : 'text-zinc-900'
-  const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-purple'
-  const accentBg = isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white'
-  const cardBg = isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'
+  const accentColor = isDarkMode ? 'text-brand-yellow' : 'text-brand-yellow'
+  const accentBg = isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-yellow text-black'
+  const cardBg = isDarkMode ? 'bg-zinc-900/40 border-zinc-500/10' : 'bg-white border-slate-200'
 
   if (!isLoaded || !currentUser) return null
 
@@ -203,28 +210,73 @@ export default function WorshipPage() {
         )}
       </header>
 
-      <section className="px-6 space-y-6">
-        {sets.map(set => (
-          <div key={set.id} onClick={() => setSelectedSet(set)} className={`p-8 rounded-[40px] border ${cardBg} transition-all active:scale-[0.98] cursor-pointer`}>
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <p className={`text-[10px] font-black uppercase tracking-widest ${accentColor} mb-2`}>{set.date}</p>
-                <h3 className="text-xl font-black tracking-tight">{set.title}</h3>
+      <section className="px-6 space-y-8">
+        {sets.map(set => {
+          const status = getStatus(set.date)
+          return (
+            <div 
+              key={set.id} 
+              onClick={() => setSelectedSet(set)} 
+              className={`rounded-[36px] overflow-hidden border ${cardBg} shadow-sm active:scale-[0.98] transition-all cursor-pointer flex flex-col`}
+            >
+              {/* Image-inspired Status Bar */}
+              <div className={`h-8 flex items-center justify-center ${status.color}`}>
+                <p className="text-[9px] font-black tracking-[0.4em] uppercase">{status.label}</p>
               </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10">
-                <span className="material-icons text-zinc-400">chevron_right</span>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              {set.songs.slice(0, 3).map((s, i) => (
-                <div key={i} className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${isDarkMode ? 'bg-zinc-800 text-zinc-500' : 'bg-white text-slate-400'}`}>
-                  {s.title}
+
+              <div className="p-8 space-y-6">
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-black tracking-tight leading-tight">{set.title}</h3>
+                  <p className="text-xs font-bold opacity-40 line-clamp-2 leading-relaxed">
+                    {set.songs.length > 0 ? set.songs.map(s => s.title).join(', ') : 'No songs added yet.'}
+                  </p>
                 </div>
-              ))}
-              {set.songs.length > 3 && <div className="text-[9px] font-black opacity-20">+{set.songs.length - 3}</div>}
+
+                <div className="flex items-center justify-between pt-2">
+                  {/* Team Avatars Stack */}
+                  <div className="flex -space-x-3">
+                    {set.team_members?.slice(0, 4).map((m, i) => (
+                      <div key={i} className={`w-10 h-10 rounded-full border-2 ${isDarkMode ? 'border-zinc-900' : 'border-white'} ${accentBg} flex items-center justify-center text-[10px] font-black`}>
+                        {m.nickname[0]}
+                      </div>
+                    ))}
+                    {(set.team_members?.length || 0) > 4 && (
+                      <div className={`w-10 h-10 rounded-full border-2 ${isDarkMode ? 'border-zinc-900' : 'border-white'} bg-zinc-800 text-zinc-500 flex items-center justify-center text-[10px] font-black`}>
+                        +{set.team_members!.length - 4}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Status Tag */}
+                  <div className={`px-4 py-2 rounded-full ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-100'} text-[9px] font-black uppercase tracking-widest opacity-60`}>
+                    In Progress
+                  </div>
+                </div>
+
+                {/* Bottom Metadata Bar */}
+                <div className="pt-6 border-t border-zinc-500/5 flex items-center justify-between">
+                  <div className="flex items-center gap-6 opacity-30">
+                    <div className="flex items-center gap-2">
+                      <span className="material-icons text-sm">music_note</span>
+                      <span className="text-[10px] font-black">{set.songs.length}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-icons text-sm">link</span>
+                      <span className="text-[10px] font-black">{set.songs.filter(s => s.link).length}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="material-icons text-sm">description</span>
+                      <span className="text-[10px] font-black">{set.notes ? 1 : 0}</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-30">
+                    {new Date(set.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </section>
 
       {/* Set Details Modal */}
