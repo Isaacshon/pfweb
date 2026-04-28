@@ -19,25 +19,42 @@ export function AppNavBar() {
   ])
 
   useEffect(() => {
-    const saved = localStorage.getItem('pf_current_user')
-    if (saved) {
-      const user = JSON.parse(saved)
-      setCurrentUser(user)
-      
-      // Dynamic navigation items based on role
-      const baseItems = [
-        { label: 'Home', icon: 'home', path: '/app' },
-        { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
-        { label: 'Community', icon: 'groups', path: '/app/community' },
-        { label: 'My', icon: 'person', path: '/app/profile' },
-      ]
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+        
+        const user = { ...session.user, ...profile }
+        setCurrentUser(user)
 
-      if (user.role === 'leader' || user.role === 'worship_team') {
-        const worshipItem = { label: 'Worship', icon: 'music_note', path: '/app/worship' }
-        // Insert Worship before Community
-        baseItems.splice(2, 0, worshipItem)
+        const baseItems = [
+          { label: 'Home', icon: 'home', path: '/app' },
+          { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
+          { label: 'Community', icon: 'groups', path: '/app/community' },
+          { label: 'My', icon: 'person', path: '/app/profile' },
+        ]
+
+        if (user.role === 'leader' || user.role === 'worship_team') {
+          const worshipItem = { label: 'Worship', icon: 'music_note', path: '/app/worship' }
+          baseItems.splice(2, 0, worshipItem)
+        }
+        setNavItems(baseItems)
+      } else {
+        setCurrentUser(null)
+        setNavItems([
+          { label: 'Home', icon: 'home', path: '/app' },
+          { label: 'Service', icon: 'volunteer_activism', path: '/app/service' },
+          { label: 'Community', icon: 'groups', path: '/app/community' },
+          { label: 'My', icon: 'person', path: '/app/profile' },
+        ])
       }
-      setNavItems(baseItems)
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
     }
   }, [pathname])
   const [isScanOpen, setIsScanOpen] = useState(false)

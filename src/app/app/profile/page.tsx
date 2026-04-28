@@ -52,9 +52,12 @@ export default function ProfilePage() {
           .eq('id', session.user.id)
           .single()
         
-        setUser({ ...session.user, ...profile })
+        const combinedUser = { ...session.user, ...profile }
+        setUser(combinedUser)
+        localStorage.setItem('pf_current_user', JSON.stringify(combinedUser))
       } else {
         setUser(null)
+        localStorage.removeItem('pf_current_user')
       }
       setIsLoaded(true)
     })
