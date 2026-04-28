@@ -89,34 +89,32 @@ export default function WorshipPage() {
     init()
   }, [])
 
-  const handleLinkChange = (url: string) => {
+  const handleLinkChange = async (url: string) => {
     setSongLink(url)
     if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('spotify.com')) {
       setIsPreviewing(true)
       setIsPlaylist(url.includes('playlist') || url.includes('list='));
       
-      // Enhanced Mocked Detection
-      setTimeout(() => {
-        if (url.includes('playlist') || url.includes('list=')) {
-          // Mock Playlist Extraction
-          setDetectedSongs([
-            { title: "Way Maker", artist: "Leeland", key: "G", link: url },
-            { title: "Goodness of God", artist: "Bethel Music", key: "Ab", link: url },
-            { title: "Build My Life", artist: "Pat Barrett", key: "G", link: url }
-          ])
+      try {
+        const response = await fetch('/api/fetch-metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setSongTitle(data.title || "Unknown Song")
+          setSongArtist(data.artist || "Unknown Artist")
+          setDetectedSongs([]) // oEmbed for single item
         } else {
-          let title = "Detected Praise Song"
-          let artist = "Artist Name"
-          if (url.includes('v=w') || url.includes('track/w')) { title = "Way Maker"; artist = "Leeland" }
-          else if (url.includes('v=g') || url.includes('track/g')) { title = "Goodness of God"; artist = "Bethel Music" }
-          else if (url.includes('v=b') || url.includes('track/b')) { title = "Build My Life"; artist = "Pat Barrett" }
-          
-          setSongTitle(title)
-          setSongArtist(artist)
-          setDetectedSongs([])
+          console.error("Failed to fetch real metadata")
         }
+      } catch (err) {
+        console.error("Network error fetching metadata", err)
+      } finally {
         setIsPreviewing(false)
-      }, 1500)
+      }
     }
   }
 
