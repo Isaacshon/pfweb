@@ -49,6 +49,7 @@ export default function WorshipPage() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isFetchingSets, setIsFetchingSets] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [editingSetId, setEditingSetId] = useState<string | null>(null)
   const [selectedSet, setSelectedSet] = useState<SetList | null>(null)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>(() => {
     if (typeof window !== 'undefined') {
@@ -273,31 +274,68 @@ export default function WorshipPage() {
     setNewTeam(newTeam.map(m => m.userId === userId ? { ...m, role } : m))
   }
 
-  const createSet = async () => {
+  const openEditModal = (set: SetList) => {
+    setNewDate(set.date)
+    setNewTitle(set.title)
+    setNewNotes(set.notes || '')
+    setNewSongs(set.songs)
+    setNewTeam(set.team_members)
+    setEditingSetId(set.id)
+    setIsAddModalOpen(true)
+    setSelectedSet(null)
+  }
+
+  const saveSet = async () => {
     if (!newDate || !newTitle) {
       alert("Please enter date and title.")
       return
     }
 
-    const { data, error } = await supabase.from('worship_sets').insert({
+    const payload = {
       date: newDate,
       title: newTitle,
       notes: newNotes,
       songs: newSongs,
       team_members: newTeam
-    }).select()
-
-    if (error) {
-      alert(error.message)
-    } else {
-      if (data) setSets([data[0], ...sets])
-      setIsAddModalOpen(false)
-      // Reset
-      setNewSongs([])
-      setNewTeam([])
-      setNewTitle('')
-      setNewNotes('')
     }
+
+    if (editingSetId) {
+      const { data, error } = await supabase
+        .from('worship_sets')
+        .update(payload)
+        .eq('id', editingSetId)
+        .select()
+
+      if (error) {
+        alert(error.message)
+      } else {
+        if (data) setSets(sets.map(s => s.id === editingSetId ? data[0] : s))
+        setIsAddModalOpen(false)
+        resetForm()
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('worship_sets')
+        .insert(payload)
+        .select()
+
+      if (error) {
+        alert(error.message)
+      } else {
+        if (data) setSets([data[0], ...sets])
+        setIsAddModalOpen(false)
+        resetForm()
+      }
+    }
+  }
+
+  const resetForm = () => {
+    setNewSongs([])
+    setNewTeam([])
+    setNewTitle('')
+    setNewNotes('')
+    setNewDate('')
+    setEditingSetId(null)
   }
 
   const themeColor = activeTab === 'upcoming' ? '#9a78b4' : '#fffbbd'
@@ -351,7 +389,7 @@ export default function WorshipPage() {
           <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">Set List & Practice</p>
         </div>
         {(currentUser.role === 'leader' || currentUser.role === 'worship_team') && (
-          <button onClick={() => setIsAddModalOpen(true)} className={`w-10 h-10 rounded-full flex items-center justify-center ${accentBg} shadow-lg active:scale-90 transition-all duration-700`}>
+          <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className={`w-10 h-10 rounded-full flex items-center justify-center ${accentBg} shadow-lg active:scale-90 transition-all duration-700`}>
             <span className="material-icons">add</span>
           </button>
         )}
@@ -463,7 +501,13 @@ export default function WorshipPage() {
           <header className="px-6 pt-16 pb-6 flex items-center justify-between border-b border-zinc-500/10">
             <button onClick={() => setSelectedSet(null)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
             <h2 className="text-sm font-black uppercase tracking-widest opacity-40">Set Details</h2>
-            <div className="w-10"></div>
+            {currentUser?.role === 'leader' ? (
+              <button onClick={() => openEditModal(selectedSet)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10 text-[#9a78b4]">
+                <span className="material-icons text-xl">edit</span>
+              </button>
+            ) : (
+              <div className="w-10"></div>
+            )}
           </header>
           <div className="flex-1 overflow-y-auto px-8 py-10 space-y-12 no-scrollbar">
             <div>
@@ -502,7 +546,7 @@ export default function WorshipPage() {
                   ]
                   const cardColor = cardColors[i % cardColors.length]
                   return (
-                    <div key={i} className={`${cardColor} rounded-[28px] p-4 flex flex-col gap-3 shadow-lg transition-all active:scale-[0.97]`}>
+                    <div key={i} className={`${cardColor} rounded-[28px] p-3 flex flex-col gap-2.5 shadow-lg transition-all active:scale-[0.97]`}>
                       {/* Thumbnail */}
                       <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center">
                         {song.thumbnail ? (
@@ -517,15 +561,18 @@ export default function WorshipPage() {
                         <p className="text-[10px] font-bold text-white/60 line-clamp-1">{song.artist}</p>
                       </div>
                       {/* Action Bar: Key / Sheet / Link */}
-                      <div className="flex items-center justify-between px-1">
-                        <span className="px-3 py-1 rounded-full bg-white/20 text-white text-[9px] font-black tracking-wider">{song.key}</span>
-                        <div className="flex gap-1.5">
-                          <button onClick={(e) => { e.stopPropagation(); findSheet(song.title) }} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                            <span className="material-icons text-white text-sm">description</span>
+                      <div className="flex flex-col gap-2 px-1 pt-0.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Key</span>
+                          <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-black tracking-wider min-w-[24px] text-center">{song.key}</span>
+                        </div>
+                        <div className="flex gap-1 justify-end">
+                          <button onClick={(e) => { e.stopPropagation(); findSheet(song.title) }} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                            <span className="material-icons text-white text-[11px]">description</span>
                           </button>
                           {song.link && (
-                            <a href={song.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                              <span className="material-icons text-white text-sm">play_arrow</span>
+                            <a href={song.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                              <span className="material-icons text-white text-[11px]">play_arrow</span>
                             </a>
                           )}
                         </div>
@@ -543,9 +590,9 @@ export default function WorshipPage() {
       {isAddModalOpen && (
         <div className={`fixed inset-0 z-[110] flex flex-col animate-in fade-in zoom-in duration-300 ${bgColor} no-scrollbar overflow-y-auto`}>
           <header className="px-6 pt-16 pb-6 flex items-center justify-between border-b border-zinc-500/10 sticky top-0 bg-inherit z-10">
-            <button onClick={() => setIsAddModalOpen(false)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
-            <h2 className="text-sm font-black uppercase tracking-widest opacity-40">Create Setlist</h2>
-            <button onClick={createSet} className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${accentBg} shadow-lg active:scale-90 transition-all`}>Save All</button>
+            <button onClick={() => { setIsAddModalOpen(false); setEditingSetId(null); }} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
+            <h2 className="text-sm font-black uppercase tracking-widest opacity-40">{editingSetId ? "Edit Setlist" : "Create Setlist"}</h2>
+            <button onClick={saveSet} className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${accentBg} shadow-lg active:scale-90 transition-all`}>Save All</button>
           </header>
           
           <div className="flex-1 px-8 py-10 space-y-12">
@@ -735,6 +782,14 @@ export default function WorshipPage() {
               <p className="text-[10px] font-black uppercase tracking-widest opacity-30 pl-2">General Notes</p>
               <textarea placeholder="Instructions for the whole team..." value={newNotes} onChange={(e)=>setNewNotes(e.target.value)} className={`w-full h-32 p-6 rounded-[32px] outline-none font-bold ${cardBg} border resize-none`} />
             </div>
+
+            {/* Action Buttons */}
+            <div className="pt-6 pb-12 border-t border-zinc-500/10 flex items-center justify-end gap-4">
+              <button onClick={() => { setIsAddModalOpen(false); setEditingSetId(null); }} className="px-6 py-4 rounded-full font-black text-xs uppercase tracking-widest bg-zinc-500/10 transition-all">Cancel</button>
+              <button onClick={saveSet} className={`px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl active:scale-95 transition-all`}>
+                {editingSetId ? "Update Set List" : "Save Set List"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -779,7 +834,7 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
       style={style} 
       {...attributes} 
       {...listeners} 
-      className={`${cc} rounded-[28px] p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-300 shadow-lg group select-none`}
+      className={`${cc} rounded-[28px] p-3 flex flex-col gap-2.5 animate-in fade-in zoom-in-95 duration-300 shadow-lg group select-none`}
     >
       {/* Delete Button */}
       <button 
@@ -820,23 +875,26 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="flex items-center justify-between px-1 pt-1">
-        <select
-          value={song.key}
-          onChange={(e) => updateSong(index, 'key', e.target.value)}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="bg-white/20 text-white text-[9px] font-black rounded-full px-3 py-1.5 outline-none cursor-pointer appearance-none text-center"
-        >
-          {KEYS.map(k => <option key={k} value={k} className="text-black">{k}</option>)}
-        </select>
-        <div className="flex gap-1.5">
+      <div className="flex flex-col gap-2 px-1 pt-0.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Key</span>
+          <select
+            value={song.key}
+            onChange={(e) => updateSong(index, 'key', e.target.value)}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="bg-white/20 text-white text-[9px] font-black rounded-full px-1.5 py-0.5 outline-none cursor-pointer appearance-none text-center min-w-[24px]"
+          >
+            {KEYS.map(k => <option key={k} value={k} className="text-black">{k}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-wrap gap-1 justify-end">
           <button 
             onClick={(e) => { e.stopPropagation(); findSheet(song.title); }} 
             onPointerDown={(e) => e.stopPropagation()}
-            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors" 
+            className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors shrink-0" 
             title="Search Web for Sheet"
           >
-            <span className="material-icons text-sm">search</span>
+            <span className="material-icons text-[11px]">search</span>
           </button>
           
           <input 
@@ -853,13 +911,13 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
           <label 
             htmlFor={`sheet-upload-${song.id}`}
             onPointerDown={(e) => e.stopPropagation()}
-            className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all ${song.sheetUrl ? 'bg-green-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'} ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-all shrink-0 ${song.sheetUrl ? 'bg-green-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'} ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
             title={song.sheetUrl ? "Sheet Uploaded (Click to replace)" : "Upload Sheet File"}
           >
             {isUploading ? (
-              <span className="material-icons text-sm animate-spin">sync</span>
+              <span className="material-icons text-[11px] animate-spin">sync</span>
             ) : (
-              <span className="material-icons text-sm">{song.sheetUrl ? "check" : "upload_file"}</span>
+              <span className="material-icons text-[11px]">{song.sheetUrl ? "check" : "upload_file"}</span>
             )}
           </label>
 
@@ -870,10 +928,10 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
               rel="noopener noreferrer" 
               onClick={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
-              className="w-8 h-8 rounded-full bg-green-500/20 text-green-300 flex items-center justify-center hover:bg-green-500/30 transition-colors" 
+              className="w-6 h-6 rounded-full bg-green-500/20 text-green-300 flex items-center justify-center hover:bg-green-500/30 transition-colors shrink-0" 
               title="View Sheet"
             >
-              <span className="material-icons text-sm">visibility</span>
+              <span className="material-icons text-[11px]">visibility</span>
             </a>
           )}
 
@@ -884,10 +942,10 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
               rel="noopener noreferrer" 
               onClick={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
-              className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center" 
+              className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0" 
               title="Open Original"
             >
-              <span className="material-icons text-white text-sm">play_arrow</span>
+              <span className="material-icons text-white text-[11px]">play_arrow</span>
             </a>
           )}
         </div>
