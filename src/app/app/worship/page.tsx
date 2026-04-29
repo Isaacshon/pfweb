@@ -315,21 +315,8 @@ export default function WorshipPage() {
       team_members: newTeam
     }
 
-    // Optimistic: close modal and update UI immediately
-    if (editingSetId) {
-      const optimisticSet = { ...payload, id: editingSetId } as SetList
-      setSets(prev => prev.map(s => s.id === editingSetId ? optimisticSet : s))
-    } else {
-      const tempId = 'temp-' + Date.now()
-      const optimisticSet = { ...payload, id: tempId } as SetList
-      setSets(prev => [optimisticSet, ...prev])
-    }
-    setIsAddModalOpen(false)
     const wasEditing = editingSetId
-    resetForm()
-    setIsSaving(false)
 
-    // Background sync with Supabase
     try {
       if (wasEditing) {
         const { error } = await supabase
@@ -338,7 +325,6 @@ export default function WorshipPage() {
           .eq('id', wasEditing)
         if (error) {
           alert('Save failed: ' + error.message)
-          fetchSets() // revert
         }
       } else {
         const { data, error } = await supabase
@@ -347,15 +333,16 @@ export default function WorshipPage() {
           .select()
         if (error) {
           alert('Save failed: ' + error.message)
-          fetchSets() // revert
-        } else if (data) {
-          // Replace temp ID with real ID
-          setSets(prev => prev.map(s => s.id.startsWith('temp-') ? data[0] : s))
         }
       }
+      // Re-fetch to guarantee sync with DB
+      await fetchSets()
     } catch (err: any) {
       alert('Save error: ' + err.message)
-      fetchSets()
+    } finally {
+      setIsAddModalOpen(false)
+      resetForm()
+      setIsSaving(false)
     }
   }
 
