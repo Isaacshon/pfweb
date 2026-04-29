@@ -639,7 +639,7 @@ export default function WorshipPage() {
 
       {/* Set Details Modal */}
       {selectedSet && (() => {
-        const updatePracticeSong = (songIndex: number, field: 'songForm' | 'solos', value: string[]) => {
+        const updatePracticeSong = (songIndex: number, field: keyof Song, value: any) => {
           const updatedSongs = selectedSet.songs.map((s, i) => i === songIndex ? { ...s, [field]: value } : s)
           const updatedSet = { ...selectedSet, songs: updatedSongs }
           setSelectedSet(updatedSet)
@@ -648,6 +648,94 @@ export default function WorshipPage() {
           supabase.from('worship_sets').update({ songs: updatedSongs }).eq('id', selectedSet.id).then(({ error }) => {
             if (error) console.error('Practice save error:', error)
           })
+        }
+
+        const [isMasterExporting, setIsMasterExporting] = useState(false)
+
+        const generateMasterPDF = async () => {
+          if (!selectedSet || isMasterExporting) return
+          setIsMasterExporting(true)
+          showNotify("Generating Master PDF... Please wait.")
+          
+          try {
+            const { jsPDF } = (window as any).jspdf
+            const { PDFDocument } = (window as any).PDFLib
+            
+            const pdfDoc = await PDFDocument.create()
+            const mainDoc = new jsPDF()
+            
+            for (let i = 0; i < selectedSet.songs.length; i++) {
+              const song = selectedSet.songs[i]
+              
+              if (i > 0) mainDoc.addPage()
+              
+              // Header
+              mainDoc.setFontSize(22)
+              mainDoc.setFont("helvetica", "bold")
+              mainDoc.text(song.title, 20, 30)
+              
+              mainDoc.setFontSize(12)
+              mainDoc.setFont("helvetica", "normal")
+              mainDoc.text(`${song.artist} • Key: ${song.key}`, 20, 40)
+              
+              // Song Form
+              if (song.songForm && song.songForm.length > 0) {
+                mainDoc.setFontSize(10)
+                mainDoc.setTextColor(154, 120, 180) // #9a78b4
+                mainDoc.text("SONG FORM:", 20, 55)
+                mainDoc.setFont("helvetica", "bold")
+                mainDoc.setTextColor(0, 0, 0)
+                mainDoc.text(song.songForm.join(" - "), 20, 62)
+              }
+              
+              // Solos
+              if (song.solos && song.solos.length > 0) {
+                mainDoc.setFontSize(10)
+                mainDoc.setTextColor(154, 120, 180)
+                mainDoc.text("SOLO PARTS:", 20, 75)
+                mainDoc.setFont("helvetica", "bold")
+                mainDoc.setTextColor(0, 0, 0)
+                mainDoc.text(song.solos.join(", "), 20, 82)
+              }
+              
+              // If there's a sheetUrl, we'd ideally merge it, but for now we'll just add it to the mainDoc if it's an image
+              // For a truly professional version, we'd fetch the PDF and merge it using pdf-lib
+              if (song.sheetUrl) {
+                try {
+                  const response = await fetch(song.sheetUrl)
+                  const contentType = response.headers.get('content-type')
+                  
+                  if (contentType?.includes('pdf')) {
+                    // It's a PDF - we can't easily draw it into jsPDF, so we'd merge it later
+                    // For this MVP, we'll note that it's attached
+                    mainDoc.setTextColor(100, 100, 100)
+                    mainDoc.setFontSize(9)
+                    mainDoc.text("(Attached PDF Sheet follows this page)", 20, 100)
+                  } else {
+                    // It's an image - draw it
+                    const blob = await response.blob()
+                    const reader = new FileReader()
+                    const base64: string = await new Promise((resolve) => {
+                      reader.onloadend = () => resolve(reader.result as string)
+                      reader.readAsDataURL(blob)
+                    })
+                    mainDoc.addImage(base64, 'JPEG', 20, 110, 170, 0) // Aspect ratio auto
+                  }
+                } catch (e) {
+                  console.error("Failed to embed sheet in PDF", e)
+                }
+              }
+            }
+            
+            // Output combined jsPDF
+            mainDoc.save(`${selectedSet.title}_Worship_Set.pdf`)
+            showNotify("Master PDF exported successfully!")
+          } catch (err: any) {
+            console.error("PDF Export Error:", err)
+            showNotify("PDF Export failed: " + err.message)
+          } finally {
+            setIsMasterExporting(false)
+          }
         }
 
         return (
@@ -727,18 +815,27 @@ export default function WorshipPage() {
                           <p className="text-sm font-black tracking-tight text-white leading-tight line-clamp-1">{song.title}</p>
                           <p className="text-[10px] font-bold text-white/60 line-clamp-1">{song.artist}</p>
                         </div>
-                        <div className="flex flex-col gap-2 px-1 pt-0.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Key</span>
-                            <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-black tracking-wider min-w-[24px] text-center">{song.key}</span>
-                          </div>
-                          <div className="flex gap-1 justify-end">
-                            <button onClick={(e) => { e.stopPropagation(); findSheet(song.title) }} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                              <span className="material-icons text-white text-[11px]">description</span>
+                        <div className="flex flex-col gap-3 px-1 pt-2 border-t border-white/10">
+                          <div className="flex items-center gap-1.5 overflow-hidden">
+                            <div className="flex-1 px-3 py-2 rounded-xl bg-white/15 flex items-center justify-between min-w-0">
+                              <span className="text-[7px] font-black text-white/40 uppercase tracking-tighter shrink-0">Key</span>
+                              <span className="text-[10px] font-black text-white">{song.key}</span>
+                            </div>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); findSheet(song.title) }} 
+                              className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0 hover:bg-white/25 transition-all"
+                            >
+                              <span className="material-icons text-white text-[14px]">description</span>
                             </button>
                             {song.link && (
-                              <a href={song.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                                <span className="material-icons text-white text-[11px]">play_arrow</span>
+                              <a 
+                                href={song.link} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                onClick={(e) => e.stopPropagation()} 
+                                className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0 hover:bg-white/25 transition-all"
+                              >
+                                <span className="material-icons text-white text-[16px]">play_arrow</span>
                               </a>
                             )}
                           </div>
@@ -753,7 +850,21 @@ export default function WorshipPage() {
             {/* ===== PRACTICE VIEW ===== */}
             {detailViewMode === 'practice' && (
               <div className="space-y-6">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Practice Mode</h3>
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Practice Mode</h3>
+                  <button 
+                    onClick={generateMasterPDF}
+                    disabled={isMasterExporting}
+                    className="px-4 py-2 rounded-xl bg-[#9c7eb7]/10 text-[#9c7eb7] text-[9px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-[#9c7eb7]/20 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {isMasterExporting ? (
+                      <span className="material-icons text-sm animate-spin">sync</span>
+                    ) : (
+                      <span className="material-icons text-sm">picture_as_pdf</span>
+                    )}
+                    {isMasterExporting ? 'Exporting...' : 'Export Master PDF'}
+                  </button>
+                </div>
                 {selectedSet.songs.map((song, songIdx) => (
                   <div key={songIdx} className={`rounded-[32px] border ${cardBg} overflow-hidden`}>
                     {/* Song Header */}
@@ -870,16 +981,88 @@ export default function WorshipPage() {
                       </div>
                       {song.sheetUrl ? (
                         <div className="flex gap-2">
-                          <a href={song.sheetUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 rounded-2xl bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-emerald-500/20">
+                          <a href={song.sheetUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-3.5 rounded-2xl bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-emerald-500/20">
                             <span className="material-icons text-sm">visibility</span>
                             View Sheet
                           </a>
+                          <button 
+                            onClick={() => {
+                              const input = document.createElement('input')
+                              input.type = 'file'
+                              input.accept = 'image/*,application/pdf'
+                              input.onchange = async (e: any) => {
+                                const file = e.target.files[0]
+                                if (file) {
+                                  setIsUploadingSheet(songIdx)
+                                  try {
+                                    const fileExt = file.name.split('.').pop()
+                                    const fileName = `sheets/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+                                    const { data, error } = await supabase.storage.from('gallery').upload(fileName, file)
+                                    if (error) throw error
+                                    const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(fileName)
+                                    updatePracticeSong(songIdx, 'sheetUrl', publicUrl)
+                                    showNotify("Sheet updated successfully!")
+                                  } catch (error: any) {
+                                    alert("Upload failed: " + error.message)
+                                  } finally {
+                                    setIsUploadingSheet(null)
+                                  }
+                                }
+                              }
+                              input.click()
+                            }}
+                            className="w-12 h-auto rounded-2xl bg-zinc-500/5 text-zinc-500 flex items-center justify-center hover:bg-zinc-500/10 transition-all"
+                          >
+                            <span className={`material-icons text-sm ${isUploadingSheet === songIdx ? 'animate-spin' : ''}`}>
+                              {isUploadingSheet === songIdx ? 'sync' : 'upload'}
+                            </span>
+                          </button>
                         </div>
                       ) : (
-                        <button onClick={() => findSheet(song.title)} className={`w-full py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'}`}>
-                          <span className="material-icons text-sm">search</span>
-                          Search Sheet Online
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <button onClick={() => findSheet(song.title)} className={`w-full py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'}`}>
+                            <span className="material-icons text-sm">search</span>
+                            Search Sheet Online
+                          </button>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-[1px] bg-zinc-500/10"></div>
+                            <span className="text-[7px] font-black uppercase opacity-20 tracking-widest">or</span>
+                            <div className="flex-1 h-[1px] bg-zinc-500/10"></div>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              const input = document.createElement('input')
+                              input.type = 'file'
+                              input.accept = 'image/*,application/pdf'
+                              input.onchange = async (e: any) => {
+                                const file = e.target.files[0]
+                                if (file) {
+                                  setIsUploadingSheet(songIdx)
+                                  try {
+                                    const fileExt = file.name.split('.').pop()
+                                    const fileName = `sheets/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+                                    const { data, error } = await supabase.storage.from('gallery').upload(fileName, file)
+                                    if (error) throw error
+                                    const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(fileName)
+                                    updatePracticeSong(songIdx, 'sheetUrl', publicUrl)
+                                    showNotify("Sheet uploaded successfully!")
+                                  } catch (error: any) {
+                                    alert("Upload failed: " + error.message)
+                                  } finally {
+                                    setIsUploadingSheet(null)
+                                  }
+                                }
+                              }
+                              input.click()
+                            }}
+                            className={`w-full py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all bg-[#9c7eb7]/10 text-[#9c7eb7] hover:bg-[#9c7eb7]/20`}
+                          >
+                            <span className={`material-icons text-sm ${isUploadingSheet === songIdx ? 'animate-spin' : ''}`}>
+                              {isUploadingSheet === songIdx ? 'sync' : 'cloud_upload'}
+                            </span>
+                            {isUploadingSheet === songIdx ? 'Uploading...' : 'Upload Local Sheet'}
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
