@@ -260,6 +260,61 @@ export default function WorshipPage() {
     }
   }, [isAddModalOpen])
 
+  // --- HELPER FUNCTIONS ---
+  const lookupSheetHistory = async (title: string, artist: string) => {
+    if (!title) return null
+    try {
+      const { data: pastSets } = await supabase
+        .from('worship_sets')
+        .select('songs')
+        .order('date', { ascending: false })
+        .limit(50)
+      
+      if (pastSets) {
+        const t = title.toLowerCase().trim()
+        const a = artist.toLowerCase().trim()
+        
+        for (const set of pastSets) {
+          const match = (set.songs as Song[])?.find(s => 
+            s.title.toLowerCase().trim() === t && 
+            (a ? s.artist.toLowerCase().trim() === a : true) &&
+            s.sheetUrl
+          )
+          if (match) return match.sheetUrl
+        }
+      }
+    } catch (e) {
+      console.error("Sheet history lookup failed", e)
+    }
+    return null
+  }
+
+  const uploadSheet = async (index: number, file: File) => {
+    if (!file) return
+    setIsUploadingSheet(index)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `sheets/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const { data, error } = await supabase.storage.from('gallery').upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(fileName)
+      if (selectedSet) {
+        updatePracticeSong(index, 'sheetUrl', publicUrl)
+      } else {
+        updateSong(index, 'sheetUrl', publicUrl)
+      }
+      showNotify("Sheet uploaded and linked!")
+    } catch (error: any) {
+      console.error("Upload failed", error)
+      alert("Sheet upload failed: " + error.message)
+    } finally {
+      setIsUploadingSheet(null)
+    }
+  }
+
   const handleLinkChange = async (rawUrl: string) => {
     setSongLink(rawUrl)
     
@@ -283,47 +338,64 @@ export default function WorshipPage() {
           const data = await response.json()
           
           if (data.type === 'playlist' && data.tracks && data.tracks.length > 0) {
-            // Playlist: auto-add ALL tracks directly as individual cards
-            const tracks: Song[] = data.tracks.map((t: any) => ({
-              id: Math.random().toString(36).substring(7),
-              title: t.title || '',
-              artist: t.artist || '',
-              key: 'C',
-              link: url,
-              thumbnail: t.thumbnail || ''
+            // Playlist: auto-add ALL tracks
+            const tracks: Song[] = await Promise.all(data.tracks.map(async (t: any) => {
+              const existingSheet = await lookupSheetHistory(t.title, t.artist)
+              return {
+                id: Math.random().toString(36).substring(7),
+                title: t.title || '',
+                artist: t.artist || '',
+                key: 'C',
+                link: url,
+                thumbnail: t.thumbnail || '',
+                sheetUrl: existingSheet || undefined
+              }
             }))
             setNewSongs(prev => [...prev, ...tracks])
-            // Clear input for next use
             setSongLink('')
-            setSongTitle('')
-            setSongArtist('')
-            setSongThumbnail('')
             setIsPlaylist(false)
           } else if (data.type === 'track' || (data.type === 'playlist' && (!data.tracks || data.tracks.length === 0))) {
-            // Single track or failed playlist extraction → show single track preview
             setIsPlaylist(false)
             setSongTitle(data.title || data.playlistTitle || '')
             setSongArtist(data.artist || '')
             setSongThumbnail(data.thumbnail || '')
           }
-        } else {
-          console.error('Metadata error')
-          setSongTitle('')
-          setSongArtist('')
-          setSongThumbnail('')
         }
       } catch (err) {
-        console.error('Network error fetching metadata', err)
+        console.error('Metadata error', err)
       } finally {
         setIsPreviewing(false)
       }
     }
   }
 
-  const addSong = (specificSong?: Song) => {
-    const target = specificSong ? { ...specificSong, id: specificSong.id || Math.random().toString(36).substring(7) } : { id: Math.random().toString(36).substring(7), title: songTitle, artist: songArtist, key: songKey, link: songLink, thumbnail: songThumbnail }
-    if (!target.title) return
+  const addSong = async (specificSong?: Song) => {
+    let target: Song
+    
+    if (specificSong) {
+      const existingSheet = await lookupSheetHistory(specificSong.title, specificSong.artist)
+      target = { 
+        ...specificSong, 
+        id: specificSong.id || Math.random().toString(36).substring(7),
+        sheetUrl: specificSong.sheetUrl || existingSheet || undefined
+      }
+    } else {
+      if (!songTitle) return
+      const existingSheet = await lookupSheetHistory(songTitle, songArtist)
+      target = { 
+        id: Math.random().toString(36).substring(7), 
+        title: songTitle, 
+        artist: songArtist, 
+        key: songKey, 
+        link: songLink, 
+        thumbnail: songThumbnail,
+        sheetUrl: existingSheet || undefined
+      }
+    }
+
     setNewSongs([...newSongs, target])
+    if (target.sheetUrl) showNotify("Previous sheet auto-matched!")
+    
     if (!specificSong) {
       setSongTitle('')
       setSongArtist('')
@@ -352,28 +424,7 @@ export default function WorshipPage() {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(title + " 악보 sheet music")}&tbm=isch`, '_blank')
   }
 
-  const [isUploadingSheet, setIsUploadingSheet] = useState<number | null>(null)
-  const [isMasterExporting, setIsMasterExporting] = useState(false)
-  
-  const uploadSheet = async (index: number, file: File) => {
-    if (!file) return
-    setIsUploadingSheet(index)
-    try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `sheets/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-      
-      const { data, error } = await supabase.storage.from('gallery').upload(fileName, file)
-      if (error) throw error
-      
-      const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(fileName)
-      updateSong(index, 'sheetUrl', publicUrl)
-    } catch (error: any) {
-      console.error("Upload failed", error)
-      alert("Sheet upload failed: " + error.message)
-    } finally {
-      setIsUploadingSheet(null)
-    }
-  }
+  // --- END HELPERS ---
 
   const updatePracticeSong = (songIndex: number, field: keyof Song, value: any) => {
     if (!selectedSet) return
