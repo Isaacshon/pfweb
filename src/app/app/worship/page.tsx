@@ -221,10 +221,12 @@ export default function WorshipPage() {
       
       if (members) {
         console.log(`Fetched ${members.length} profiles successfully.`)
-        // Only include people with valid roles
-        const validMembers = members.filter(m => 
-          ['leader', 'worship_team', 'user'].includes(m.role)
-        )
+        // Filter out incomplete profiles and only include valid roles
+        const validMembers = members.filter(m => {
+          const hasName = m.nickname || m.username || m.first_name || m.last_name;
+          const hasRole = ['leader', 'worship_team', 'user'].includes(m.role);
+          return hasName && hasRole;
+        })
         setTeamOptions(validMembers)
       }
     } catch (err: any) {
