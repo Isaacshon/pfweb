@@ -62,8 +62,8 @@ export default function ProfilePage() {
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single()
-          const combinedUser = { ...session.user, ...profile }
+            .maybeSingle()
+          const combinedUser = { ...session.user, ...(profile || {}) }
           setUser(combinedUser)
           localStorage.setItem('pf_current_user', JSON.stringify(combinedUser))
         } else {
@@ -232,60 +232,67 @@ export default function ProfilePage() {
       return
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-      options: {
-        data: {
-          username: email.split('@')[0], 
-          nickname: nickname,
-          first_name: firstName,
-          last_name: lastName,
-          signup_path: signupPath === 'Other' ? signupPathOther : signupPath,
-          denomination: denomination === 'Other' ? denominationOther : denomination,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            username: email.split('@')[0], 
+            nickname: nickname,
+            first_name: firstName,
+            last_name: lastName,
+            signup_path: signupPath === 'Other' ? signupPathOther : signupPath,
+            denomination: denomination === 'Other' ? denominationOther : denomination,
+          }
         }
-      }
-    })
+      })
 
-    if (error) {
-      alert(error.message)
-    } else if (data.user) {
-      // Automatic Login & Save credentials
-      localStorage.setItem('pf_rem_email', email)
-      localStorage.setItem('pf_rem_pw', password)
-      
-      // Supabase auto-signs in after signup by default
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single()
-      
-      setUser({ ...data.user, ...profile })
-      alert("Welcome to PassionFruits!")
+      if (error) {
+        alert(error.message)
+      } else if (data.user) {
+        // Automatic Login & Save credentials
+        localStorage.setItem('pf_rem_email', email)
+        localStorage.setItem('pf_rem_pw', password)
+        
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .maybeSingle()
+        
+        setUser({ ...data.user, ...(profile || {}) })
+        alert("Welcome to PassionFruits!")
+      }
+    } catch (err: any) {
+      alert("Signup failed: " + err.message)
     }
   }
 
   const handleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password: loginPw
-    })
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPw
+      })
 
-    if (error) {
-      alert(error.message)
-    } else if (data.user) {
-      // Remember credentials
-      localStorage.setItem('pf_rem_email', loginEmail)
-      localStorage.setItem('pf_rem_pw', loginPw)
+      if (error) {
+        alert(error.message)
+      } else if (data.user) {
+        // Remember credentials
+        localStorage.setItem('pf_rem_email', loginEmail)
+        localStorage.setItem('pf_rem_pw', loginPw)
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single()
-      
-      setUser({ ...data.user, ...profile })
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .maybeSingle()
+        
+        setUser({ ...data.user, ...(profile || {}) })
+      }
+    } catch (err: any) {
+      alert("Login failed: " + err.message)
     }
   }
 
