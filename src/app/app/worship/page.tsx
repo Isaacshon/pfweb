@@ -163,8 +163,13 @@ export default function WorshipPage() {
     setIsFetchingSets(false)
   }
 
-  const handleLinkChange = async (url: string) => {
-    setSongLink(url)
+  const handleLinkChange = async (rawUrl: string) => {
+    setSongLink(rawUrl)
+    
+    // Extract actual URL in case of "dirty" paste (extra text, multiple lines)
+    const urlMatch = rawUrl.match(/https?:\/\/[^\s]+/)
+    const url = urlMatch ? urlMatch[0] : ''
+    
     if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('music.youtube.com') || url.includes('spotify.com')) {
       setIsPreviewing(true)
       const playlist = url.includes('playlist') || url.includes('list=')
@@ -1091,8 +1096,16 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
           value={song.artist}
           onChange={(e) => updateSong(index, 'artist', e.target.value)}
           onPointerDown={(e) => e.stopPropagation()}
-          className="bg-transparent text-[10px] font-bold text-white/60 outline-none w-full placeholder-white/20"
+          className="bg-transparent text-[10px] font-bold text-white/60 outline-none w-full placeholder-white/20 truncate"
           placeholder="Artist"
+        />
+        <input 
+          type="text"
+          value={song.link}
+          onChange={(e) => updateSong(index, 'link', e.target.value)}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="bg-white/10 text-[8px] font-medium text-white/40 outline-none w-full px-2 py-1 rounded-lg mt-1 placeholder-white/10"
+          placeholder="Paste URL here..."
         />
       </div>
 
