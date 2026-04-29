@@ -141,6 +141,7 @@ export default function WorshipPage() {
       try {
         const user = JSON.parse(savedUser)
         setCurrentUser(user)
+        setIsLoaded(true) // Show page immediately with cached data
         // If not authorized, redirect early
         if (user.role !== 'leader' && user.role !== 'worship_team') {
           router.push('/app')
@@ -209,7 +210,10 @@ export default function WorshipPage() {
 
       } catch (err) {
         console.error("❌ Critical Init Error:", err);
-        setIsLoaded(true); // Still show page even if something fails
+      } finally {
+        console.log("Init sequence finished. Setting isLoaded=true")
+        setIsLoaded(true);
+        clearTimeout(safetyTimer);
       }
     };
 
@@ -699,11 +703,25 @@ export default function WorshipPage() {
   const cardBg = isDarkMode ? 'bg-zinc-900/40 border-zinc-500/10' : 'bg-white border-slate-200'
 
   // Safety Render: Only show loading if we literally have zero user info
-  if (!currentUser && !isLoaded) {
+  if (!isLoaded) {
     return (
-      <div className={`min-h-screen ${bgColor} flex flex-col items-center justify-center p-8 text-center`}>
-        <div className="w-12 h-12 border-4 border-[#9a78b4] border-t-transparent rounded-full animate-spin mb-6"></div>
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Verifying Authorization...</p>
+      <div className={`min-h-screen flex flex-col items-center justify-center ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
+        <div className="w-16 h-16 rounded-full border-4 border-[#9c7eb7]/20 border-t-[#9c7eb7] animate-spin mb-6"></div>
+        <div className="text-center space-y-2">
+          <p className={`text-[10px] font-black uppercase tracking-[0.4em] ${isDarkMode ? 'text-white/30' : 'text-zinc-400'}`}>
+            Synchronizing Worship Data...
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Auth Fallback (if still no user after loading)
+  if (!currentUser) {
+    return (
+      <div className={`min-h-screen flex flex-col items-center justify-center ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
+        <p className="text-xs font-bold opacity-50">Please log in to access this page.</p>
+        <button onClick={() => router.push('/app/profile')} className="mt-4 px-6 py-2 bg-[#9c7eb7] text-white rounded-full text-[10px] font-black uppercase">Go to Login</button>
       </div>
     )
   }
