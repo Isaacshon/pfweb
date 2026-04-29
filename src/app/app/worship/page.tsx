@@ -198,28 +198,40 @@ export default function WorshipPage() {
   }
 
   const fetchTeamOptions = async () => {
+    console.log("Starting team options fetch...")
     setIsFetchingTeam(true)
+    
+    // Safety timeout: stop loading after 10 seconds no matter what
+    const timeout = setTimeout(() => {
+      console.warn("Team options fetch timed out");
+      setIsFetchingTeam(false);
+    }, 10000);
+
     try {
-      // Fetch all profiles and filter on client for better reliability
       const { data: members, error } = await supabase
         .from('profiles')
-        .select('id, nickname, username, role, first_name, last_name')
+        .select('*')
       
       if (error) {
-        showNotify("Failed to fetch members: " + error.message)
-        throw error
+        console.error("Supabase profiles fetch error:", error)
+        showNotify("Database error: " + error.message)
+        setIsFetchingTeam(false)
+        return
       }
       
       if (members) {
-        // Only include people with leadership or team roles
+        console.log(`Fetched ${members.length} profiles successfully.`)
+        // Only include people with valid roles
         const validMembers = members.filter(m => 
           ['leader', 'worship_team', 'user'].includes(m.role)
         )
         setTeamOptions(validMembers)
       }
     } catch (err: any) {
-      console.error("Fetch team options error:", err)
+      console.error("Fetch team options exception:", err)
+      showNotify("Error: " + (err.message || "Unknown error"))
     } finally {
+      clearTimeout(timeout)
       setIsFetchingTeam(false)
     }
   }
