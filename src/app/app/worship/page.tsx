@@ -138,67 +138,82 @@ export default function WorshipPage() {
     // 1. Instant Load from LocalStorage
     const savedUser = localStorage.getItem('pf_current_user')
     if (savedUser) {
-      const user = JSON.parse(savedUser)
-      setCurrentUser(user)
-      // If not authorized, redirect early
-      if (user.role !== 'leader' && user.role !== 'worship_team') {
-        router.push('/app')
+      try {
+        const user = JSON.parse(savedUser)
+        setCurrentUser(user)
+        // If not authorized, redirect early
+        if (user.role !== 'leader' && user.role !== 'worship_team') {
+          router.push('/app')
+        }
+      } catch (e) {
+        console.error("Failed to parse saved user", e)
+        localStorage.removeItem('pf_current_user')
       }
     }
 
     const init = async () => {
-      // Global safety timeout: always stop loading after 8 seconds
-      const globalTimeout = setTimeout(() => {
-        console.warn("Global initialization timeout reached")
-        setIsLoaded(true)
-      }, 8000)
+      console.log("🚀 Worship Page Init Started");
+      
+      // 1. Safety Timeout (7 seconds)
+      const safetyTimer = setTimeout(() => {
+        console.warn("⚠️ Global Init Timeout - Forcing Load");
+        setIsLoaded(true);
+      }, 7000);
 
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-          if (!savedUser) router.push('/app/profile')
-          clearTimeout(globalTimeout)
-          return
+        // 2. Auth Check
+        const { data: { session }, error: authError } = await supabase.auth.getSession();
+        
+        if (authError || !session) {
+          console.warn("🚫 No active session found", authError);
+          // Only redirect if we have absolutely no user info
+          if (!localStorage.getItem('pf_current_user')) {
+            router.push('/app/profile');
+          }
+          setIsLoaded(true);
+          return;
         }
 
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle()
-        const user = profile ? { ...session.user, ...profile } : session.user
-        setCurrentUser(user)
-        localStorage.setItem('pf_current_user', JSON.stringify(user))
+        // 3. User Info & Profile
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+        const user = profile ? { ...session.user, ...profile } : session.user;
+        
+        setCurrentUser(user);
+        localStorage.setItem('pf_current_user', JSON.stringify(user));
 
         if (user.role !== 'leader' && user.role !== 'worship_team') {
-          router.push('/app')
-          clearTimeout(globalTimeout)
-          return
+          router.push('/app');
+          return;
         }
 
-        // 1. Supabase Realtime Subscription (Live Sync)
+        // 4. Parallel Data Fetch & Realtime
+        console.log("📊 Fetching sets and team...");
+        
+        // Subscription setup
         const channel = supabase
-          .channel('worship_sets_changes')
-          .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'worship_sets' }, (payload: any) => {
-            console.log('Realtime update received:', payload)
-            fetchSets() 
+          .channel('worship_sets_sync')
+          .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'worship_sets' }, () => {
+            fetchSets();
           })
-          .subscribe()
+          .subscribe();
 
-        // Initial Fetch - run in parallel for speed
-        await Promise.all([
+        // Run fetches but don't let them block the whole page if they are slow
+        Promise.all([
           fetchSets(),
           fetchTeamOptions()
-        ])
+        ]).finally(() => {
+          console.log("✅ Initial Data Load Complete");
+          setIsLoaded(true);
+          clearTimeout(safetyTimer);
+        });
 
-        return () => {
-          supabase.removeChannel(channel)
-        }
       } catch (err) {
-        console.error("Initialization error:", err)
-        showNotify("Session check failed. Please refresh.")
-      } finally {
-        setIsLoaded(true)
-        clearTimeout(globalTimeout)
+        console.error("❌ Critical Init Error:", err);
+        setIsLoaded(true); // Still show page even if something fails
       }
-    }
-    init()
+    };
+
+    init();
   }, [])
 
   const fetchSets = async () => {
