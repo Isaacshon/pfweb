@@ -187,11 +187,24 @@ export default function WorshipPage() {
   const fetchSets = async () => {
     setIsFetchingSets(true)
     try {
-      const { data: setsData, error } = await supabase.from('worship_sets').select('*').order('date', { ascending: false })
-      if (error) throw error
-      if (setsData) setSets(setsData)
-    } catch (err) {
-      console.error("Fetch sets error:", err)
+      const { data: setsData, error } = await supabase
+        .from('worship_sets')
+        .select('*')
+        .order('date', { ascending: false })
+      
+      if (error) {
+        console.error("Supabase fetch sets error:", error)
+        showNotify("Failed to load sets: " + error.message)
+        throw error
+      }
+      
+      if (setsData) {
+        setSets(setsData)
+        console.log(`Loaded ${setsData.length} sets.`)
+      }
+    } catch (err: any) {
+      console.error("Fetch sets exception:", err)
+      // Already notified via error check above
     } finally {
       setIsFetchingSets(false)
     }
@@ -530,11 +543,20 @@ export default function WorshipPage() {
           <h1 className="text-3xl font-black tracking-tight uppercase">Worship</h1>
           <p className="text-[10px] font-black opacity-30 uppercase tracking-[0.4em]">Set List & Practice</p>
         </div>
-        {(currentUser.role === 'leader' || currentUser.role === 'worship_team') && (
-          <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className={`w-10 h-10 rounded-full flex items-center justify-center ${accentBg} shadow-lg active:scale-90 transition-all duration-700`}>
-            <span className="material-icons">add</span>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={fetchSets} 
+            disabled={isFetchingSets}
+            className={`w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10 hover:bg-zinc-500/20 transition-all ${isFetchingSets ? 'opacity-50' : ''}`}
+          >
+            <span className={`material-icons text-xl ${isFetchingSets ? 'animate-spin text-[#9a78b4]' : 'opacity-40'}`}>sync</span>
           </button>
-        )}
+          {(currentUser.role === 'leader' || currentUser.role === 'worship_team') && (
+            <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className={`w-10 h-10 rounded-full flex items-center justify-center ${accentBg} shadow-lg active:scale-90 transition-all duration-700`}>
+              <span className="material-icons">add</span>
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Tab Selector */}
