@@ -1028,38 +1028,50 @@ export default function WorshipPage() {
             <div className="space-y-6">
               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Team Assignments</h3>
               
-              {/* Selected Team with Tags */}
-              <div className="grid grid-cols-1 gap-4">
-                {newTeam.map((m, i) => (
-                  <div key={i} className={`p-6 rounded-[32px] border ${cardBg} space-y-4`}>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-black tracking-tight">{m.nickname}</p>
-                      <button onClick={() => setNewTeam(newTeam.filter(t => t.userId !== m.userId))} className="text-red-500/20 hover:text-red-500 transition-colors">
-                        <span className="material-icons text-sm">remove_circle</span>
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {ROLES.map(role => {
-                        const isAssigned = m.role.split(', ').includes(role)
-                        return (
-                          <button 
-                            key={role}
-                            onClick={() => {
-                              const currentRoles = m.role ? m.role.split(', ').filter(r => r) : []
-                              const nextRoles = currentRoles.includes(role) 
-                                ? currentRoles.filter(r => r !== role)
-                                : [...currentRoles, role]
-                              updateMemberRole(m.userId, nextRoles.join(', '))
-                            }}
-                            className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${isAssigned ? accentBg : 'bg-zinc-500/10 opacity-40'}`}
-                          >
-                            {role}
-                          </button>
-                        )
-                      })}
-                    </div>
+              {/* Selected Team List (Compact) */}
+              <div className="space-y-2">
+                {newTeam.length === 0 ? (
+                  <div className="py-8 text-center border-2 border-dashed border-zinc-500/10 rounded-2xl opacity-20 italic text-[10px] font-bold">
+                    No members assigned yet.
                   </div>
-                ))}
+                ) : (
+                  newTeam.map((m, i) => (
+                    <div key={i} className={`p-4 rounded-2xl border ${cardBg} flex flex-col gap-3 transition-all animate-in slide-in-from-right-2 duration-300`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-1.5 h-6 rounded-full ${isDarkMode ? 'bg-brand-yellow' : 'bg-[#9c7eb7]'}`}></div>
+                          <p className="text-[11px] font-black uppercase tracking-tight">{m.nickname}</p>
+                        </div>
+                        <button 
+                          onClick={() => setNewTeam(newTeam.filter(t => t.userId !== m.userId))} 
+                          className="w-6 h-6 rounded-full bg-red-500/5 text-red-500/30 hover:bg-red-500/10 hover:text-red-500 transition-all flex items-center justify-center"
+                        >
+                          <span className="material-icons text-xs">close</span>
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {ROLES.map(role => {
+                          const isAssigned = m.role.split(', ').includes(role)
+                          return (
+                            <button 
+                              key={role}
+                              onClick={() => {
+                                const currentRoles = m.role ? m.role.split(', ').filter(r => r) : []
+                                const nextRoles = currentRoles.includes(role) 
+                                  ? currentRoles.filter(r => r !== role)
+                                  : [...currentRoles, role]
+                                updateMemberRole(m.userId, nextRoles.join(', '))
+                              }}
+                              className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-widest transition-all ${isAssigned ? 'bg-[#9c7eb7] text-white shadow-sm' : 'bg-zinc-500/5 opacity-40 hover:opacity-60'}`}
+                            >
+                              {role}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
               {/* Member Picker */}
