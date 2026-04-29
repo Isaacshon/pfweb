@@ -16,6 +16,8 @@ interface Song {
   link: string
   sheetUrl?: string
   thumbnail?: string
+  songForm?: string[]
+  solos?: string[]
 }
 
 interface TeamMember {
@@ -40,6 +42,11 @@ const ROLES = [
 
 const KEYS = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B']
 
+const SONG_SECTIONS = [
+  'Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Post-Chorus', 
+  'Bridge', 'Interlude', 'Instrumental', 'Tag', 'Outro', 'Ad-lib', 'Ending'
+]
+
 export default function WorshipPage() {
   const { isDarkMode } = useTheme()
   const router = useRouter()
@@ -51,6 +58,7 @@ export default function WorshipPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingSetId, setEditingSetId] = useState<string | null>(null)
   const [selectedSet, setSelectedSet] = useState<SetList | null>(null)
+  const [detailViewMode, setDetailViewMode] = useState<'cards' | 'practice'>('cards')
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('pf_worship_tab') as 'upcoming' | 'history') || 'upcoming'
@@ -294,47 +302,55 @@ export default function WorshipPage() {
     if (isSaving) return
     setIsSaving(true)
 
-    try {
-      const payload = {
-        date: newDate,
-        title: newTitle,
-        notes: newNotes,
-        songs: newSongs,
-        team_members: newTeam
-      }
+    const payload = {
+      date: newDate,
+      title: newTitle,
+      notes: newNotes,
+      songs: newSongs,
+      team_members: newTeam
+    }
 
-      if (editingSetId) {
-        const { data, error } = await supabase
+    // Optimistic: close modal and update UI immediately
+    if (editingSetId) {
+      const optimisticSet = { ...payload, id: editingSetId } as SetList
+      setSets(prev => prev.map(s => s.id === editingSetId ? optimisticSet : s))
+    } else {
+      const tempId = 'temp-' + Date.now()
+      const optimisticSet = { ...payload, id: tempId } as SetList
+      setSets(prev => [optimisticSet, ...prev])
+    }
+    setIsAddModalOpen(false)
+    const wasEditing = editingSetId
+    resetForm()
+    setIsSaving(false)
+
+    // Background sync with Supabase
+    try {
+      if (wasEditing) {
+        const { error } = await supabase
           .from('worship_sets')
           .update(payload)
-          .eq('id', editingSetId)
-          .select()
-
+          .eq('id', wasEditing)
         if (error) {
           alert('Save failed: ' + error.message)
-        } else {
-          if (data) setSets(sets.map(s => s.id === editingSetId ? data[0] : s))
-          setIsAddModalOpen(false)
-          resetForm()
+          fetchSets() // revert
         }
       } else {
         const { data, error } = await supabase
           .from('worship_sets')
           .insert(payload)
           .select()
-
         if (error) {
           alert('Save failed: ' + error.message)
-        } else {
-          if (data) setSets([data[0], ...sets])
-          setIsAddModalOpen(false)
-          resetForm()
+          fetchSets() // revert
+        } else if (data) {
+          // Replace temp ID with real ID
+          setSets(prev => prev.map(s => s.id.startsWith('temp-') ? data[0] : s))
         }
       }
     } catch (err: any) {
       alert('Save error: ' + err.message)
-    } finally {
-      setIsSaving(false)
+      fetchSets()
     }
   }
 
@@ -505,95 +521,250 @@ export default function WorshipPage() {
       </section>
 
       {/* Set Details Modal */}
-      {selectedSet && (
+      {selectedSet && (() => {
+        const updatePracticeSong = (songIndex: number, field: 'songForm' | 'solos', value: string[]) => {
+          const updatedSongs = selectedSet.songs.map((s, i) => i === songIndex ? { ...s, [field]: value } : s)
+          const updatedSet = { ...selectedSet, songs: updatedSongs }
+          setSelectedSet(updatedSet)
+          setSets(prev => prev.map(s => s.id === selectedSet.id ? updatedSet : s))
+          // Background save
+          supabase.from('worship_sets').update({ songs: updatedSongs }).eq('id', selectedSet.id).then(({ error }) => {
+            if (error) console.error('Practice save error:', error)
+          })
+        }
+
+        return (
         <div className={`fixed inset-0 z-[100] flex flex-col animate-in fade-in slide-in-from-bottom-10 duration-500 ${bgColor}`}>
-          <header className="px-6 pt-16 pb-6 flex items-center justify-between border-b border-zinc-500/10">
-            <button onClick={() => setSelectedSet(null)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
+          <header className="px-6 pt-16 pb-4 flex items-center justify-between border-b border-zinc-500/10">
+            <button onClick={() => { setSelectedSet(null); setDetailViewMode('cards'); }} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
             <h2 className="text-sm font-black uppercase tracking-widest opacity-40">Set Details</h2>
             {currentUser?.role === 'leader' ? (
-              <button onClick={() => openEditModal(selectedSet)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10 text-[#9a78b4]">
+              <button onClick={() => openEditModal(selectedSet)} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10 text-[#9c7eb7]">
                 <span className="material-icons text-xl">edit</span>
               </button>
             ) : (
               <div className="w-10"></div>
             )}
           </header>
-          <div className="flex-1 overflow-y-auto px-8 py-10 space-y-12 no-scrollbar">
+
+          {/* View Mode Toggle */}
+          <div className="px-6 py-3 flex gap-2 border-b border-zinc-500/5">
+            <button onClick={() => setDetailViewMode('cards')} className={`flex-1 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${detailViewMode === 'cards' ? 'bg-[#9c7eb7] text-white' : 'bg-zinc-500/10 opacity-50'}`}>
+              <span className="material-icons text-sm">grid_view</span>
+              Song Cards
+            </button>
+            <button onClick={() => setDetailViewMode('practice')} className={`flex-1 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${detailViewMode === 'practice' ? 'bg-[#9c7eb7] text-white' : 'bg-zinc-500/10 opacity-50'}`}>
+              <span className="material-icons text-sm">queue_music</span>
+              Practice
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-8 py-8 space-y-10 no-scrollbar">
+            {/* Header */}
             <div>
-              <p className={`text-xs font-black uppercase tracking-[0.3em] ${accentColor} mb-3`}>{selectedSet.date}</p>
+              <p className={`text-xs font-black uppercase tracking-[0.3em] text-[#9c7eb7] mb-3`}>{selectedSet.date}</p>
               <h2 className="text-4xl font-black tracking-tighter leading-tight mb-4">{selectedSet.title}</h2>
               {selectedSet.notes && <p className="text-sm opacity-50 leading-relaxed font-medium">{selectedSet.notes}</p>}
             </div>
 
-            <div className="space-y-6">
+            {/* Team */}
+            <div className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Team Assignments</h3>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                 {selectedSet.team_members?.map((member, i) => (
-                  <div key={i} className={`p-5 rounded-3xl border ${cardBg} flex items-center justify-between`}>
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl ${accentBg} flex items-center justify-center font-black text-xs`}>
-                        {member.nickname[0]}
-                      </div>
-                      <div>
-                        <p className="text-sm font-black tracking-tight">{member.nickname}</p>
-                        <p className={`text-[9px] font-bold uppercase tracking-widest ${accentColor}`}>{member.role}</p>
-                      </div>
+                  <div key={i} className={`px-4 py-2 rounded-full border ${cardBg} flex items-center gap-2 shrink-0`}>
+                    <div className={`w-6 h-6 rounded-lg bg-[#9c7eb7] text-white flex items-center justify-center font-black text-[9px]`}>
+                      {member.nickname[0]}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black leading-tight">{member.nickname}</span>
+                      <span className="text-[7px] font-bold text-[#9c7eb7] uppercase tracking-wider leading-tight">{member.role?.split(', ')[0]}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-6">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Songs List</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {selectedSet.songs.map((song, i) => {
-                  const cardColors = [
-                    'bg-[#b8a99a]', 'bg-[#a3aa7e]', 'bg-[#c2a882]',
-                    'bg-[#8a9e8a]', 'bg-[#9a9a9a]', 'bg-[#c9a08a]',
-                    'bg-[#8a8e9e]', 'bg-[#9a8a7a]', 'bg-[#a8967a]'
-                  ]
-                  const cardColor = cardColors[i % cardColors.length]
-                  return (
-                    <div key={i} className={`${cardColor} rounded-[28px] p-3 flex flex-col gap-2.5 shadow-lg transition-all active:scale-[0.97]`}>
-                      {/* Thumbnail */}
-                      <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center">
+            {/* ===== SONG CARDS VIEW ===== */}
+            {detailViewMode === 'cards' && (
+              <div className="space-y-6">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Songs List</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedSet.songs.map((song, i) => {
+                    const cardColors = [
+                      'bg-[#b8a99a]', 'bg-[#a3aa7e]', 'bg-[#c2a882]',
+                      'bg-[#8a9e8a]', 'bg-[#9a9a9a]', 'bg-[#c9a08a]',
+                      'bg-[#8a8e9e]', 'bg-[#9a8a7a]', 'bg-[#a8967a]'
+                    ]
+                    const cardColor = cardColors[i % cardColors.length]
+                    return (
+                      <div key={i} className={`${cardColor} rounded-[28px] p-3 flex flex-col gap-2.5 shadow-lg transition-all active:scale-[0.97]`}>
+                        <div className="w-full aspect-square rounded-[20px] overflow-hidden bg-black/10 flex items-center justify-center">
+                          {song.thumbnail ? (
+                            <img src={song.thumbnail} alt={song.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="material-icons text-5xl text-white/30">music_note</span>
+                          )}
+                        </div>
+                        <div className="px-1 space-y-0.5 min-h-[40px]">
+                          <p className="text-sm font-black tracking-tight text-white leading-tight line-clamp-1">{song.title}</p>
+                          <p className="text-[10px] font-bold text-white/60 line-clamp-1">{song.artist}</p>
+                        </div>
+                        <div className="flex flex-col gap-2 px-1 pt-0.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Key</span>
+                            <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-black tracking-wider min-w-[24px] text-center">{song.key}</span>
+                          </div>
+                          <div className="flex gap-1 justify-end">
+                            <button onClick={(e) => { e.stopPropagation(); findSheet(song.title) }} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                              <span className="material-icons text-white text-[11px]">description</span>
+                            </button>
+                            {song.link && (
+                              <a href={song.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                <span className="material-icons text-white text-[11px]">play_arrow</span>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ===== PRACTICE VIEW ===== */}
+            {detailViewMode === 'practice' && (
+              <div className="space-y-6">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Practice Mode</h3>
+                {selectedSet.songs.map((song, songIdx) => (
+                  <div key={songIdx} className={`rounded-[32px] border ${cardBg} overflow-hidden`}>
+                    {/* Song Header */}
+                    <div className="p-5 flex items-center gap-4 border-b border-zinc-500/10">
+                      <div className="w-12 h-12 rounded-2xl overflow-hidden bg-zinc-500/10 shrink-0 flex items-center justify-center">
                         {song.thumbnail ? (
                           <img src={song.thumbnail} alt={song.title} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="material-icons text-5xl text-white/30">music_note</span>
+                          <span className="material-icons text-xl text-zinc-400">music_note</span>
                         )}
                       </div>
-                      {/* Info */}
-                      <div className="px-1 space-y-0.5 min-h-[40px]">
-                        <p className="text-sm font-black tracking-tight text-white leading-tight line-clamp-1">{song.title}</p>
-                        <p className="text-[10px] font-bold text-white/60 line-clamp-1">{song.artist}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black tracking-tight leading-tight truncate">{song.title}</p>
+                        <p className="text-[10px] font-bold opacity-40 truncate">{song.artist}</p>
                       </div>
-                      {/* Action Bar: Key / Sheet / Link */}
-                      <div className="flex flex-col gap-2 px-1 pt-0.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Key</span>
-                          <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-black tracking-wider min-w-[24px] text-center">{song.key}</span>
-                        </div>
-                        <div className="flex gap-1 justify-end">
-                          <button onClick={(e) => { e.stopPropagation(); findSheet(song.title) }} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                            <span className="material-icons text-white text-[11px]">description</span>
+                      <span className="px-2.5 py-1 rounded-full bg-[#9c7eb7]/10 text-[#9c7eb7] text-[10px] font-black shrink-0">{song.key}</span>
+                    </div>
+
+                    {/* Song Form Section */}
+                    <div className="p-5 border-b border-zinc-500/5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="material-icons text-[14px] text-[#9c7eb7]">queue_music</span>
+                        <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Song Form</p>
+                      </div>
+                      {/* Current form tags */}
+                      <div className="flex flex-wrap gap-1.5 mb-3 min-h-[28px]">
+                        {(song.songForm || []).map((section, secIdx) => (
+                          <div key={secIdx} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#9c7eb7] text-white text-[9px] font-black uppercase tracking-wider animate-in zoom-in-95 duration-200">
+                            <span>{section}</span>
+                            <button onClick={() => {
+                              const updated = [...(song.songForm || [])]
+                              updated.splice(secIdx, 1)
+                              updatePracticeSong(songIdx, 'songForm', updated)
+                            }} className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors">
+                              <span className="material-icons text-[8px]">close</span>
+                            </button>
+                          </div>
+                        ))}
+                        {(!song.songForm || song.songForm.length === 0) && (
+                          <p className="text-[9px] font-bold opacity-20 italic py-1">Tap sections below to build song form</p>
+                        )}
+                      </div>
+                      {/* Section picker */}
+                      <div className="flex flex-wrap gap-1">
+                        {SONG_SECTIONS.map(section => (
+                          <button
+                            key={section}
+                            onClick={() => {
+                              const updated = [...(song.songForm || []), section]
+                              updatePracticeSong(songIdx, 'songForm', updated)
+                            }}
+                            className={`px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-[#9c7eb7]/30 hover:text-[#9c7eb7]' : 'bg-zinc-100 text-zinc-500 hover:bg-[#9c7eb7]/10 hover:text-[#9c7eb7]'}`}
+                          >
+                            + {section}
                           </button>
-                          {song.link && (
-                            <a href={song.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                              <span className="material-icons text-white text-[11px]">play_arrow</span>
-                            </a>
-                          )}
-                        </div>
+                        ))}
                       </div>
                     </div>
-                  )
-                })}
+
+                    {/* Solo Section */}
+                    <div className="p-5 border-b border-zinc-500/5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="material-icons text-[14px] text-[#9c7eb7]">mic</span>
+                        <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Solo</p>
+                      </div>
+                      {/* Current solos */}
+                      <div className="flex flex-wrap gap-1.5 mb-3 min-h-[28px]">
+                        {(song.solos || []).map((name, soloIdx) => (
+                          <div key={soloIdx} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/80 text-white text-[9px] font-black uppercase tracking-wider animate-in zoom-in-95 duration-200">
+                            <span>{name}</span>
+                            <button onClick={() => {
+                              const updated = [...(song.solos || [])]
+                              updated.splice(soloIdx, 1)
+                              updatePracticeSong(songIdx, 'solos', updated)
+                            }} className="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/40 transition-colors">
+                              <span className="material-icons text-[8px]">close</span>
+                            </button>
+                          </div>
+                        ))}
+                        {(!song.solos || song.solos.length === 0) && (
+                          <p className="text-[9px] font-bold opacity-20 italic py-1">Assign solo parts to team members</p>
+                        )}
+                      </div>
+                      {/* Member picker */}
+                      <div className="flex flex-wrap gap-1">
+                        {selectedSet.team_members?.map(member => (
+                          <button
+                            key={member.userId}
+                            onClick={() => {
+                              const updated = [...(song.solos || []), member.nickname]
+                              updatePracticeSong(songIdx, 'solos', updated)
+                            }}
+                            className={`px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-amber-500/30 hover:text-amber-400' : 'bg-zinc-100 text-zinc-500 hover:bg-amber-500/10 hover:text-amber-600'}`}
+                          >
+                            + {member.nickname}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Sheet Section */}
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="material-icons text-[14px] text-[#9c7eb7]">description</span>
+                        <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Sheet Music</p>
+                      </div>
+                      {song.sheetUrl ? (
+                        <div className="flex gap-2">
+                          <a href={song.sheetUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 rounded-2xl bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:bg-emerald-500/20">
+                            <span className="material-icons text-sm">visibility</span>
+                            View Sheet
+                          </a>
+                        </div>
+                      ) : (
+                        <button onClick={() => findSheet(song.title)} className={`w-full py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'}`}>
+                          <span className="material-icons text-sm">search</span>
+                          Search Sheet Online
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* Add Set Modal */}
       {isAddModalOpen && (
