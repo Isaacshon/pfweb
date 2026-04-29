@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [myAttendances, setMyAttendances] = useState<any[]>([])
   const [lobbyUsers, setLobbyUsers] = useState<{id: string, nickname: string}[]>([])
   const [mounted, setMounted] = useState(false)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
   const todayDateString = mounted ? new Date().toISOString().split('T')[0] : ''
   const qrUrl = mounted ? `${window.location.origin}/app/attendance?date=${todayDateString}` : ''
 
@@ -54,9 +55,47 @@ export default function ProfilePage() {
     if (remEmail) setLoginEmail(remEmail)
     if (remPw) setLoginPw(remPw)
 
-    const initAuth = async () => {
+    // Step 1: INSTANT load from localStorage (no async wait)
+    const savedUser = localStorage.getItem('pf_current_user')
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser))
+      } catch (e) {
+        localStorage.removeItem('pf_current_user')
+      }
+    }
+    // Show UI immediately - no waiting for server
+    setIsLoaded(true)
+    setMounted(true)
+
+    // Step 2: BACKGROUND verify session with Supabase
+    const verifySession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle()
+          const combinedUser = { ...session.user, ...(profile || {}) }
+          setUser(combinedUser)
+          localStorage.setItem('pf_current_user', JSON.stringify(combinedUser))
+        } else if (!savedUser) {
+          // Only clear user if we didn't have one cached AND server says no session
+          setUser(null)
+          localStorage.removeItem('pf_current_user')
+        }
+      } catch (err) {
+        console.error("Auth verify error:", err)
+        // Keep cached user on network error - don't kick them out
+      }
+    }
+
+    verifySession()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event !== 'INITIAL_SESSION') {
         if (session?.user) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -70,42 +109,10 @@ export default function ProfilePage() {
           setUser(null)
           localStorage.removeItem('pf_current_user')
         }
-      } catch (err) {
-        console.error("Auth init error:", err)
-      } finally {
-        setIsLoaded(true)
-        setMounted(true)
-      }
-    }
-
-    initAuth()
-
-    // Safety fallback: if auth takes too long, stop loading
-    const safetyTimer = setTimeout(() => {
-      setIsLoaded(true)
-      setMounted(true)
-    }, 5000)
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event !== 'INITIAL_SESSION') {
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle()
-          const combinedUser = { ...session.user, ...profile }
-          setUser(combinedUser)
-          localStorage.setItem('pf_current_user', JSON.stringify(combinedUser))
-        } else {
-          setUser(null)
-          localStorage.removeItem('pf_current_user')
-        }
       }
     })
 
     return () => {
-      clearTimeout(safetyTimer)
       authListener.subscription.unsubscribe()
     }
   }, [])
@@ -270,6 +277,8 @@ export default function ProfilePage() {
   }
 
   const handleLogin = async () => {
+    if (isLoggingIn) return
+    setIsLoggingIn(true)
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: loginEmail,
@@ -289,10 +298,14 @@ export default function ProfilePage() {
           .eq('id', data.user.id)
           .maybeSingle()
         
-        setUser({ ...data.user, ...(profile || {}) })
+        const combinedUser = { ...data.user, ...(profile || {}) }
+        setUser(combinedUser)
+        localStorage.setItem('pf_current_user', JSON.stringify(combinedUser))
       }
     } catch (err: any) {
       alert("Login failed: " + err.message)
+    } finally {
+      setIsLoggingIn(false)
     }
   }
 
@@ -335,7 +348,10 @@ export default function ProfilePage() {
           <div className="space-y-4 animate-in slide-in-from-bottom-4">
             <input type="email" placeholder="EMAIL" value={loginEmail} onChange={(e)=>setLoginEmail(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border`} />
             <input type="password" placeholder="PASSWORD" value={loginPw} onChange={(e)=>setLoginPw(e.target.value)} className={`w-full p-6 rounded-[24px] outline-none font-bold ${inputBg} border`} />
-            <button onClick={handleLogin} className={`w-full py-6 rounded-[32px] font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all mt-6`}>Log In</button>
+            <button onClick={handleLogin} disabled={isLoggingIn} className={`w-full py-6 rounded-[32px] font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl shadow-current/20 active:scale-95 transition-all mt-6 flex items-center justify-center gap-2 ${isLoggingIn ? 'opacity-70' : ''}`}>
+              {isLoggingIn && <span className="material-icons text-sm animate-spin">sync</span>}
+              {isLoggingIn ? 'Logging In...' : 'Log In'}
+            </button>
           </div>
         ) : (
           <div className="space-y-4 overflow-y-auto max-h-[60vh] px-2 no-scrollbar animate-in slide-in-from-bottom-4">
