@@ -395,8 +395,14 @@ export default function WorshipPage() {
   const themeText = activeTab === 'upcoming' ? 'text-white' : 'text-zinc-900'
   const themeBg = activeTab === 'upcoming' ? 'bg-[#9a78b4]' : 'bg-[#fffbbd]'
 
+  const getLocalToday = () => {
+    const d = new Date()
+    const offset = d.getTimezoneOffset() * 60000
+    return new Date(d.getTime() - offset).toISOString().split('T')[0]
+  }
+
   const getStatus = (date: string) => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalToday()
     if (date === today) return { label: 'TODAY', color: `${themeBg} ${themeText}` }
     if (date > today) return { label: 'UPCOMING', color: `${themeBg} ${themeText}` }
     return { label: 'COMPLETED', color: 'bg-zinc-500/20 text-zinc-500' }
@@ -419,7 +425,7 @@ export default function WorshipPage() {
   }
 
   const filteredSets = sets.filter(set => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalToday()
     return activeTab === 'upcoming' ? set.date >= today : set.date < today
   })
 
