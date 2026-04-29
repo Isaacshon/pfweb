@@ -43,8 +43,10 @@ const ROLES = [
 const KEYS = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B']
 
 const SONG_SECTIONS = [
-  'Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Post-Chorus', 
-  'Bridge', 'Interlude', 'Instrumental', 'Tag', 'Outro', 'Ad-lib', 'Ending'
+  'Intro', 'Verse 1', 'Verse 2', 'Verse 3', 'Verse 4', 
+  'Pre-Chorus', 'Chorus', 'Post-Chorus', 
+  'Bridge 1', 'Bridge 2', 'Bridge 3', 
+  'Interlude', 'Instrumental', 'Tag', 'Outro', 'Ad-lib', 'Ending'
 ]
 
 export default function WorshipPage() {
@@ -427,25 +429,16 @@ export default function WorshipPage() {
           mainDoc.text(compressedForm, 20, 15)
         }
 
-        // 2. Title & Info
-        mainDoc.setFontSize(26)
-        mainDoc.setFont("helvetica", "bold")
-        mainDoc.text(song.title.toUpperCase(), 105, 30, { align: 'center' })
-        
-        mainDoc.setFontSize(10)
-        mainDoc.setFont("helvetica", "normal")
-        mainDoc.text(`${song.artist}  |  Key: ${song.key}`, 105, 38, { align: 'center' })
-        
-        // 3. Solo Parts (Small tag below info)
+        // 2. Solo Parts (Small tag at top right)
         if (song.solos && song.solos.length > 0) {
           mainDoc.setFontSize(9)
           mainDoc.setTextColor(154, 120, 180)
-          mainDoc.text(`SOLO: ${song.solos.join(", ")}`, 105, 45, { align: 'center' })
+          mainDoc.text(`SOLO: ${song.solos.join(", ")}`, 190, 15, { align: 'right' })
         }
         
         mainDoc.setTextColor(0, 0, 0) // Reset
         
-        // 4. Sheet Embed
+        // 3. Sheet Embed
         if (song.sheetUrl) {
           try {
             const response = await fetch(song.sheetUrl)
@@ -457,8 +450,8 @@ export default function WorshipPage() {
                 reader.onloadend = () => resolve(reader.result as string)
                 reader.readAsDataURL(blob)
               })
-              // Position sheet image starting below header
-              mainDoc.addImage(base64, 'JPEG', 15, 55, 180, 0) 
+              // Position sheet image starting higher up since title is gone
+              mainDoc.addImage(base64, 'JPEG', 15, 25, 180, 0) 
             } else {
               mainDoc.setTextColor(100, 100, 100)
               mainDoc.setFontSize(9)
