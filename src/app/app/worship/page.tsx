@@ -1553,16 +1553,15 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="flex items-end justify-between pt-2 border-t border-white/5 mt-1 w-full px-1">
+      <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/5 mt-1 w-full px-1">
         
         {/* Key Button */}
-        <div className="flex flex-col items-center gap-1 shrink-0">
-          <span className="text-[6px] font-black text-white/30 uppercase tracking-[0.1em] leading-none">Key</span>
+        <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0 border border-white/5">
           <select
             value={song.key}
             onChange={(e) => updateSong(index, 'key', e.target.value)}
             onPointerDown={(e) => e.stopPropagation()}
-            className="w-7 h-7 rounded-full bg-white/10 text-white text-[10px] font-black outline-none cursor-pointer appearance-none text-center hover:bg-white/20 transition-all border border-white/5"
+            className="w-full h-full bg-transparent text-white text-[11px] font-black outline-none cursor-pointer appearance-none text-center"
           >
             {KEYS.map(k => <option key={k} value={k} className="text-black">{k}</option>)}
           </select>
@@ -1572,10 +1571,10 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
         <button 
           onClick={(e) => { e.stopPropagation(); findSheet(song.title); }} 
           onPointerDown={(e) => e.stopPropagation()}
-          className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all shrink-0 border border-white/5" 
+          className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-all shrink-0 border border-white/5" 
           title="Search Web for Sheet"
         >
-          <span className="material-icons text-[12px]">search</span>
+          <span className="material-icons text-[14px]">search</span>
         </button>
         
         {/* Upload */}
@@ -1594,13 +1593,13 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
           <label 
             htmlFor={`sheet-upload-${song.id}`}
             onPointerDown={(e) => e.stopPropagation()}
-            className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-all shrink-0 border border-white/5 ${song.sheetUrl ? 'bg-green-500/80 text-white border-transparent' : 'bg-white/10 text-white hover:bg-white/20'} ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer transition-all shrink-0 border border-white/5 ${song.sheetUrl ? 'bg-green-500/80 text-white border-transparent' : 'bg-white/10 text-white hover:bg-white/20'} ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
             title={song.sheetUrl ? "Sheet Uploaded (Click to replace)" : "Upload Sheet File"}
           >
             {isUploading ? (
               <span className="material-icons text-[12px] animate-spin">sync</span>
             ) : (
-              <span className="material-icons text-[12px]">{song.sheetUrl ? "check" : "upload_file"}</span>
+              <span className="material-icons text-[14px]">{song.sheetUrl ? "check" : "upload_file"}</span>
             )}
           </label>
         </div>
@@ -1613,10 +1612,10 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
             rel="noopener noreferrer" 
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
-            className="w-7 h-7 rounded-full bg-green-500/20 text-green-300 flex items-center justify-center hover:bg-green-500/30 transition-all shrink-0 border border-green-500/10" 
+            className="w-9 h-9 rounded-xl bg-green-500/20 text-green-300 flex items-center justify-center hover:bg-green-500/30 transition-all shrink-0 border border-green-500/10" 
             title="View Sheet"
           >
-            <span className="material-icons text-[12px]">visibility</span>
+            <span className="material-icons text-[14px]">visibility</span>
           </a>
         )}
 
@@ -1628,10 +1627,10 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
             rel="noopener noreferrer" 
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
-            className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 shrink-0 transition-all border border-white/5" 
+            className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-white hover:bg-white/20 shrink-0 transition-all border border-white/5" 
             title="Open Original"
           >
-            <span className="material-icons text-white text-[12px]">play_arrow</span>
+            <span className="material-icons text-white text-[16px]">play_arrow</span>
           </a>
         )}
       </div>
