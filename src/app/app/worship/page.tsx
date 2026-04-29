@@ -89,6 +89,8 @@ export default function WorshipPage() {
   const [isPreviewing, setIsPreviewing] = useState(false)
   const [isPlaylist, setIsPlaylist] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isFetchingTeam, setIsFetchingTeam] = useState(false)
+  const [memberSearch, setMemberSearch] = useState('')
   const [notification, setNotification] = useState<string | null>(null)
 
   const showNotify = (msg: string) => {
@@ -107,6 +109,26 @@ export default function WorshipPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isAddModalOpen) {
+        setIsAddModalOpen(false)
+        setEditingSetId(null)
+      }
+      if (selectedSet) {
+        setSelectedSet(null)
+      }
+    }
+
+    if (isAddModalOpen || selectedSet) {
+      window.history.pushState({ modal: true }, '')
+      window.addEventListener('popstate', handlePopState)
+      return () => {
+        window.removeEventListener('popstate', handlePopState)
+      }
+    }
+  }, [isAddModalOpen, selectedSet])
 
   useEffect(() => {
     // 1. Instant Load from LocalStorage
@@ -149,9 +171,9 @@ export default function WorshipPage() {
         })
         .subscribe()
 
-      // Fetch Team Options
-      const { data: members } = await supabase.from('profiles').select('id, nickname').in('role', ['leader', 'worship_team'])
-      if (members) setTeamOptions(members)
+      // Initial Fetch
+      fetchSets()
+      fetchTeamOptions()
 
       setIsLoaded(true)
 
@@ -164,10 +186,50 @@ export default function WorshipPage() {
 
   const fetchSets = async () => {
     setIsFetchingSets(true)
-    const { data: setsData } = await supabase.from('worship_sets').select('*').order('date', { ascending: false })
-    if (setsData) setSets(setsData)
-    setIsFetchingSets(false)
+    try {
+      const { data: setsData, error } = await supabase.from('worship_sets').select('*').order('date', { ascending: false })
+      if (error) throw error
+      if (setsData) setSets(setsData)
+    } catch (err) {
+      console.error("Fetch sets error:", err)
+    } finally {
+      setIsFetchingSets(false)
+    }
   }
+
+  const fetchTeamOptions = async () => {
+    setIsFetchingTeam(true)
+    try {
+      // Fetch all profiles and filter on client for better reliability
+      const { data: members, error } = await supabase
+        .from('profiles')
+        .select('id, nickname, username, role')
+      
+      if (error) {
+        showNotify("Failed to fetch members: " + error.message)
+        throw error
+      }
+      
+      if (members) {
+        // Only include people with leadership or team roles
+        const validMembers = members.filter(m => 
+          ['leader', 'worship_team', 'user'].includes(m.role)
+        )
+        setTeamOptions(validMembers)
+      }
+    } catch (err: any) {
+      console.error("Fetch team options error:", err)
+    } finally {
+      setIsFetchingTeam(false)
+    }
+  }
+
+  // Fetch team whenever modal opens to ensure fresh data
+  useEffect(() => {
+    if (isAddModalOpen) {
+      fetchTeamOptions()
+    }
+  }, [isAddModalOpen])
 
   const handleLinkChange = async (rawUrl: string) => {
     setSongLink(rawUrl)
@@ -1001,18 +1063,74 @@ export default function WorshipPage() {
               </div>
 
               {/* Member Picker */}
-              <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-30">Add Members</p>
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                  {teamOptions.map(opt => (
-                    <button 
-                      key={opt.id} 
-                      onClick={() => addTeamMember(opt.id, opt.nickname)}
-                      className={`px-6 py-4 rounded-3xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${newTeam.some(m => m.userId === opt.id) ? accentBg : 'bg-zinc-500/10 border border-zinc-500/5'}`}
-                    >
-                      {opt.nickname}
-                    </button>
-                  ))}
+              <div className="space-y-4 p-4 rounded-[32px] border border-zinc-500/10 bg-zinc-500/5">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#9c7eb7]">Select Team Members</p>
+                      <button 
+                        onClick={(e) => { e.preventDefault(); fetchTeamOptions(); }}
+                        className="w-6 h-6 rounded-full bg-[#9c7eb7]/10 text-[#9c7eb7] flex items-center justify-center hover:bg-[#9c7eb7]/20 transition-all"
+                        title="Reload Members"
+                      >
+                        <span className={`material-icons text-[14px] ${isFetchingTeam ? 'animate-spin' : ''}`}>sync</span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        placeholder="Search name..." 
+                        value={memberSearch}
+                        onChange={(e) => setMemberSearch(e.target.value)}
+                        className={`w-32 sm:w-48 px-4 py-2 rounded-xl text-[10px] font-bold outline-none border transition-all ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-zinc-200'}`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
+                    {isFetchingTeam && teamOptions.length === 0 ? (
+                      <div className="col-span-full py-10 flex flex-col items-center gap-3 opacity-30">
+                        <span className="material-icons animate-spin text-2xl">sync</span>
+                        <p className="text-[10px] font-black uppercase tracking-widest">Loading Team...</p>
+                      </div>
+                    ) : teamOptions.length > 0 ? (
+                      (() => {
+                        const filtered = teamOptions.filter(opt => 
+                          (opt.nickname || '').toLowerCase().includes(memberSearch.toLowerCase()) || 
+                          (opt.username || '').toLowerCase().includes(memberSearch.toLowerCase())
+                        )
+                        
+                        if (filtered.length === 0) {
+                          return <div className="col-span-full py-10 text-center opacity-30 italic text-[10px]">No members found matching "{memberSearch}"</div>
+                        }
+
+                        return filtered.map(opt => {
+                          const isSelected = newTeam.some(m => m.userId === opt.id)
+                          return (
+                            <button 
+                              key={opt.id} 
+                              onClick={() => addTeamMember(opt.id, opt.nickname)}
+                              className={`w-full px-5 py-4 rounded-2xl transition-all flex items-center justify-between border ${isSelected ? 'bg-[#9c7eb7] text-white border-transparent shadow-lg scale-[1.02]' : cardBg + ' border-zinc-500/10 hover:border-[#9c7eb7]/30'}`}
+                            >
+                              <div className="flex flex-col items-start">
+                                <span className="text-[11px] font-black uppercase tracking-tight">{opt.nickname}</span>
+                                <span className={`text-[8px] font-bold opacity-40 ${isSelected ? 'text-white/60' : ''}`}>{opt.username}</span>
+                              </div>
+                              {isSelected ? (
+                                <span className="material-icons text-sm">check_circle</span>
+                              ) : (
+                                <span className="material-icons text-sm opacity-10">add_circle_outline</span>
+                              )}
+                            </button>
+                          )
+                        })
+                      })()
+                    ) : !isFetchingTeam && (
+                      <div className="col-span-full py-10 text-center opacity-30 italic text-[10px]">
+                        No members found. Try clicking the sync button above.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
