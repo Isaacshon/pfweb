@@ -203,7 +203,7 @@ export default function WorshipPage() {
       // Fetch all profiles and filter on client for better reliability
       const { data: members, error } = await supabase
         .from('profiles')
-        .select('id, nickname, username, role')
+        .select('id, nickname, username, role, first_name, last_name')
       
       if (error) {
         showNotify("Failed to fetch members: " + error.message)
@@ -1106,6 +1106,10 @@ export default function WorshipPage() {
 
                         return filtered.map(opt => {
                           const isSelected = newTeam.some(m => m.userId === opt.id)
+                          const realName = (opt.last_name || opt.first_name) 
+                            ? `${opt.last_name || ''}${opt.first_name || ''}`.trim()
+                            : opt.username || 'No Name'
+
                           return (
                             <button 
                               key={opt.id} 
@@ -1114,7 +1118,7 @@ export default function WorshipPage() {
                             >
                               <div className="flex flex-col items-start">
                                 <span className="text-[11px] font-black uppercase tracking-tight">{opt.nickname}</span>
-                                <span className={`text-[8px] font-bold opacity-40 ${isSelected ? 'text-white/60' : ''}`}>{opt.username}</span>
+                                <span className={`text-[8px] font-bold opacity-40 ${isSelected ? 'text-white/60' : ''}`}>{realName}</span>
                               </div>
                               {isSelected ? (
                                 <span className="material-icons text-sm">check_circle</span>
