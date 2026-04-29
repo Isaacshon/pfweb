@@ -1108,8 +1108,8 @@ export default function WorshipPage() {
 
                         return filtered.map(opt => {
                           const isSelected = newTeam.some(m => m.userId === opt.id)
-                          const realName = (opt.last_name || opt.first_name) 
-                            ? `${opt.last_name || ''}${opt.first_name || ''}`.trim()
+                          const realName = (opt.first_name || opt.last_name) 
+                            ? `${opt.first_name || ''} ${opt.last_name || ''}`.trim()
                             : opt.username || 'No Name'
 
                           return (
