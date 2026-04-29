@@ -80,6 +80,7 @@ export default function WorshipPage() {
   const [songThumbnail, setSongThumbnail] = useState('')
   const [isPreviewing, setIsPreviewing] = useState(false)
   const [isPlaylist, setIsPlaylist] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -290,42 +291,50 @@ export default function WorshipPage() {
       alert("Please enter date and title.")
       return
     }
+    if (isSaving) return
+    setIsSaving(true)
 
-    const payload = {
-      date: newDate,
-      title: newTitle,
-      notes: newNotes,
-      songs: newSongs,
-      team_members: newTeam
-    }
-
-    if (editingSetId) {
-      const { data, error } = await supabase
-        .from('worship_sets')
-        .update(payload)
-        .eq('id', editingSetId)
-        .select()
-
-      if (error) {
-        alert(error.message)
-      } else {
-        if (data) setSets(sets.map(s => s.id === editingSetId ? data[0] : s))
-        setIsAddModalOpen(false)
-        resetForm()
+    try {
+      const payload = {
+        date: newDate,
+        title: newTitle,
+        notes: newNotes,
+        songs: newSongs,
+        team_members: newTeam
       }
-    } else {
-      const { data, error } = await supabase
-        .from('worship_sets')
-        .insert(payload)
-        .select()
 
-      if (error) {
-        alert(error.message)
+      if (editingSetId) {
+        const { data, error } = await supabase
+          .from('worship_sets')
+          .update(payload)
+          .eq('id', editingSetId)
+          .select()
+
+        if (error) {
+          alert('Save failed: ' + error.message)
+        } else {
+          if (data) setSets(sets.map(s => s.id === editingSetId ? data[0] : s))
+          setIsAddModalOpen(false)
+          resetForm()
+        }
       } else {
-        if (data) setSets([data[0], ...sets])
-        setIsAddModalOpen(false)
-        resetForm()
+        const { data, error } = await supabase
+          .from('worship_sets')
+          .insert(payload)
+          .select()
+
+        if (error) {
+          alert('Save failed: ' + error.message)
+        } else {
+          if (data) setSets([data[0], ...sets])
+          setIsAddModalOpen(false)
+          resetForm()
+        }
       }
+    } catch (err: any) {
+      alert('Save error: ' + err.message)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -592,7 +601,10 @@ export default function WorshipPage() {
           <header className="px-6 pt-16 pb-6 flex items-center justify-between border-b border-zinc-500/10 sticky top-0 bg-inherit z-10">
             <button onClick={() => { setIsAddModalOpen(false); setEditingSetId(null); }} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
             <h2 className="text-sm font-black uppercase tracking-widest opacity-40">{editingSetId ? "Edit Setlist" : "Create Setlist"}</h2>
-            <button onClick={saveSet} className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${accentBg} shadow-lg active:scale-90 transition-all`}>Save All</button>
+            <button onClick={saveSet} disabled={isSaving} className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest bg-[#9c7eb7] text-white shadow-lg active:scale-90 transition-all flex items-center gap-1.5 ${isSaving ? 'opacity-70' : ''}`}>
+              {isSaving && <span className="material-icons text-sm animate-spin">sync</span>}
+              {isSaving ? 'Saving...' : 'Save All'}
+            </button>
           </header>
           
           <div className="flex-1 px-8 py-10 space-y-12">
@@ -786,8 +798,9 @@ export default function WorshipPage() {
             {/* Action Buttons */}
             <div className="pt-6 pb-12 border-t border-zinc-500/10 flex items-center justify-end gap-4">
               <button onClick={() => { setIsAddModalOpen(false); setEditingSetId(null); }} className="px-6 py-4 rounded-full font-black text-xs uppercase tracking-widest bg-zinc-500/10 transition-all">Cancel</button>
-              <button onClick={saveSet} className={`px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest ${accentBg} shadow-xl active:scale-95 transition-all`}>
-                {editingSetId ? "Update Set List" : "Save Set List"}
+              <button onClick={saveSet} disabled={isSaving} className={`px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest bg-[#9c7eb7] text-white shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 ${isSaving ? 'opacity-70' : ''}`}>
+                {isSaving && <span className="material-icons text-sm animate-spin">sync</span>}
+                {isSaving ? 'Saving...' : (editingSetId ? "Update Set List" : "Save Set List")}
               </button>
             </div>
           </div>
