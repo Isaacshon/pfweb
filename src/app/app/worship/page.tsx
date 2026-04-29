@@ -385,6 +385,26 @@ export default function WorshipPage() {
     })
   }
 
+  const compressSongForm = (form: string[]) => {
+    if (!form || form.length === 0) return ""
+    const result: string[] = []
+    let current = form[0]
+    let count = 1
+    
+    for (let i = 1; i <= form.length; i++) {
+      if (i < form.length && form[i] === current) {
+        count++
+      } else {
+        result.push(count > 1 ? `${current.toLowerCase()} x${count}` : current.toLowerCase())
+        if (i < form.length) {
+          current = form[i]
+          count = 1
+        }
+      }
+    }
+    return result.join(" - ")
+  }
+
   const generateMasterPDF = async () => {
     if (!selectedSet || isMasterExporting) return
     setIsMasterExporting(true)
@@ -398,31 +418,34 @@ export default function WorshipPage() {
         const song = selectedSet.songs[i]
         if (i > 0) mainDoc.addPage()
         
-        mainDoc.setFontSize(22)
+        // 1. Song Form Header (TOP)
+        const compressedForm = compressSongForm(song.songForm || [])
+        if (compressedForm) {
+          mainDoc.setFontSize(14)
+          mainDoc.setFont("helvetica", "normal")
+          mainDoc.setTextColor(0, 0, 0)
+          mainDoc.text(compressedForm, 20, 15)
+        }
+
+        // 2. Title & Info
+        mainDoc.setFontSize(26)
         mainDoc.setFont("helvetica", "bold")
-        mainDoc.text(song.title, 20, 30)
-        mainDoc.setFontSize(12)
+        mainDoc.text(song.title.toUpperCase(), 105, 30, { align: 'center' })
+        
+        mainDoc.setFontSize(10)
         mainDoc.setFont("helvetica", "normal")
-        mainDoc.text(`${song.artist} • Key: ${song.key}`, 20, 40)
+        mainDoc.text(`${song.artist}  |  Key: ${song.key}`, 105, 38, { align: 'center' })
         
-        if (song.songForm && song.songForm.length > 0) {
-          mainDoc.setFontSize(10)
-          mainDoc.setTextColor(154, 120, 180)
-          mainDoc.text("SONG FORM:", 20, 55)
-          mainDoc.setFont("helvetica", "bold")
-          mainDoc.setTextColor(0, 0, 0)
-          mainDoc.text(song.songForm.join(" - "), 20, 62)
-        }
-        
+        // 3. Solo Parts (Small tag below info)
         if (song.solos && song.solos.length > 0) {
-          mainDoc.setFontSize(10)
+          mainDoc.setFontSize(9)
           mainDoc.setTextColor(154, 120, 180)
-          mainDoc.text("SOLO PARTS:", 20, 75)
-          mainDoc.setFont("helvetica", "bold")
-          mainDoc.setTextColor(0, 0, 0)
-          mainDoc.text(song.solos.join(", "), 20, 82)
+          mainDoc.text(`SOLO: ${song.solos.join(", ")}`, 105, 45, { align: 'center' })
         }
         
+        mainDoc.setTextColor(0, 0, 0) // Reset
+        
+        // 4. Sheet Embed
         if (song.sheetUrl) {
           try {
             const response = await fetch(song.sheetUrl)
@@ -434,18 +457,19 @@ export default function WorshipPage() {
                 reader.onloadend = () => resolve(reader.result as string)
                 reader.readAsDataURL(blob)
               })
-              mainDoc.addImage(base64, 'JPEG', 20, 110, 170, 0)
+              // Position sheet image starting below header
+              mainDoc.addImage(base64, 'JPEG', 15, 55, 180, 0) 
             } else {
               mainDoc.setTextColor(100, 100, 100)
               mainDoc.setFontSize(9)
-              mainDoc.text("(Attached PDF Sheet follows this page)", 20, 100)
+              mainDoc.text("(Sheet Music is a PDF - Please view attached file separately)", 105, 100, { align: 'center' })
             }
           } catch (e) {
             console.error("Failed to embed sheet in PDF", e)
           }
         }
       }
-      mainDoc.save(`${selectedSet.title}_Worship_Set.pdf`)
+      mainDoc.save(`${selectedSet.title}_Master_Set.pdf`)
       showNotify("Master PDF exported successfully!")
     } catch (err: any) {
       console.error("PDF Export Error:", err)
