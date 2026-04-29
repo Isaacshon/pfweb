@@ -261,23 +261,25 @@ export default function WorshipPage() {
   }, [isAddModalOpen])
 
   // --- HELPER FUNCTIONS ---
-  const lookupSheetHistory = async (title: string, artist: string) => {
+  const lookupSheetHistory = async (title: string, artist: string, key?: string) => {
     if (!title) return null
     try {
       const { data: pastSets } = await supabase
         .from('worship_sets')
         .select('songs')
         .order('date', { ascending: false })
-        .limit(50)
+        .limit(100) // Increase limit slightly for better lookup
       
       if (pastSets) {
         const t = title.toLowerCase().trim()
         const a = artist.toLowerCase().trim()
+        const k = key?.trim()
         
         for (const set of pastSets) {
           const match = (set.songs as Song[])?.find(s => 
             s.title.toLowerCase().trim() === t && 
             (a ? s.artist.toLowerCase().trim() === a : true) &&
+            (k ? s.key === k : true) &&
             s.sheetUrl
           )
           if (match) return match.sheetUrl
@@ -288,6 +290,21 @@ export default function WorshipPage() {
     }
     return null
   }
+
+  const [hasHistorySheet, setHasHistorySheet] = useState(false)
+
+  // Real-time check for sheet when title/artist/key changes
+  useEffect(() => {
+    const check = async () => {
+      if (songTitle) {
+        const exists = await lookupSheetHistory(songTitle, songArtist, songKey)
+        setHasHistorySheet(!!exists)
+      } else {
+        setHasHistorySheet(false)
+      }
+    }
+    check()
+  }, [songTitle, songArtist, songKey])
 
   const uploadSheet = async (index: number, file: File) => {
     if (!file) return
@@ -1263,13 +1280,21 @@ export default function WorshipPage() {
                         </div>
 
                         <div className="space-y-3">
-                          <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30 px-1">Select Performance Key</p>
-                          <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                          <div className="flex items-center justify-between px-1">
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30">Select Performance Key</p>
+                            {hasHistorySheet && (
+                              <div className="flex items-center gap-1 text-emerald-400 animate-pulse">
+                                <span className="material-icons text-[10px]">check_circle</span>
+                                <span className="text-[8px] font-black uppercase tracking-tighter">Sheet Found</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-6 gap-2">
                             {KEYS.map(k => (
                               <button 
                                 key={k} 
                                 onClick={() => setSongKey(k)}
-                                className={`min-w-[44px] h-10 rounded-xl font-black text-[10px] transition-all ${songKey === k ? accentBg : cardBg + ' border opacity-40'}`}
+                                className={`h-10 rounded-xl font-black text-[10px] transition-all border ${songKey === k ? 'bg-white text-[#b8a99a] border-white shadow-lg' : 'bg-white/10 border-transparent text-white opacity-40 hover:opacity-80'}`}
                               >
                                 {k}
                               </button>
