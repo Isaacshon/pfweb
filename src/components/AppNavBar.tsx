@@ -45,9 +45,9 @@ export function AppNavBar() {
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single()
+          .maybeSingle()
         
-        const user = profile ? { ...session.user, ...profile } : session.user
+        const user = { ...session.user, ...(profile || {}) }
         setCurrentUser(user)
         localStorage.setItem('pf_current_user', JSON.stringify(user))
 

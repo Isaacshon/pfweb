@@ -14,6 +14,16 @@ const bibleVersions = [
   { name: 'KJV', lang: '🇬🇧' }
 ]
 
+const BIBLE_BOOKS = [
+  { name: 'Genesis', chapters: 50 }, { name: 'Exodus', chapters: 40 }, { name: 'Leviticus', chapters: 27 },
+  { name: 'Numbers', chapters: 36 }, { name: 'Deuteronomy', chapters: 34 }, { name: 'Joshua', chapters: 24 },
+  { name: 'Judges', chapters: 21 }, { name: 'Ruth', chapters: 4 }, { name: '1 Samuel', chapters: 31 },
+  { name: '2 Samuel', chapters: 24 }, { name: '1 Kings', chapters: 22 }, { name: '2 Kings', chapters: 25 },
+  { name: 'Psalms', chapters: 150 }, { name: 'Proverbs', chapters: 31 }, { name: 'Isaiah', chapters: 66 },
+  { name: 'Matthew', chapters: 28 }, { name: 'Mark', chapters: 16 }, { name: 'Luke', chapters: 24 },
+  { name: 'John', chapters: 21 }, { name: 'Acts', chapters: 28 }, { name: 'Romans', chapters: 16 }
+]
+
 const initialVerses = [
   { num: 1, text: '태초에 말씀이 계시니라 이 말씀이 하나님과 함께 계셨으니 이 말씀은 곧 하나님이시니라' },
   { num: 2, text: '그가 태초에 하나님과 함께 계셨고' },
@@ -32,6 +42,9 @@ export default function BiblePage() {
   const [selectedColor, setSelectedColor] = useState('#fffbbd')
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false)
+  const [selectedBook, setSelectedBook] = useState('John')
+  const [selectedChapter, setSelectedChapter] = useState(1)
 
   // Long Press Logic
   const longPressTimer = useRef<any>(null)
@@ -96,8 +109,11 @@ export default function BiblePage() {
 
       {/* Selector Section */}
       <div className="flex justify-between items-center bg-white p-4 rounded-[24px] shadow-[0_10px_30px_rgba(109,40,217,0.04)]">
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#f8f9ff] rounded-full hover:bg-[#e6eeff] transition-colors">
-          <span className="font-bold text-[18px] text-brand-dark uppercase tracking-tighter">John Chapter 1</span>
+        <button 
+          onClick={() => setIsSelectorOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-[#f8f9ff] rounded-full hover:bg-[#e6eeff] transition-colors"
+        >
+          <span className="font-bold text-[18px] text-brand-dark uppercase tracking-tighter">{selectedBook} {selectedChapter}</span>
           <span className="material-icons text-slate-400">expand_more</span>
         </button>
         
@@ -309,6 +325,51 @@ export default function BiblePage() {
           Save
         </button>
       </BentoCard>
+
+      {/* Bible Selector Modal */}
+      {isSelectorOpen && (
+        <div className="fixed inset-0 z-[500] bg-black/60 backdrop-blur-md flex items-end animate-in fade-in duration-300">
+          <div className="w-full bg-white rounded-t-[40px] max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 duration-500 shadow-2xl">
+            <div className="p-8 flex items-center justify-between border-b border-slate-50">
+              <h2 className="text-2xl font-black text-brand-dark uppercase tracking-tight">Select Book</h2>
+              <button onClick={() => setIsSelectorOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center"><span className="material-icons text-slate-300">close</span></button>
+            </div>
+            
+            <div className="flex flex-1 overflow-hidden">
+              {/* Books List */}
+              <div className="w-1/2 overflow-y-auto p-4 border-r border-slate-50 no-scrollbar">
+                {BIBLE_BOOKS.map(book => (
+                  <button 
+                    key={book.name}
+                    onClick={() => setSelectedBook(book.name)}
+                    className={`w-full text-left p-4 rounded-2xl font-bold text-sm transition-all mb-1 ${selectedBook === book.name ? 'bg-brand-purple text-white shadow-lg' : 'hover:bg-slate-50 text-slate-600'}`}
+                  >
+                    {book.name}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Chapters Grid */}
+              <div className="w-1/2 overflow-y-auto p-6 no-scrollbar bg-slate-50/30">
+                <div className="grid grid-cols-3 gap-3">
+                  {Array.from({ length: BIBLE_BOOKS.find(b => b.name === selectedBook)?.chapters || 1 }).map((_, i) => (
+                    <button 
+                      key={i}
+                      onClick={() => {
+                        setSelectedChapter(i + 1)
+                        setIsSelectorOpen(false)
+                      }}
+                      className={`aspect-square rounded-2xl flex items-center justify-center font-black text-sm transition-all ${selectedChapter === i + 1 ? 'bg-brand-yellow text-brand-dark shadow-md' : 'bg-white text-slate-400 border border-slate-100'}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

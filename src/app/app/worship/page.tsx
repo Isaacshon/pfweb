@@ -121,7 +121,7 @@ export default function WorshipPage() {
         return
       }
 
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle()
       const user = profile ? { ...session.user, ...profile } : session.user
       setCurrentUser(user)
       localStorage.setItem('pf_current_user', JSON.stringify(user))
@@ -351,6 +351,29 @@ export default function WorshipPage() {
     } catch (err: any) {
       alert('Save error: ' + err.message)
       fetchSets()
+    }
+  }
+
+  const deleteSet = async () => {
+    if (!editingSetId) return
+    if (!confirm("Are you sure you want to delete this set list? This action cannot be undone.")) return
+
+    try {
+      const { error } = await supabase
+        .from('worship_sets')
+        .delete()
+        .eq('id', editingSetId)
+
+      if (error) {
+        alert('Delete failed: ' + error.message)
+      } else {
+        setSets(prev => prev.filter(s => s.id !== editingSetId))
+        setIsAddModalOpen(false)
+        resetForm()
+        alert("Set list deleted successfully.")
+      }
+    } catch (err: any) {
+      alert('Delete error: ' + err.message)
     }
   }
 
@@ -660,6 +683,14 @@ export default function WorshipPage() {
                       <div className="flex items-center gap-2 mb-3">
                         <span className="material-icons text-[14px] text-[#9c7eb7]">queue_music</span>
                         <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Song Form</p>
+                        {(song.songForm || []).length > 0 && (
+                          <button 
+                            onClick={() => updatePracticeSong(songIdx, 'songForm', [])}
+                            className="ml-auto text-[8px] font-black text-red-500/50 uppercase tracking-widest hover:text-red-500 transition-colors"
+                          >
+                            Clear All
+                          </button>
+                        )}
                       </div>
                       {/* Current form tags */}
                       <div className="flex flex-wrap gap-1.5 mb-3 min-h-[28px]">
@@ -720,18 +751,18 @@ export default function WorshipPage() {
                           <p className="text-[9px] font-bold opacity-20 italic py-1">Assign solo parts to team members</p>
                         )}
                       </div>
-                      {/* Member picker */}
                       <div className="flex flex-wrap gap-1">
                         {selectedSet.team_members?.map(member => (
                           <button
                             key={member.userId}
                             onClick={() => {
+                              if ((song.solos || []).includes(member.nickname)) return
                               const updated = [...(song.solos || []), member.nickname]
                               updatePracticeSong(songIdx, 'solos', updated)
                             }}
                             className={`px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${isDarkMode ? 'bg-zinc-800 text-zinc-400 hover:bg-amber-500/30 hover:text-amber-400' : 'bg-zinc-100 text-zinc-500 hover:bg-amber-500/10 hover:text-amber-600'}`}
                           >
-                            + {member.nickname}
+                            + {member.nickname} <span className="opacity-40 ml-1 font-bold">({member.role?.split(' ')[0]})</span>
                           </button>
                         ))}
                       </div>
@@ -770,7 +801,14 @@ export default function WorshipPage() {
       {isAddModalOpen && (
         <div className={`fixed inset-0 z-[110] flex flex-col animate-in fade-in zoom-in duration-300 ${bgColor} no-scrollbar overflow-y-auto`}>
           <header className="px-6 pt-16 pb-6 flex items-center justify-between border-b border-zinc-500/10 sticky top-0 bg-inherit z-10">
-            <button onClick={() => { setIsAddModalOpen(false); setEditingSetId(null); }} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => { setIsAddModalOpen(false); setEditingSetId(null); }} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
+              {editingSetId && currentUser?.role === 'leader' && (
+                <button onClick={deleteSet} className="w-10 h-10 rounded-full flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all" title="Delete Set">
+                  <span className="material-icons text-xl">delete</span>
+                </button>
+              )}
+            </div>
             <h2 className="text-sm font-black uppercase tracking-widest opacity-40">{editingSetId ? "Edit Setlist" : "Create Setlist"}</h2>
             <button onClick={saveSet} disabled={isSaving} className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest bg-[#9c7eb7] text-white shadow-lg active:scale-90 transition-all flex items-center gap-1.5 ${isSaving ? 'opacity-70' : ''}`}>
               {isSaving && <span className="material-icons text-sm animate-spin">sync</span>}
