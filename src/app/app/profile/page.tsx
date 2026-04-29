@@ -80,6 +80,12 @@ export default function ProfilePage() {
 
     initAuth()
 
+    // Safety fallback: if auth takes too long, stop loading
+    const safetyTimer = setTimeout(() => {
+      setIsLoaded(true)
+      setMounted(true)
+    }, 5000)
+
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event !== 'INITIAL_SESSION') {
         if (session?.user) {
@@ -87,7 +93,7 @@ export default function ProfilePage() {
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single()
+            .maybeSingle()
           const combinedUser = { ...session.user, ...profile }
           setUser(combinedUser)
           localStorage.setItem('pf_current_user', JSON.stringify(combinedUser))
@@ -99,6 +105,7 @@ export default function ProfilePage() {
     })
 
     return () => {
+      clearTimeout(safetyTimer)
       authListener.subscription.unsubscribe()
     }
   }, [])
@@ -294,7 +301,14 @@ export default function ProfilePage() {
   const accentBg = isDarkMode ? 'bg-brand-yellow text-black' : 'bg-brand-purple text-white'
   const inputBg = isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-50 border-slate-100'
 
-  if (!isLoaded) return null
+  if (!isLoaded) {
+    return (
+      <div className={`min-h-screen ${bgColor} flex flex-col items-center justify-center p-8 text-center`}>
+        <div className="w-12 h-12 border-4 border-[#9a78b4] border-t-transparent rounded-full animate-spin mb-6"></div>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Loading Profile...</p>
+      </div>
+    )
+  }
 
   if (!user) {
     return (
@@ -377,8 +391,16 @@ export default function ProfilePage() {
     )
   }
 
-  // Calendar setup
-  const currentDate = mounted ? new Date() : new Date('2024-01-01T12:00:00Z')
+  // Calendar setup - ensure currentDate is always valid
+  let currentDate: Date;
+  try {
+    currentDate = mounted ? new Date() : new Date('2024-01-01T12:00:00Z')
+    if (isNaN(currentDate.getTime())) {
+      currentDate = new Date()
+    }
+  } catch (e) {
+    currentDate = new Date()
+  }
   const firstDay = startOfMonth(currentDate)
   const lastDay = endOfMonth(currentDate)
   const daysInMonth = eachDayOfInterval({ start: firstDay, end: lastDay })
@@ -392,7 +414,7 @@ export default function ProfilePage() {
         <div className={`relative w-32 h-32 rounded-[56px] overflow-hidden border-4 ${isDarkMode ? 'border-zinc-900 shadow-brand-yellow/5' : 'border-slate-50 shadow-brand-purple/5'} shadow-2xl mb-8`}>
           <img src="/images/PF app logo iphone.png" alt="PF" className="w-full h-full object-contain scale-110" />
         </div>
-        <h1 className="text-4xl font-black font-plus-jakarta tracking-tighter mb-2">{user.nickname || user.username}</h1>
+        <h1 className="text-4xl font-black font-plus-jakarta tracking-tighter mb-2">{(user?.nickname || user?.username || user?.email?.split('@')[0] || 'Member')}</h1>
         <div className="flex flex-col items-center gap-2">
           {user.role === 'leader' && (
             <div className={`px-4 py-1 rounded-full ${isDarkMode ? 'bg-brand-yellow/10 border-brand-yellow/20 text-brand-yellow' : 'bg-brand-purple/10 border-brand-purple/20 text-brand-purple'} border flex items-center gap-2 shadow-lg`}>
