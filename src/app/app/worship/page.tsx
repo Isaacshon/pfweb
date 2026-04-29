@@ -351,6 +351,7 @@ export default function WorshipPage() {
   }
 
   const [isUploadingSheet, setIsUploadingSheet] = useState<number | null>(null)
+  const [isMasterExporting, setIsMasterExporting] = useState(false)
   
   const uploadSheet = async (index: number, file: File) => {
     if (!file) return
@@ -359,9 +360,7 @@ export default function WorshipPage() {
       const fileExt = file.name.split('.').pop()
       const fileName = `sheets/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
       
-      // Using 'gallery' bucket as it's the standard public bucket in this app
       const { data, error } = await supabase.storage.from('gallery').upload(fileName, file)
-      
       if (error) throw error
       
       const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(fileName)
@@ -371,6 +370,88 @@ export default function WorshipPage() {
       alert("Sheet upload failed: " + error.message)
     } finally {
       setIsUploadingSheet(null)
+    }
+  }
+
+  const updatePracticeSong = (songIndex: number, field: keyof Song, value: any) => {
+    if (!selectedSet) return
+    const updatedSongs = selectedSet.songs.map((s, i) => i === songIndex ? { ...s, [field]: value } : s)
+    const updatedSet = { ...selectedSet, songs: updatedSongs }
+    setSelectedSet(updatedSet)
+    setSets(prev => prev.map(s => s.id === selectedSet.id ? updatedSet : s))
+    // Background save
+    supabase.from('worship_sets').update({ songs: updatedSongs }).eq('id', selectedSet.id).then(({ error }) => {
+      if (error) console.error('Practice save error:', error)
+    })
+  }
+
+  const generateMasterPDF = async () => {
+    if (!selectedSet || isMasterExporting) return
+    setIsMasterExporting(true)
+    showNotify("Generating Master PDF... Please wait.")
+    
+    try {
+      const { jsPDF } = (window as any).jspdf
+      const mainDoc = new jsPDF()
+      
+      for (let i = 0; i < selectedSet.songs.length; i++) {
+        const song = selectedSet.songs[i]
+        if (i > 0) mainDoc.addPage()
+        
+        mainDoc.setFontSize(22)
+        mainDoc.setFont("helvetica", "bold")
+        mainDoc.text(song.title, 20, 30)
+        mainDoc.setFontSize(12)
+        mainDoc.setFont("helvetica", "normal")
+        mainDoc.text(`${song.artist} • Key: ${song.key}`, 20, 40)
+        
+        if (song.songForm && song.songForm.length > 0) {
+          mainDoc.setFontSize(10)
+          mainDoc.setTextColor(154, 120, 180)
+          mainDoc.text("SONG FORM:", 20, 55)
+          mainDoc.setFont("helvetica", "bold")
+          mainDoc.setTextColor(0, 0, 0)
+          mainDoc.text(song.songForm.join(" - "), 20, 62)
+        }
+        
+        if (song.solos && song.solos.length > 0) {
+          mainDoc.setFontSize(10)
+          mainDoc.setTextColor(154, 120, 180)
+          mainDoc.text("SOLO PARTS:", 20, 75)
+          mainDoc.setFont("helvetica", "bold")
+          mainDoc.setTextColor(0, 0, 0)
+          mainDoc.text(song.solos.join(", "), 20, 82)
+        }
+        
+        if (song.sheetUrl) {
+          try {
+            const response = await fetch(song.sheetUrl)
+            const contentType = response.headers.get('content-type')
+            if (!contentType?.includes('pdf')) {
+              const blob = await response.blob()
+              const reader = new FileReader()
+              const base64: string = await new Promise((resolve) => {
+                reader.onloadend = () => resolve(reader.result as string)
+                reader.readAsDataURL(blob)
+              })
+              mainDoc.addImage(base64, 'JPEG', 20, 110, 170, 0)
+            } else {
+              mainDoc.setTextColor(100, 100, 100)
+              mainDoc.setFontSize(9)
+              mainDoc.text("(Attached PDF Sheet follows this page)", 20, 100)
+            }
+          } catch (e) {
+            console.error("Failed to embed sheet in PDF", e)
+          }
+        }
+      }
+      mainDoc.save(`${selectedSet.title}_Worship_Set.pdf`)
+      showNotify("Master PDF exported successfully!")
+    } catch (err: any) {
+      console.error("PDF Export Error:", err)
+      showNotify("PDF Export failed: " + err.message)
+    } finally {
+      setIsMasterExporting(false)
     }
   }
 
@@ -660,107 +741,7 @@ export default function WorshipPage() {
       </section>
 
       {/* Set Details Modal */}
-      {selectedSet && (() => {
-        const updatePracticeSong = (songIndex: number, field: keyof Song, value: any) => {
-          const updatedSongs = selectedSet.songs.map((s, i) => i === songIndex ? { ...s, [field]: value } : s)
-          const updatedSet = { ...selectedSet, songs: updatedSongs }
-          setSelectedSet(updatedSet)
-          setSets(prev => prev.map(s => s.id === selectedSet.id ? updatedSet : s))
-          // Background save
-          supabase.from('worship_sets').update({ songs: updatedSongs }).eq('id', selectedSet.id).then(({ error }) => {
-            if (error) console.error('Practice save error:', error)
-          })
-        }
-
-        const [isMasterExporting, setIsMasterExporting] = useState(false)
-
-        const generateMasterPDF = async () => {
-          if (!selectedSet || isMasterExporting) return
-          setIsMasterExporting(true)
-          showNotify("Generating Master PDF... Please wait.")
-          
-          try {
-            const { jsPDF } = (window as any).jspdf
-            const { PDFDocument } = (window as any).PDFLib
-            
-            const pdfDoc = await PDFDocument.create()
-            const mainDoc = new jsPDF()
-            
-            for (let i = 0; i < selectedSet.songs.length; i++) {
-              const song = selectedSet.songs[i]
-              
-              if (i > 0) mainDoc.addPage()
-              
-              // Header
-              mainDoc.setFontSize(22)
-              mainDoc.setFont("helvetica", "bold")
-              mainDoc.text(song.title, 20, 30)
-              
-              mainDoc.setFontSize(12)
-              mainDoc.setFont("helvetica", "normal")
-              mainDoc.text(`${song.artist} • Key: ${song.key}`, 20, 40)
-              
-              // Song Form
-              if (song.songForm && song.songForm.length > 0) {
-                mainDoc.setFontSize(10)
-                mainDoc.setTextColor(154, 120, 180) // #9a78b4
-                mainDoc.text("SONG FORM:", 20, 55)
-                mainDoc.setFont("helvetica", "bold")
-                mainDoc.setTextColor(0, 0, 0)
-                mainDoc.text(song.songForm.join(" - "), 20, 62)
-              }
-              
-              // Solos
-              if (song.solos && song.solos.length > 0) {
-                mainDoc.setFontSize(10)
-                mainDoc.setTextColor(154, 120, 180)
-                mainDoc.text("SOLO PARTS:", 20, 75)
-                mainDoc.setFont("helvetica", "bold")
-                mainDoc.setTextColor(0, 0, 0)
-                mainDoc.text(song.solos.join(", "), 20, 82)
-              }
-              
-              // If there's a sheetUrl, we'd ideally merge it, but for now we'll just add it to the mainDoc if it's an image
-              // For a truly professional version, we'd fetch the PDF and merge it using pdf-lib
-              if (song.sheetUrl) {
-                try {
-                  const response = await fetch(song.sheetUrl)
-                  const contentType = response.headers.get('content-type')
-                  
-                  if (contentType?.includes('pdf')) {
-                    // It's a PDF - we can't easily draw it into jsPDF, so we'd merge it later
-                    // For this MVP, we'll note that it's attached
-                    mainDoc.setTextColor(100, 100, 100)
-                    mainDoc.setFontSize(9)
-                    mainDoc.text("(Attached PDF Sheet follows this page)", 20, 100)
-                  } else {
-                    // It's an image - draw it
-                    const blob = await response.blob()
-                    const reader = new FileReader()
-                    const base64: string = await new Promise((resolve) => {
-                      reader.onloadend = () => resolve(reader.result as string)
-                      reader.readAsDataURL(blob)
-                    })
-                    mainDoc.addImage(base64, 'JPEG', 20, 110, 170, 0) // Aspect ratio auto
-                  }
-                } catch (e) {
-                  console.error("Failed to embed sheet in PDF", e)
-                }
-              }
-            }
-            
-            // Output combined jsPDF
-            mainDoc.save(`${selectedSet.title}_Worship_Set.pdf`)
-            showNotify("Master PDF exported successfully!")
-          } catch (err: any) {
-            console.error("PDF Export Error:", err)
-            showNotify("PDF Export failed: " + err.message)
-          } finally {
-            setIsMasterExporting(false)
-          }
-        }
-
-        return (
+      {selectedSet && (
         <div className={`fixed inset-0 z-[100] flex flex-col animate-in fade-in slide-in-from-bottom-10 duration-500 ${bgColor}`}>
           <header className="px-6 pt-16 pb-4 flex items-center justify-between border-b border-zinc-500/10">
             <button onClick={() => { setSelectedSet(null); setDetailViewMode('cards'); }} className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-500/10"><span className="material-icons text-xl">close</span></button>
