@@ -1097,7 +1097,9 @@ export default function WorshipPage() {
                       (() => {
                         const filtered = teamOptions.filter(opt => 
                           (opt.nickname || '').toLowerCase().includes(memberSearch.toLowerCase()) || 
-                          (opt.username || '').toLowerCase().includes(memberSearch.toLowerCase())
+                          (opt.username || '').toLowerCase().includes(memberSearch.toLowerCase()) ||
+                          (opt.first_name || '').toLowerCase().includes(memberSearch.toLowerCase()) ||
+                          (opt.last_name || '').toLowerCase().includes(memberSearch.toLowerCase())
                         )
                         
                         if (filtered.length === 0) {
