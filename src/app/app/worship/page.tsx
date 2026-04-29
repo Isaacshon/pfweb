@@ -89,6 +89,12 @@ export default function WorshipPage() {
   const [isPreviewing, setIsPreviewing] = useState(false)
   const [isPlaylist, setIsPlaylist] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [notification, setNotification] = useState<string | null>(null)
+
+  const showNotify = (msg: string) => {
+    setNotification(msg)
+    setTimeout(() => setNotification(null), 4000)
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -301,7 +307,7 @@ export default function WorshipPage() {
 
   const saveSet = async () => {
     if (!newDate || !newTitle) {
-      alert("Please enter date and title.")
+      showNotify("Please enter date and title.")
       return
     }
     if (isSaving) return
@@ -324,7 +330,9 @@ export default function WorshipPage() {
           .update(payload)
           .eq('id', wasEditing)
         if (error) {
-          alert('Save failed: ' + error.message)
+          showNotify('Save failed: ' + error.message)
+          setIsSaving(false)
+          return
         }
       } else {
         const { data, error } = await supabase
@@ -332,16 +340,20 @@ export default function WorshipPage() {
           .insert(payload)
           .select()
         if (error) {
-          alert('Save failed: ' + error.message)
+          showNotify('Save failed: ' + error.message)
+          setIsSaving(false)
+          return
         }
       }
-      // Re-fetch to guarantee sync with DB
+      
+      // Success case
       await fetchSets()
-    } catch (err: any) {
-      alert('Save error: ' + err.message)
-    } finally {
       setIsAddModalOpen(false)
       resetForm()
+      showNotify(wasEditing ? "Set list updated successfully." : "Set list created successfully.")
+    } catch (err: any) {
+      showNotify('Save error: ' + err.message)
+    } finally {
       setIsSaving(false)
     }
   }
@@ -357,15 +369,15 @@ export default function WorshipPage() {
         .eq('id', editingSetId)
 
       if (error) {
-        alert('Delete failed: ' + error.message)
+        showNotify('Delete failed: ' + error.message)
       } else {
         setSets(prev => prev.filter(s => s.id !== editingSetId))
         setIsAddModalOpen(false)
         resetForm()
-        alert("Set list deleted successfully.")
+        showNotify("Set list deleted successfully.")
       }
     } catch (err: any) {
-      alert('Delete error: ' + err.message)
+      showNotify('Delete error: ' + err.message)
     }
   }
 
@@ -428,7 +440,15 @@ export default function WorshipPage() {
   }
 
   return (
-    <div className={`min-h-screen ${bgColor} ${textColor} pb-40 transition-colors duration-500 font-pretendard`}>
+    <div className={`min-h-screen ${bgColor} ${textColor} pb-40 transition-colors duration-500 font-pretendard relative`}>
+      {notification && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-10 duration-500 w-11/12 max-w-sm">
+          <div className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-100'} border px-6 py-4 rounded-3xl shadow-2xl flex items-start gap-3`}>
+            <span className={`material-icons text-xl ${accentColor} mt-0.5`}>info</span>
+            <p className="text-sm font-bold tracking-tight leading-relaxed">{notification}</p>
+          </div>
+        </div>
+      )}
       <header className="px-6 pt-20 pb-4 flex items-center justify-between sticky top-0 z-40 bg-inherit/80 backdrop-blur-md">
         <div>
           <h1 className="text-3xl font-black tracking-tight uppercase">Worship</h1>
