@@ -1091,8 +1091,7 @@ export default function WorshipPage() {
             )}
           </div>
         </div>
-        )
-      })()}
+        )}
 
       {/* Add Set Modal */}
       {isAddModalOpen && (
