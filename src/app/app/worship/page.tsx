@@ -906,10 +906,9 @@ export default function WorshipPage() {
                           <p className="text-[10px] font-bold text-white/60 line-clamp-1">{song.artist}</p>
                         </div>
                         <div className="flex flex-col gap-3 px-1 pt-2 border-t border-white/10">
-                          <div className="flex items-center gap-1.5 overflow-hidden">
-                            <div className="flex-1 px-3 py-2 rounded-xl bg-white/15 flex items-center justify-between min-w-0">
-                              <span className="text-[7px] font-black text-white/40 uppercase tracking-tighter shrink-0">Key</span>
-                              <span className="text-[10px] font-black text-white">{song.key}</span>
+                          <div className="flex items-center gap-2 overflow-hidden justify-end">
+                            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                              <span className="text-[11px] font-black text-white">{song.key}</span>
                             </div>
                             <button 
                               onClick={(e) => { e.stopPropagation(); findSheet(song.title) }} 
