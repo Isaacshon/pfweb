@@ -147,42 +147,55 @@ export default function WorshipPage() {
     }
 
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        if (!savedUser) router.push('/app/profile')
-        return
-      }
+      // Global safety timeout: always stop loading after 8 seconds
+      const globalTimeout = setTimeout(() => {
+        console.warn("Global initialization timeout reached")
+        setIsLoaded(true)
+      }, 8000)
 
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle()
-      const user = profile ? { ...session.user, ...profile } : session.user
-      setCurrentUser(user)
-      localStorage.setItem('pf_current_user', JSON.stringify(user))
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          if (!savedUser) router.push('/app/profile')
+          clearTimeout(globalTimeout)
+          return
+        }
 
-      if (user.role !== 'leader' && user.role !== 'worship_team') {
-        router.push('/app')
-        return
-      }
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle()
+        const user = profile ? { ...session.user, ...profile } : session.user
+        setCurrentUser(user)
+        localStorage.setItem('pf_current_user', JSON.stringify(user))
 
-      // Initial Fetch
-      fetchSets()
+        if (user.role !== 'leader' && user.role !== 'worship_team') {
+          router.push('/app')
+          clearTimeout(globalTimeout)
+          return
+        }
 
-      // 1. Supabase Realtime Subscription (Live Sync)
-      const channel = supabase
-        .channel('worship_sets_changes')
-        .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'worship_sets' }, (payload: any) => {
-          console.log('Realtime update received:', payload)
-          fetchSets() // Refresh all to keep order correct
-        })
-        .subscribe()
+        // 1. Supabase Realtime Subscription (Live Sync)
+        const channel = supabase
+          .channel('worship_sets_changes')
+          .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'worship_sets' }, (payload: any) => {
+            console.log('Realtime update received:', payload)
+            fetchSets() 
+          })
+          .subscribe()
 
-      // Initial Fetch
-      fetchSets()
-      fetchTeamOptions()
+        // Initial Fetch - run in parallel for speed
+        await Promise.all([
+          fetchSets(),
+          fetchTeamOptions()
+        ])
 
-      setIsLoaded(true)
-
-      return () => {
-        supabase.removeChannel(channel)
+        return () => {
+          supabase.removeChannel(channel)
+        }
+      } catch (err) {
+        console.error("Initialization error:", err)
+        showNotify("Session check failed. Please refresh.")
+      } finally {
+        setIsLoaded(true)
+        clearTimeout(globalTimeout)
       }
     }
     init()
