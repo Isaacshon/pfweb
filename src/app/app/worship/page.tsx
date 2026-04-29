@@ -1063,7 +1063,7 @@ export default function WorshipPage() {
                           <span className="material-icons text-xs">close</span>
                         </button>
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-1">
                         {ROLES.map(role => {
                           const isAssigned = m.role.split(', ').includes(role)
                           return (
@@ -1076,8 +1076,9 @@ export default function WorshipPage() {
                                   : [...currentRoles, role]
                                 updateMemberRole(m.userId, nextRoles.join(', '))
                               }}
-                              className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-widest transition-all ${isAssigned ? 'bg-[#9c7eb7] text-white shadow-sm' : 'bg-zinc-500/5 opacity-40 hover:opacity-60'}`}
+                              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-tight transition-all border ${isAssigned ? 'bg-[#9c7eb7] text-white border-transparent shadow-sm' : 'bg-zinc-500/5 border-zinc-500/5 opacity-40 hover:opacity-100 hover:bg-zinc-500/10'}`}
                             >
+                              <div className={`w-1.5 h-1.5 rounded-full ${isAssigned ? 'bg-white' : 'bg-zinc-500/20'}`}></div>
                               {role}
                             </button>
                           )
