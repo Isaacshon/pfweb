@@ -632,8 +632,7 @@ export default function ConferenceRegistrationPage() {
                   We are excited to have you join PassionFruits Conference 2026. Please complete the form carefully.
                 </p>
                 <div className="mt-6 rounded-2xl bg-brand-yellow/60 p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-dark">Base Registration Fee</p>
-                  <p className="mt-2 text-3xl font-black text-brand-dark">100 CAD</p>
+                  <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-dark">Church Group Registration</p>
                   <p className="mt-2 text-xs font-bold leading-relaxed text-brand-dark/70">
                     If you are registering as a church, please contact us through our email.
                     <br />
@@ -714,6 +713,12 @@ export default function ConferenceRegistrationPage() {
                 </div>
                 <RadioGroup label="Are you attending with a group?" name="attendingWithGroup" options={['Yes', 'No']} error={fieldErrors.attendingWithGroup} required />
                 <TextField label="If yes, group / church name" name="groupName" />
+                <div className="rounded-[1.5rem] border-2 border-brand-purple/10 bg-brand-purple/5 p-5">
+                  <TextField label="Group Registration Code" name="groupRegistrationCode" placeholder="Optional" />
+                  <p className="mt-3 text-xs font-bold leading-relaxed text-slate-500">
+                    If you have group registration code, please enter your code.
+                  </p>
+                </div>
               </FormSection>
 
               <FormSection number="3" title="Emergency Contact Info.">
@@ -766,30 +771,6 @@ export default function ConferenceRegistrationPage() {
                 <CheckboxField name="accuracyConfirm" error={fieldErrors.accuracyConfirm} required>
                   I confirm that all information provided is accurate.
                 </CheckboxField>
-              </FormSection>
-
-              <FormSection number="6" title="Payment Information">
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-[0.8fr_1.2fr]">
-                  <div className="rounded-2xl bg-brand-dark p-6 text-white">
-                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-yellow">Base Fee</p>
-                    <p className="mt-3 text-4xl font-black">100 CAD</p>
-                    <p className="mt-3 text-xs font-bold leading-relaxed text-white/60">After submitting, you can pay securely with Apple Pay, Google Pay, or card.</p>
-                  </div>
-                  <div className="space-y-2">
-                    <TextField label="Group Registration Code" name="groupRegistrationCode" placeholder="Optional" />
-                    <p className="text-xs font-bold leading-relaxed text-slate-500">
-                      If you have group registration code, please enter your code.
-                    </p>
-                  </div>
-                </div>
-                <div className="rounded-2xl border-2 border-brand-purple/20 bg-brand-purple/5 p-5">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-purple">After You Submit</p>
-                    <p className="mt-3 text-sm font-bold leading-relaxed text-slate-600">
-                      You will receive a secure checkout link for the final amount. Keep your payment receipt for your records.
-                    </p>
-                  </div>
-                </div>
               </FormSection>
 
               {paymentInstructions && (
