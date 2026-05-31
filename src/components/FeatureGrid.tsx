@@ -2,8 +2,11 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { useLanguage } from '@/context/LanguageContext'
 
 export const FeatureGrid = () => {
+  const { t } = useLanguage()
+
   return (
     <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Big Feature */}
@@ -16,12 +19,12 @@ export const FeatureGrid = () => {
         </video>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         <div className="absolute bottom-8 left-8 right-8 md:bottom-12 md:left-12 md:right-12">
-          <span className="text-[#fffbbd] font-black text-xs tracking-widest uppercase mb-4 block">Major Event</span>
+          <span className="text-[#fffbbd] font-black text-xs tracking-widest uppercase mb-4 block">{t('feature.majorEvent')}</span>
           <h3 className="text-3xl md:text-6xl font-black text-white uppercase tracking-tighter mb-6 leading-none">
-            Kingdom Influence:<br/><span className="text-[#9a78b4]">Conf 2026</span>
+            {t('feature.kingdomInfluence')}<br /><span className="text-[#9a78b4]">{t('feature.conf2026')}</span>
           </h3>
           <Link href="/conference" className="inline-block px-10 py-4 bg-white text-brand-dark rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">
-            Join the Movement
+            {t('feature.joinMovement')}
           </Link>
         </div>
       </div>
@@ -29,22 +32,22 @@ export const FeatureGrid = () => {
       {/* Small Grid */}
       <div className="lg:col-span-4 flex flex-col gap-6">
         <Link href="/about" className="flex-1 group relative overflow-hidden rounded-3xl bg-brand-purple p-8 flex flex-col justify-center shadow-lg text-white hover:scale-[1.02] transition-all">
-          <h4 className="text-brand-yellow font-black text-2xl mb-2">Our Mission</h4>
+          <h4 className="text-brand-yellow font-black text-2xl mb-2">{t('feature.ourMission')}</h4>
           <p className="text-sm font-bold opacity-80 leading-relaxed">
-            Spreading the love of Jesus Christ through the creative language of culture.
+            {t('feature.missionDesc')}
           </p>
           <div className="mt-6 flex items-center gap-2 text-xs font-black uppercase tracking-widest">
-            Learn More <span className="material-icons text-sm">arrow_forward</span>
+            {t('feature.learnMore')} <span className="material-icons text-sm">arrow_forward</span>
           </div>
         </Link>
         
         <Link href="/about" className="flex-1 group relative overflow-hidden rounded-3xl bg-brand-dark p-8 flex flex-col justify-center shadow-lg text-white hover:scale-[1.02] transition-all">
-          <h4 className="text-brand-yellow font-black text-2xl mb-2">Join Movement</h4>
+          <h4 className="text-brand-yellow font-black text-2xl mb-2">{t('feature.joinMovementTitle')}</h4>
           <p className="text-sm font-bold opacity-70 leading-relaxed">
-            Leading a youth culture that is as trendy as it is transformative.
+            {t('feature.joinMovementDesc')}
           </p>
           <div className="mt-6 flex items-center gap-2 text-xs font-black uppercase tracking-widest">
-            About Us <span className="material-icons text-sm">arrow_forward</span>
+            {t('feature.aboutUs')} <span className="material-icons text-sm">arrow_forward</span>
           </div>
         </Link>
       </div>

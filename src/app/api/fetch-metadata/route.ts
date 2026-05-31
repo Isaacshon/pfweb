@@ -157,7 +157,7 @@ async function getYouTubePlaylistTracks(listId: string) {
 // ===== YOUTUBE: Parse title =====
 function parseYouTubeTitle(rawTitle: string): { title: string; artist: string } {
   // Only remove obvious marketing suffixes, preserve other parentheticals
-  let cleaned = rawTitle
+  const cleaned = rawTitle
     .replace(/\s*[\(\[]?(official\s*(music\s*)?video|official\s*audio|official\s*lyric\s*video|lyric\s*video|lyrics?|mv|m\/v|audio|live|공식\s*뮤직비디오)[\)\]]?\s*/gi, '')
     .trim()
 

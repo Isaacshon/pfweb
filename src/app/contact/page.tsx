@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import { BrandHeading } from '@/components/BrandHeading'
 import { supabase } from '@/lib/supabase'
 
 export default function Contact() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const router = useRouter()
   const [isLoaded, setIsLoaded] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -28,31 +29,28 @@ export default function Contact() {
     }
   }
 
-  const heroTitle = content?.heroTitle || t('nav.contact')
-  const infoTitle = content?.infoTitle || "Let's Build the Kingdom Together"
-  const infoDesc = content?.infoDesc || "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you."
-  const emailDetail = content?.emailDetail || 'passionfruits_ministry@naver.com'
-  const addressDetail = content?.addressDetail || 'Toronto, Ontario, Canada'
+  const localizedContent = language === 'en' ? content : null
+  const heroTitle = localizedContent?.heroTitle || t('contactPage.heroTitle')
+  const infoTitle = localizedContent?.infoTitle || t('contactPage.infoTitle')
+  const infoDesc = localizedContent?.infoDesc || t('contactPage.infoDesc')
+  const emailTitle = localizedContent?.emailTitle || t('contactPage.emailTitle')
+  const emailDetail = localizedContent?.emailDetail || t('contactPage.email')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (messageContent.trim() === 'Pfadmin1!') {
       router.push('/admin')
     } else {
-      alert('Thank you for your message!')
+      alert(t('contactPage.thankYou'))
     }
   }
-
-  useEffect(() => {
-    setIsLoaded(true)
-  }, [])
 
   return (
     <div className="flex flex-col min-h-screen bg-white selection:bg-brand-purple selection:text-white">
       {/* ========== NAVBAR ========== */}
       <header
         className={`
-          sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6
+          sticky top-0 z-[100] relative grid grid-cols-[auto_1fr_auto] items-center px-6 md:px-16 py-6
           bg-white md:bg-white/95 md:backdrop-blur-md border-b border-slate-100 shadow-sm
           transition-all duration-[800ms] ease-out
           ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}
@@ -68,7 +66,7 @@ export default function Contact() {
         </div>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex gap-12 text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
+        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:flex justify-center gap-12 whitespace-nowrap text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
           <Link href="/" className="hover:text-brand-purple transition-all">{t('nav.home')}</Link>
           <Link href="/conference" className="hover:text-brand-purple transition-all">{t('nav.conference')}</Link>
           <Link href="/events" className="hover:text-brand-purple transition-all">{t('nav.events')}</Link>
@@ -112,13 +110,15 @@ export default function Contact() {
             />
           </div>
           
-          <h1 className={`
+          <BrandHeading
+            tag="h1"
+            text={heroTitle}
+            className={`
             text-3xl md:text-7xl font-black text-white mb-4 tracking-tighter uppercase leading-none
             transition-all duration-700 delay-500
             ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}
-          `}>
-            {heroTitle}
-          </h1>
+          `}
+          />
         </div>
       </section>
 
@@ -132,7 +132,7 @@ export default function Contact() {
             ${isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'}
           `}>
             <div>
-              <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block">Get In Touch</span>
+              <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block">{t('contactPage.getInTouch')}</span>
               <h2 className="text-4xl md:text-6xl font-black text-brand-dark uppercase tracking-tighter mb-8 leading-tight">
                 {infoTitle}
               </h2>
@@ -147,7 +147,7 @@ export default function Contact() {
                   <span className="material-icons text-slate-400 group-hover:text-white transition-colors">mail</span>
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{content?.emailTitle || 'Email Us'}</h4>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{emailTitle}</h4>
                   <p className="text-lg md:text-xl font-black text-brand-dark">{emailDetail}</p>
                 </div>
               </div>
@@ -157,8 +157,8 @@ export default function Contact() {
                   <span className="material-icons text-slate-400 group-hover:text-white transition-colors">share</span>
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Follow Us</h4>
-                  <p className="text-lg md:text-xl font-black text-brand-dark">@passionfruits_ministry</p>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{t('contactPage.instaTitle')}</h4>
+                  <p className="text-lg md:text-xl font-black text-brand-dark">{t('contactPage.instaHandle')}</p>
                 </div>
               </div>
             </div>
@@ -172,7 +172,7 @@ export default function Contact() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Name</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('contactPage.nameLabel')}</label>
                   <input 
                     type="text" 
                     placeholder={t('contactPage.namePlaceholder')}
@@ -180,7 +180,7 @@ export default function Contact() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('contactPage.emailLabel')}</label>
                   <input 
                     type="email" 
                     placeholder={t('contactPage.emailPlaceholder')}
@@ -189,7 +189,7 @@ export default function Contact() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Message</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('contactPage.messageLabel')}</label>
                 <textarea 
                   rows={5} 
                   value={messageContent}
@@ -213,20 +213,20 @@ export default function Contact() {
           <div className="col-span-1 md:col-span-2">
             <Link href="/"><img src="/logo.png" alt="PassionFruits Logo" className="h-20 w-auto mb-10 cursor-pointer" /></Link>
             <p className="text-slate-400 max-w-sm leading-relaxed text-lg font-bold">
-              Flipping the world upside down through the creative language of youth culture.
+              {t('common.footerDescription')}
             </p>
           </div>
           <div>
-            <h4 className="font-black mb-10 text-brand-purple uppercase tracking-[0.2em] text-xs">Explore</h4>
+            <h4 className="font-black mb-10 text-brand-purple uppercase tracking-[0.2em] text-xs">{t('common.explore')}</h4>
             <ul className="space-y-6 text-slate-600 text-xs font-black uppercase tracking-widest">
-              <li><Link href="/conference" className="hover:text-brand-purple transition-colors">2026 Conference</Link></li>
-              <li><Link href="/events" className="hover:text-brand-purple transition-colors">Events & News</Link></li>
-              <li><Link href="/about" className="hover:text-brand-purple transition-colors">Our Impact</Link></li>
-              <li><Link href="/contact" className="hover:text-brand-purple transition-colors">Contact</Link></li>
+              <li><Link href="/conference" className="hover:text-brand-purple transition-colors">{t('common.conference2026')}</Link></li>
+              <li><Link href="/events" className="hover:text-brand-purple transition-colors">{t('common.eventsNews')}</Link></li>
+              <li><Link href="/about" className="hover:text-brand-purple transition-colors">{t('common.ourImpact')}</Link></li>
+              <li><Link href="/contact" className="hover:text-brand-purple transition-colors">{t('nav.contact')}</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-black mb-10 text-brand-purple uppercase tracking-[0.2em] text-xs">Follow</h4>
+            <h4 className="font-black mb-10 text-brand-purple uppercase tracking-[0.2em] text-xs">{t('common.follow')}</h4>
             <div className="flex gap-6">
               <a href="https://www.instagram.com/passionfruits_ministry/" target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center hover:text-brand-purple border border-slate-200 shadow-sm transition-all">
                 <span className="material-icons text-2xl">camera_alt</span>
@@ -238,7 +238,7 @@ export default function Contact() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto mt-24 pt-10 border-t border-slate-100 text-center text-slate-300 text-[10px] font-black tracking-[0.6em] uppercase">
-          © 2026 PassionFruits Ministry. Retro Roots, Future Vision.
+          {t('common.copyright')}
         </div>
       </footer>
 
@@ -284,7 +284,7 @@ export default function Contact() {
               {t('nav.join')}
             </Link>
             <Link href="/about" onClick={() => setIsMenuOpen(false)} className="w-full py-5 bg-slate-100 text-brand-dark rounded-2xl font-black text-sm uppercase tracking-widest text-center">
-              Our Vision
+              {t('common.ourVision')}
             </Link>
           </div>
         </div>

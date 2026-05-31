@@ -4,25 +4,26 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import { BrandHeading } from '@/components/BrandHeading'
 import { supabase } from '@/lib/supabase'
 
-const beliefs = (t: any) => [
-  { icon: 'menu_book', title: 'The Bible — Our Compass', desc: 'We believe the Holy Bible is the infallible Word of God — our final authority and the ultimate guidebook for faith and life.' },
-  { icon: 'diversity_3', title: 'God — The Creator', desc: 'We believe in the one true, living God existing eternally in three persons: Father, Son, and Holy Spirit. He is the Architect of all things.' },
-  { icon: 'church', title: 'Jesus Christ — Our Only Way', desc: 'Jesus is fully God and fully man. He died for our sins, rose again, and ascended to Heaven as Lord. He is the only bridge between us and God.' },
-  { icon: 'local_fire_department', title: 'Holy Spirit — Our Guide', desc: 'The Holy Spirit dwells within us, transforming our lives. He coaches, comforts, and empowers us to live out our mission.' },
-  { icon: 'card_giftcard', title: 'Salvation — The Ultimate Gift', desc: "Salvation isn't earned by good works — it's a free gift of grace. Through faith in Jesus' finished work on the cross, we are saved." },
-  { icon: 'healing', title: 'Mankind — Restoration', desc: 'We were created in God\'s image, but sin separated us from Him. Every human being needs to find true identity and restoration through Jesus Christ.' },
+const beliefs = (t: (key: string) => string) => [
+  { icon: 'menu_book', title: t('about.beliefBibleTitle'), desc: t('about.beliefBibleDesc') },
+  { icon: 'diversity_3', title: t('about.beliefGodTitle'), desc: t('about.beliefGodDesc') },
+  { icon: 'church', title: t('about.beliefJesusTitle'), desc: t('about.beliefJesusDesc') },
+  { icon: 'local_fire_department', title: t('about.beliefSpiritTitle'), desc: t('about.beliefSpiritDesc') },
+  { icon: 'card_giftcard', title: t('about.beliefSalvationTitle'), desc: t('about.beliefSalvationDesc') },
+  { icon: 'healing', title: t('about.beliefMankindTitle'), desc: t('about.beliefMankindDesc') },
 ]
 
-const ministries = (t: any) => [
-  { icon: 'music_note', title: 'Worship & Unity', desc: 'Every Monday, our Worship Night serves as a spiritual engine for praise and fellowship. Our annual Conference is a 3-day immersion into Kingdom culture.' },
-  { icon: 'public', title: 'Global Missions', desc: 'Our mission teams actively serve in Europe (France, Italy, North Macedonia) and Latin America (Dominican Republic, Haiti), planting seeds of hope.' },
-  { icon: 'theater_comedy', title: '"The Gospel" (Cultural Arts)', desc: 'Through our original musical production, we provide a platform for youth to encounter God through the arts, using the stage to communicate Truth.' },
+const ministries = (t: (key: string) => string) => [
+  { icon: 'music_note', title: t('about.ministry1Title'), desc: t('about.ministry1Desc') },
+  { icon: 'public', title: t('about.ministry2Title'), desc: t('about.ministry2Desc') },
+  { icon: 'theater_comedy', title: t('about.ministry3Title'), desc: t('about.ministry3Desc') },
 ]
 
 export default function AboutPage() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [content, setContent] = useState<any>(null)
@@ -43,15 +44,16 @@ export default function AboutPage() {
     }
   }
 
-  const massiveTitle = content?.massiveTitle || t('about.massiveTitle')
-  const massiveDesc = content?.massiveDesc || t('about.massiveDesc')
-  const creativeCall = content?.creativeCall || t('about.creativeCall')
-  const creativeQuote = content?.creativeQuote || t('about.creativeQuote')
+  const localizedContent = language === 'en' ? content : null
+  const massiveTitle = localizedContent?.massiveTitle || t('about.massiveTitle')
+  const massiveDesc = localizedContent?.massiveDesc || t('about.massiveDesc')
+  const creativeCall = localizedContent?.creativeCall || t('about.creativeCall')
+  const creativeQuote = localizedContent?.creativeQuote || t('about.creativeQuote')
 
   return (
     <div className="flex flex-col min-h-screen bg-white selection:bg-brand-purple selection:text-white">
       {/* Navbar */}
-      <header className="sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6 bg-white md:bg-white/95 md:backdrop-blur-md border-b border-slate-100 shadow-sm">
+      <header className="sticky top-0 z-[100] relative grid grid-cols-[auto_1fr_auto] items-center px-6 md:px-16 py-6 bg-white md:bg-white/95 md:backdrop-blur-md border-b border-slate-100 shadow-sm">
         <div className="flex items-center gap-6">
           <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-14 md:h-28 w-auto mt-0 md:-mt-6 -mb-4 drop-shadow-md cursor-pointer" /></Link>
           <div className="hidden md:block">
@@ -60,7 +62,7 @@ export default function AboutPage() {
         </div>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex gap-12 text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
+        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:flex justify-center gap-12 whitespace-nowrap text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
           <Link href="/" className="hover:text-brand-purple transition-all">{t('nav.home')}</Link>
           <Link href="/conference" className="hover:text-brand-purple transition-all">{t('nav.conference')}</Link>
           <Link href="/events" className="hover:text-brand-purple transition-all">{t('nav.events')}</Link>
@@ -90,10 +92,10 @@ export default function AboutPage() {
       <section className="relative bg-brand-dark text-white py-32 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#9a78b4]/30 to-brand-dark" />
         <div className="relative z-10 max-w-5xl mx-auto text-center">
-          <span className="text-[#fffbbd] text-xs font-black tracking-[0.5em] uppercase mb-6 block">Since 2023</span>
-          <h1 className="text-4xl md:text-8xl font-black uppercase tracking-tighter mb-8 leading-none">"{t('hero.influence')}"</h1>
+          <span className="text-[#fffbbd] text-xs font-black tracking-[0.5em] uppercase mb-6 block">{t('about.since')}</span>
+          <BrandHeading tag="h1" text={`"${t('hero.influence')}"`} className="text-4xl md:text-8xl font-black uppercase tracking-tighter mb-8 leading-none" />
           <p className="text-lg text-white/70 font-bold max-w-3xl mx-auto leading-relaxed italic break-keep">
-            PassionFruits is a vibrant youth cultural mission movement dedicated to spreading the love of Jesus Christ through the creative language of culture.
+            {t('about.heroDesc')}
           </p>
         </div>
       </section>
@@ -124,19 +126,13 @@ export default function AboutPage() {
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter mb-6 md:mb-8 leading-tight break-keep">
                   {massiveTitle.split(',').map((part: string, i: number) => {
-                    const trimmed = part.trim();
-                    if (!trimmed) return null;
-                    const firstChar = trimmed[0];
-                    const rest = trimmed.slice(1);
+                    const trimmed = part.trim()
+                    if (!trimmed) return null
                     return (
                       <span key={i} className="block">
-                        <span className={i === 0 ? "text-brand-purple" : "text-brand-yellow"}>
-                          {firstChar}
-                        </span>
-                        <span>{rest}</span>
-                        {i === 0 && massiveTitle.includes(',') && ','}
+                        {i === 0 && massiveTitle.includes(',') ? `${trimmed},` : trimmed}
                       </span>
-                    );
+                    )
                   })}
                 </h2>
                 <p className="text-slate-500 font-bold text-base md:text-lg leading-relaxed break-keep">
@@ -169,11 +165,11 @@ export default function AboutPage() {
       {/* Mission */}
       <section className="py-16 md:py-24 px-5 md:px-6 bg-white">
         <div className="max-w-5xl mx-auto">
-          <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block text-center">Our Heart</span>
+          <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block text-center">{t('about.missionLabel')}</span>
           <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter text-center mb-12 md:mb-16">{t('about.missionTitle')}</h2>
           <div className="text-base md:text-lg text-slate-600 font-medium leading-relaxed space-y-6 max-w-3xl mx-auto text-center md:text-left">
-            <p>We break away from rigid traditions to create a space where young people's creative talents and raw passion become a bridge for the Gospel. Our vision is to saturate every ministry with Christ's heart, leading a youth culture that is as trendy as it is transformative.</p>
-            <p>From supporting the marginalized to launching cultural projects that heal society, we are a community of young changemakers. We don't just follow the culture; we lead it with the truth and love of Jesus, boldly aiming to flip the world upside down.</p>
+            <p>{t('about.missionP1')}</p>
+            <p>{t('about.missionP2')}</p>
           </div>
         </div>
       </section>
@@ -181,10 +177,10 @@ export default function AboutPage() {
       {/* Ministries */}
       <section className="py-16 md:py-24 px-5 md:px-6 bg-slate-50 border-y border-slate-100">
         <div className="max-w-6xl mx-auto">
-          <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block text-center">What We Do</span>
-          <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter text-center mb-12 md:mb-16">Our Ministries</h2>
+          <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block text-center">{t('about.ministriesLabel')}</span>
+          <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter text-center mb-12 md:mb-16">{t('about.ministriesTitle')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            {(content?.ministries || ministries(t)).map((m: any, i: number) => (
+            {(localizedContent?.ministries || ministries(t)).map((m: any, i: number) => (
               <div key={i} className="bg-white rounded-3xl p-8 md:p-10 border border-slate-100 shadow-sm hover:shadow-lg transition-shadow">
                 <div className="w-14 md:w-16 h-14 md:h-16 bg-[#fffbbd] rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
                   {m.iconUrl ? (
@@ -207,7 +203,7 @@ export default function AboutPage() {
           <span className="text-brand-purple font-black text-xs md:text-sm tracking-widest uppercase mb-4 block text-center">{t('about.foundation')}</span>
           <h2 className="text-3xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter text-center mb-12 md:mb-16">{t('about.beliefsTitle')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {(content?.beliefs || beliefs(t)).map((b: any, i: number) => (
+            {(localizedContent?.beliefs || beliefs(t)).map((b: any, i: number) => (
               <div key={i} className="p-6 md:p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:border-brand-purple transition-colors">
                 {b.iconUrl ? (
                   <img src={b.iconUrl} className="w-10 h-10 object-contain mb-4" alt={b.title} />
@@ -224,11 +220,11 @@ export default function AboutPage() {
 
       {/* CTA */}
       <section className="py-16 md:py-24 px-5 md:px-6 bg-brand-dark text-white text-center">
-        <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-6">Join the Movement</h2>
-        <p className="text-white/60 font-bold mb-10 md:mb-12 max-w-xl mx-auto text-sm md:text-base">Be part of a community of young changemakers flipping the world upside down.</p>
+        <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-6">{t('about.ctaTitle')}</h2>
+        <p className="text-white/60 font-bold mb-10 md:mb-12 max-w-xl mx-auto text-sm md:text-base">{t('about.ctaDesc')}</p>
         <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center">
-          <Link href="/conference" className="px-10 md:px-16 py-4 md:py-6 bg-[#fffbbd] text-brand-dark rounded-full font-black text-base md:text-lg uppercase hover:scale-105 transition-transform text-center">Conference 2026</Link>
-          <a href="https://www.instagram.com/passionfruits_ministry/" target="_blank" rel="noopener noreferrer" className="px-10 md:px-16 py-4 md:py-6 bg-white/10 border border-white/20 text-white rounded-full font-black text-base md:text-lg uppercase hover:bg-white/20 transition-all text-center">Follow Us</a>
+          <Link href="/conference" className="px-10 md:px-16 py-4 md:py-6 bg-[#fffbbd] text-brand-dark rounded-full font-black text-base md:text-lg uppercase hover:scale-105 transition-transform text-center">{t('about.conference2026')}</Link>
+          <a href="https://www.instagram.com/passionfruits_ministry/" target="_blank" rel="noopener noreferrer" className="px-10 md:px-16 py-4 md:py-6 bg-white/10 border border-white/20 text-white rounded-full font-black text-base md:text-lg uppercase hover:bg-white/20 transition-all text-center">{t('about.followUs')}</a>
         </div>
       </section>
 
@@ -274,7 +270,7 @@ export default function AboutPage() {
               {t('nav.join')}
             </Link>
             <Link href="/about" onClick={() => setIsMenuOpen(false)} className="w-full py-5 bg-slate-100 text-brand-dark rounded-2xl font-black text-sm uppercase tracking-widest text-center">
-              Our Vision
+              {t('common.ourVision')}
             </Link>
           </div>
         </div>

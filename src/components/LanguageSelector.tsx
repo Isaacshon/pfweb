@@ -20,7 +20,7 @@ export const LanguageSelector = () => {
           key={lang.code}
           onClick={() => setLanguage(lang.code)}
           className={`
-            px-3 py-1 rounded-full text-[10px] font-black transition-all
+            min-w-9 px-3 py-1 rounded-full text-center text-[10px] font-black transition-all
             ${language === lang.code 
               ? 'bg-brand-purple text-white shadow-sm' 
               : 'text-slate-400 hover:text-brand-purple'

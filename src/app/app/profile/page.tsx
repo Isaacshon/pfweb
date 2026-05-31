@@ -489,7 +489,7 @@ export default function ProfilePage() {
       {/* Invite Action */}
       <section className="px-8 mb-12">
         <Link 
-          href="/app/download"
+          href="/app/download?install=1"
           className={`w-full py-6 rounded-[32px] flex items-center justify-between px-8 transition-all active:scale-[0.98] ${isDarkMode ? 'bg-zinc-900 border-brand-yellow/20 shadow-brand-yellow/5' : 'bg-brand-purple/5 border-brand-purple/10 shadow-brand-purple/5'} border shadow-xl`}
         >
           <div className="flex items-center gap-4">

@@ -421,7 +421,7 @@ export default function AdminDashboard() {
                             <div className="flex flex-col gap-4">
                               <div className="w-20 h-20 bg-white rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm relative group mx-auto">
                                 {item.iconUrl ? (
-                                  <img src={item.iconUrl} className="w-full h-full object-cover" />
+                                  <img src={item.iconUrl} alt={`${item.label} icon`} className="w-full h-full object-cover" />
                                 ) : (
                                   <span className="material-icons text-2xl text-brand-purple">{item.icon}</span>
                                 )}
@@ -494,7 +494,7 @@ export default function AdminDashboard() {
                                 <div className="flex items-center gap-4">
                                   <div className="w-12 h-12 bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm flex items-center justify-center">
                                     {item.iconUrl ? (
-                                      <img src={item.iconUrl} className="w-full h-full object-cover" />
+                                      <img src={item.iconUrl} alt={`${item.title} icon`} className="w-full h-full object-cover" />
                                     ) : (
                                       <span className="material-icons text-slate-300">{item.icon}</span>
                                     )}
@@ -671,7 +671,7 @@ export default function AdminDashboard() {
                               <div className="flex items-center gap-4 mb-2">
                                 <div className="w-12 h-12 bg-white rounded-xl border border-slate-100 overflow-hidden shadow-sm flex items-center justify-center">
                                   {item.iconUrl ? (
-                                    <img src={item.iconUrl} className="w-full h-full object-cover" />
+                                    <img src={item.iconUrl} alt={`${item.title} icon`} className="w-full h-full object-cover" />
                                   ) : (
                                     <span className="material-icons text-slate-300">{item.icon}</span>
                                   )}

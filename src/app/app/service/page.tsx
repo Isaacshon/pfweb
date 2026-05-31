@@ -11,7 +11,7 @@ const services = [
   {
     id: 1,
     category: 'Sunday Worship',
-    title: '1st Service (for test.)',
+    title: '1st Service',
     time: '09:00 AM',
     location: 'Main Sanctuary',
     image: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&q=80&w=800'
@@ -19,7 +19,7 @@ const services = [
   {
     id: 2,
     category: 'Sunday Worship',
-    title: '2nd Service (for test.)',
+    title: '2nd Service',
     time: '11:00 AM',
     location: 'Main Sanctuary',
     image: 'https://images.unsplash.com/photo-1544427928-c49cdfebf139?auto=format&fit=crop&q=80&w=800'
@@ -27,7 +27,7 @@ const services = [
   {
     id: 3,
     category: 'Wednesday Service',
-    title: 'Midweek Revival (for test.)',
+    title: 'Midweek Revival',
     time: '07:30 PM',
     location: 'Fellowship Hall',
     image: 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&q=80&w=800'
@@ -50,7 +50,7 @@ export default function ServicePage() {
       {/* Hero Intro */}
       <section className="flex flex-col gap-2">
         <h1 className={`font-plus-jakarta font-black text-5xl tracking-tighter ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>Worship</h1>
-        <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Connect with God (for test.)</p>
+        <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Connect with God</p>
       </section>
 
       {/* Horizontal Category Tabs */}
@@ -92,14 +92,14 @@ export default function ServicePage() {
                   </h3>
                   <div className="flex items-center gap-2 text-white/70 text-sm font-bold">
                     <span className="material-icons text-base">location_on</span>
-                    <span>{service.location} (for test.)</span>
+                    <span>{service.location}</span>
                   </div>
                   
                   <button 
                     onClick={() => setShowJubo(true)}
                     className="mt-6 w-full bg-white text-black py-4 rounded-full font-black text-[12px] uppercase tracking-widest active:scale-95 transition-all shadow-xl"
                   >
-                    Join & View Bulletin (for test.)
+                    Join & View Bulletin
                   </button>
                 </div>
               </BentoCard>
@@ -123,7 +123,7 @@ export default function ServicePage() {
               <div className="text-center space-y-2">
                 <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${accentColor}`}>PassionFruits Church</p>
                 <h3 className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-black'}`}>Worship Order</h3>
-                <p className="text-slate-400 text-xs font-bold uppercase">April 27, 2026 (for test.)</p>
+                <p className="text-slate-400 text-xs font-bold uppercase">April 27, 2026</p>
               </div>
               
               <div className="space-y-6">
@@ -144,7 +144,7 @@ export default function ServicePage() {
               <div className={`mt-auto p-6 rounded-3xl ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-50'}`}>
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Announcements</p>
                 <p className={`text-[11px] font-medium leading-relaxed ${isDarkMode ? 'text-zinc-300' : 'text-slate-600'}`}>
-                  Join us for our community gathering this Friday at 7 PM. (for test.)
+                  Join us for our community gathering this Friday at 7 PM.
                 </p>
               </div>
             </div>

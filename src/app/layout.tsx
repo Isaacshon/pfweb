@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -45,9 +46,6 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" 
           rel="stylesheet" 
         />
-        {/* PDF Libraries */}
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-        <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
         <DynamicFavicon />
       </head>
       <body className="h-full overscroll-none select-none">
@@ -57,9 +55,13 @@ export default function RootLayout({
           </LanguageProvider>
         </ThemeProvider>
 
+        {/* PDF Libraries */}
+        <Script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" strategy="afterInteractive" />
+        <Script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js" strategy="afterInteractive" />
+
         {/* PWA Service Worker Registration */}
-        <script dangerouslySetInnerHTML={{
-          __html: `
+        <Script id="service-worker-registration" strategy="afterInteractive">
+          {`
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js').then(function(registration) {
@@ -69,8 +71,8 @@ export default function RootLayout({
                 });
               });
             }
-          `
-        }} />
+          `}
+        </Script>
       </body>
     </html>
   );

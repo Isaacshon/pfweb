@@ -167,11 +167,13 @@ export default function WorshipPage() {
         
         if (authError || !session) {
           console.warn("🚫 No active session found", authError);
-          // Only redirect if we have absolutely no user info
-          if (!localStorage.getItem('pf_current_user')) {
-            router.push('/app/profile');
+          // If we had a cached user but session is gone, it's expired
+          if (localStorage.getItem('pf_current_user')) {
+            console.log("Session expired. Clearing cache and redirecting...");
+            localStorage.removeItem('pf_current_user');
+            setCurrentUser(null);
           }
-          setIsLoaded(true);
+          router.push('/app/profile');
           return;
         }
 
@@ -866,9 +868,20 @@ export default function WorshipPage() {
             </div>
           </div>
         ) : (
-          <div className="py-20 flex flex-col items-center justify-center opacity-20 space-y-4">
+          <div className="py-20 flex flex-col items-center justify-center text-center opacity-20 space-y-4">
             <span className="material-icons text-6xl">auto_awesome</span>
             <p className="text-[10px] font-black uppercase tracking-widest">No sets found in {activeTab}</p>
+            {activeTab === 'upcoming' && sets.some(s => new Date(s.date) < new Date()) && (
+              <button
+                onClick={() => {
+                  setActiveTab('history');
+                  localStorage.setItem('pf_worship_tab', 'history');
+                }}
+                className="mt-4 px-6 py-2 rounded-full border border-current text-[10px] font-black uppercase tracking-widest hover:bg-brand-purple hover:text-white transition-all opacity-100"
+              >
+                Check History Tab
+              </button>
+            )}
           </div>
         )}
       </section>
@@ -1683,4 +1696,3 @@ function SortableSongCard({ song, index, updateSong, removeSong, findSheet, uplo
     </div>
   )
 }
-

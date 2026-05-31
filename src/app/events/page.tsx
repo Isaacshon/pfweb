@@ -4,21 +4,22 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import { BrandHeading } from '@/components/BrandHeading'
 import { supabase } from '@/lib/supabase'
 
-const events = [
-  { title: 'PF Youth Camp 2025', date: 'Mar 8, 2025', category: 'Worship', image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=600' },
-  { title: '2 Years Anniversary', date: 'Jan 7, 2025', category: 'Worship', image: 'https://images.unsplash.com/photo-1540575861501-7ad05823c95b?auto=format&fit=crop&q=80&w=600' },
-  { title: 'Vancouver Evangelism Night', date: 'Nov 30, 2024', category: 'Mission', image: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80&w=600' },
-  { title: '2024 Retreat — Harvest', date: 'Sep 1, 2024', category: 'Retreat', image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=600' },
-  { title: 'Worship & Prayer Night — Fresh Wind', date: 'Jun 8, 2024', category: 'Worship', image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=600' },
-  { title: 'Italy Mission: Milano', date: 'Jun 8, 2024', category: 'Mission', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=600' },
-  { title: 'February Worship & Prayer Night', date: 'Jun 8, 2024', category: 'Worship', image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=600' },
-  { title: 'End of Year Celebration', date: 'Dec 23, 2023', category: 'Event', image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=600' },
+const events = (t: (key: string) => string) => [
+  { title: t('events.card1Title'), date: t('events.card1Date'), category: t('events.worship'), image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=600' },
+  { title: t('events.card2Title'), date: t('events.card2Date'), category: t('events.worship'), image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=600' },
+  { title: t('events.card3Title'), date: t('events.card3Date'), category: t('events.mission'), image: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80&w=600' },
+  { title: t('events.card4Title'), date: t('events.card4Date'), category: t('events.retreat'), image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=600' },
+  { title: t('events.card5Title'), date: t('events.card5Date'), category: t('events.worship'), image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=600' },
+  { title: t('events.card6Title'), date: t('events.card6Date'), category: t('events.mission'), image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=600' },
+  { title: t('events.card7Title'), date: t('events.card7Date'), category: t('events.worship'), image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=600' },
+  { title: t('events.card8Title'), date: t('events.card8Date'), category: t('events.event'), image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=600' },
 ]
 
 export default function EventsPage() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [boardPosts, setBoardPosts] = useState<any[]>([])
   const [content, setContent] = useState<any>(null)
@@ -28,11 +29,9 @@ export default function EventsPage() {
   }, [])
 
   const fetchData = async () => {
-    // 1. Fetch Posts
     const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false })
     if (postsData) setBoardPosts(postsData)
 
-    // 2. Fetch Page Settings
     const { data: settingsData } = await supabase.from('site_settings').select('*')
     if (settingsData) {
       const pageContent = settingsData.find(s => s.key === 'page_content')?.value
@@ -40,13 +39,15 @@ export default function EventsPage() {
     }
   }
 
-  const heroTitle = content?.heroTitle || 'Events & Updates'
-  const heroSubtitle = content?.heroSubtitle || 'Latest happenings and important notices from our ministry hub.'
+  const localizedContent = language === 'en' ? content : null
+  const heroTitle = localizedContent?.heroTitle || t('events.heroTitle')
+  const heroSubtitle = localizedContent?.heroSubtitle || t('events.heroSubtitle')
+  const eventCards = events(t)
 
   return (
     <div className="flex flex-col min-h-screen bg-white selection:bg-brand-purple selection:text-white">
       {/* Navbar */}
-      <header className="sticky top-0 z-[100] flex justify-between items-center px-6 md:px-16 py-6 bg-white md:bg-white/95 md:backdrop-blur-md border-b border-slate-100 shadow-sm">
+      <header className="sticky top-0 z-[100] relative grid grid-cols-[auto_1fr_auto] items-center px-6 md:px-16 py-6 bg-white md:bg-white/95 md:backdrop-blur-md border-b border-slate-100 shadow-sm">
         <div className="flex items-center gap-6">
           <Link href="/"><img src="/logo.png" alt="PassionFruits" className="h-14 md:h-28 w-auto mt-0 md:-mt-6 -mb-4 drop-shadow-md cursor-pointer" /></Link>
           <div className="hidden md:block">
@@ -55,7 +56,7 @@ export default function EventsPage() {
         </div>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex gap-12 text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
+        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:flex justify-center gap-12 whitespace-nowrap text-slate-600 font-black text-[11px] uppercase tracking-[0.25em]">
           <Link href="/" className="hover:text-brand-purple transition-all">{t('nav.home')}</Link>
           <Link href="/conference" className="hover:text-brand-purple transition-all">{t('nav.conference')}</Link>
           <Link href="/events" className="text-brand-purple border-b-2 border-brand-purple pb-1">{t('nav.events')}</Link>
@@ -85,8 +86,8 @@ export default function EventsPage() {
       <section className="bg-brand-dark text-white py-20 md:py-32 px-5 md:px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#9a78b4]/20 to-brand-dark" />
         <div className="max-w-5xl mx-auto text-center relative z-10">
-          <span className="text-[#fffbbd] text-xs font-black tracking-[0.5em] uppercase mb-6 block">Kingdom News</span>
-          <h1 className="text-4xl md:text-8xl font-black uppercase tracking-tighter mb-8 leading-none">{heroTitle}</h1>
+          <span className="text-[#fffbbd] text-xs font-black tracking-[0.5em] uppercase mb-6 block">{t('events.kingdomNews')}</span>
+          <BrandHeading tag="h1" text={heroTitle} className="text-4xl md:text-8xl font-black uppercase tracking-tighter mb-8 leading-none" />
           <p className="text-base md:text-xl text-white/70 font-bold max-w-2xl mx-auto">{heroSubtitle}</p>
         </div>
       </section>
@@ -99,7 +100,7 @@ export default function EventsPage() {
               <span className="w-12 h-12 bg-brand-purple rounded-2xl flex items-center justify-center text-white">
                 <span className="material-icons">campaign</span>
               </span>
-              <h2 className="text-2xl md:text-4xl font-black text-brand-dark uppercase tracking-tighter">Notice Board</h2>
+              <h2 className="text-2xl md:text-4xl font-black text-brand-dark uppercase tracking-tighter">{t('events.noticeBoard')}</h2>
             </div>
             <div className="space-y-4">
               {boardPosts.map((post, i) => (
@@ -125,7 +126,7 @@ export default function EventsPage() {
       {/* Events Grid */}
       <section className="py-16 md:py-32 px-5 md:px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {events.map((event, i) => (
+          {eventCards.map((event, i) => (
             <div key={i} className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all">
               <div className="aspect-[4/3] overflow-hidden">
                 <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -184,7 +185,7 @@ export default function EventsPage() {
               {t('nav.join')}
             </Link>
             <Link href="/about" onClick={() => setIsMenuOpen(false)} className="w-full py-5 bg-slate-100 text-brand-dark rounded-2xl font-black text-sm uppercase tracking-widest text-center">
-              Our Vision
+              {t('common.ourVision')}
             </Link>
           </div>
         </div>

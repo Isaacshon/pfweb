@@ -7,10 +7,10 @@ export const ScheduleTable = () => {
   const { t } = useLanguage()
 
   const schedule = [
-    { name: t('schedule.mon'), time: 'Mon 7:30 PM', location: 'Toronto Hub' },
-    { name: t('schedule.sun'), time: 'Sun 2:00 PM', location: 'Main Hall' },
-    { name: t('schedule.sat'), time: 'Sat 6:00 PM', location: 'Culture Room' },
-    { name: t('schedule.thu'), time: 'Thu 7:00 PM', location: 'Studio' },
+    { name: t('schedule.mon'), time: t('schedule.monTime'), location: t('schedule.torontoHub') },
+    { name: t('schedule.sun'), time: t('schedule.sunTime'), location: t('schedule.mainHall') },
+    { name: t('schedule.sat'), time: t('schedule.satTime'), location: t('schedule.cultureRoom') },
+    { name: t('schedule.thu'), time: t('schedule.thuTime'), location: t('schedule.studio') },
   ]
 
   return (
@@ -18,7 +18,7 @@ export const ScheduleTable = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
         <div>
           <h2 className="text-6xl md:text-7xl font-black text-brand-dark mb-10 leading-[0.9] uppercase tracking-tighter">
-            {t('schedule.title')}<br/><span className="text-brand-purple">{t('schedule.subtitle')}</span>
+            {t('schedule.title')}<br /><span className="text-brand-purple">{t('schedule.subtitle')}</span>
           </h2>
           <p className="text-xl text-slate-500 mb-12 max-w-md font-bold">
             {t('schedule.desc')}

@@ -1,16 +1,43 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
-type Language = 'en' | 'ko' | 'zh' | 'es'
+export type Language = 'en' | 'ko' | 'zh' | 'es'
+
+type TranslationValue = string | { [key: string]: TranslationValue }
+type TranslationTable = Record<Language, { [key: string]: TranslationValue }>
 
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
-  t: (key: string) => any
+  t: (key: string) => string
 }
 
-const translations = {
+const LANGUAGE_STORAGE_KEY = 'pf_language'
+
+const isLanguage = (value: string | null): value is Language =>
+  value === 'en' || value === 'ko' || value === 'zh' || value === 'es'
+
+const readStoredLanguage = () => {
+  try {
+    if (typeof window === 'undefined') return null
+    const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY)
+    return isLanguage(stored) ? stored : null
+  } catch {
+    return null
+  }
+}
+
+const writeStoredLanguage = (language: Language) => {
+  try {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language)
+  } catch {
+    // Language switching should still work when storage is blocked.
+  }
+}
+
+const translations: TranslationTable = {
   en: {
     nav: {
       home: 'Home',
@@ -20,12 +47,56 @@ const translations = {
       contact: 'Contact',
       join: 'Join Now'
     },
+    common: {
+      ourVision: 'Our Vision',
+      footerDescription: 'Flipping the world upside down through the creative language of youth culture.',
+      explore: 'Explore',
+      follow: 'Follow',
+      conference2026: '2026 Conference',
+      eventsNews: 'Events & News',
+      ourImpact: 'Our Impact',
+      copyright: '© 2026 PassionFruits Ministry. Retro Roots, Future Vision.'
+    },
+    popup: {
+      specialEvent: 'Special Event',
+      titleLine1: 'PassionFruits',
+      titleLine2: 'Conference 2026',
+      desc: 'Kingdom Influence: Leading a youth culture that is as trendy as it is transformative. Join the movement.',
+      registerNow: 'Register Now',
+      viewDetails: 'View Details',
+      hideToday: 'Do not show this again today'
+    },
     hero: {
       influence: 'Kingdom Influence',
       title: 'PASSION FRUITS',
       subtitle: 'Leading a youth culture that is as trendy as it is transformative. Join the movement of changemakers.',
       getStarted: 'Get Started',
       vision: 'Our Vision'
+    },
+    home: {
+      latestUpdate: 'Latest Update',
+      conferenceEvents: 'Conference & Events',
+      moments: 'Moments',
+      passionInAction: 'Passion in Action',
+      fullGallery: 'Full Gallery',
+      contact: 'Contact',
+      visitLine1: 'Visit Our',
+      visitLine2: 'Creative Hub',
+      torontoOffice: 'Toronto Office',
+      officeAddress: 'Toronto, Ontario, Canada',
+      generalInquiries: 'General Inquiries'
+    },
+    feature: {
+      majorEvent: 'Major Event',
+      kingdomInfluence: 'Kingdom Influence:',
+      conf2026: 'Conf 2026',
+      joinMovement: 'Join the Movement',
+      ourMission: 'Our Mission',
+      missionDesc: 'Spreading the love of Jesus Christ through the creative language of culture.',
+      learnMore: 'Learn More',
+      joinMovementTitle: 'Join Movement',
+      joinMovementDesc: 'Leading a youth culture that is as trendy as it is transformative.',
+      aboutUs: 'About Us'
     },
     menu: {
       conf: '2026 Conf',
@@ -41,6 +112,18 @@ const translations = {
       support: 'Support',
       supportSub: 'Sponsorship'
     },
+    journey: {
+      title: 'PassionFruits Journey',
+      subtitle: 'Our Path',
+      worshipTitle: 'Worship',
+      worshipDesc: 'Encounter Jesus',
+      creativityTitle: 'Creativity',
+      creativityDesc: 'The Gospel Arts',
+      missionsTitle: 'Missions',
+      missionsDesc: 'Global Impact',
+      influenceTitle: 'Influence',
+      influenceDesc: 'Kingdom Culture'
+    },
     schedule: {
       title: 'Ministry',
       subtitle: 'Schedule',
@@ -49,33 +132,151 @@ const translations = {
       mon: 'Monday Worship',
       sun: 'Passion Worship',
       sat: 'Youth Gathering',
-      thu: 'Creative Lab'
+      thu: 'Creative Lab',
+      monTime: 'Mon 7:30 PM',
+      sunTime: 'Sun 2:00 PM',
+      satTime: 'Sat 6:00 PM',
+      thuTime: 'Thu 7:00 PM',
+      torontoHub: 'Toronto Hub',
+      mainHall: 'Main Hall',
+      cultureRoom: 'Culture Room',
+      studio: 'Studio'
     },
     about: {
+      since: 'Since 2023',
+      heroDesc: 'PassionFruits is a vibrant youth cultural mission movement dedicated to spreading the love of Jesus Christ through the creative language of culture.',
       massiveTitle: 'We are Creators, not just followers.',
       massiveDesc: 'We break away from rigid traditions to create a space where young people’s creative talents and raw passion become a bridge for the Gospel. We lead a youth culture that is as trendy as it is transformative.',
       creativeCall: 'The Creative Call',
       creativeQuote: '"Art and culture are the most powerful languages we have to communicate the love of Jesus to the next generation."',
       commitment: 'Our Commitment',
       commitmentDesc: 'From supporting the marginalized to launching cultural projects that heal society, we are a community of young changemakers flipping the world upside down.',
+      missionLabel: 'Our Heart',
+      missionTitle: 'Passion for Jesus, Culture for the World',
+      missionP1: 'We break away from rigid traditions to create a space where young people’s creative talents and raw passion become a bridge for the Gospel. Our vision is to saturate every ministry with Christ’s heart, leading a youth culture that is as trendy as it is transformative.',
+      missionP2: 'From supporting the marginalized to launching cultural projects that heal society, we are a community of young changemakers. We do not just follow the culture; we lead it with the truth and love of Jesus, boldly aiming to flip the world upside down.',
+      ministriesLabel: 'What We Do',
+      ministriesTitle: 'Our Ministries',
+      ministry1Title: 'Worship & Unity',
+      ministry1Desc: 'Every Monday, our Worship Night serves as a spiritual engine for praise and fellowship. Our annual Conference is a 3-day immersion into Kingdom culture.',
+      ministry2Title: 'Global Missions',
+      ministry2Desc: 'Our mission teams actively serve in Europe and Latin America, planting seeds of hope.',
+      ministry3Title: '"The Gospel" (Cultural Arts)',
+      ministry3Desc: 'Through our original musical production, we provide a platform for youth to encounter God through the arts, using the stage to communicate Truth.',
       beliefsTitle: 'What We Believe',
       foundation: 'Foundation',
-      missionTitle: 'Passion for Jesus, Culture for the World'
+      beliefBibleTitle: 'The Bible - Our Compass',
+      beliefBibleDesc: 'We believe the Holy Bible is the infallible Word of God, our final authority and the ultimate guidebook for faith and life.',
+      beliefGodTitle: 'God - The Creator',
+      beliefGodDesc: 'We believe in the one true, living God existing eternally in three persons: Father, Son, and Holy Spirit.',
+      beliefJesusTitle: 'Jesus Christ - Our Only Way',
+      beliefJesusDesc: 'Jesus is fully God and fully man. He died for our sins, rose again, and ascended to Heaven as Lord.',
+      beliefSpiritTitle: 'Holy Spirit - Our Guide',
+      beliefSpiritDesc: 'The Holy Spirit dwells within us, transforming our lives and empowering us to live out our mission.',
+      beliefSalvationTitle: 'Salvation - The Ultimate Gift',
+      beliefSalvationDesc: 'Salvation is not earned by good works. It is a free gift of grace through faith in Jesus.',
+      beliefMankindTitle: 'Mankind - Restoration',
+      beliefMankindDesc: 'We were created in God’s image, and every human being needs true identity and restoration through Jesus Christ.',
+      ctaTitle: 'Join the Movement',
+      ctaDesc: 'Be part of a community of young changemakers flipping the world upside down.',
+      conference2026: 'Conference 2026',
+      followUs: 'Follow Us'
+    },
+    conference: {
+      heroDate: 'August 20-22, 2026',
+      heroTitle: 'JUDGES',
+      titleSuffix: 'Conference',
+      heroSubtitle: 'Conquest to Conquer',
+      verse: '"But you are a chosen people, a royal priesthood, a holy nation..." - 1 Peter 2:9',
+      registerFree: 'Register Now (Free)',
+      lineup: 'Lineup',
+      speakersTitle: 'Visionary Speakers',
+      guestSpeaker1: 'Guest Speaker 1',
+      guestSpeaker2: 'Guest Speaker 2',
+      guestSpeaker3: 'Guest Speaker 3',
+      guestSpeaker4: 'Guest Speaker 4',
+      toBeAnnounced: 'To be announced',
+      timeline: 'Timeline',
+      scheduleTitle: 'Conference Schedule',
+      day1: 'Day 1',
+      day2: 'Day 2',
+      day3: 'Day 3',
+      date1: 'August 20, 2026',
+      date2: 'August 21, 2026',
+      date3: 'August 22, 2026',
+      registration: 'Registration',
+      checkIn: 'Check in',
+      recreation: 'Recreation',
+      haveFun: 'Have fun',
+      worshipPrayer: 'Worship & Prayer',
+      worshipPrayerDesc: 'Intimate time of worship',
+      morningWorship: 'Morning Worship',
+      morningWorshipDesc: 'Start your day by worship',
+      breakoutSession: 'Breakout Session',
+      breakoutSessionDesc: 'Seminars and creative initiatives',
+      worshipNight: 'Worship Night',
+      worshipNightDesc: 'Powerful worship night',
+      churchConnection: 'Church Connection',
+      churchConnectionDesc: 'Connect with new partnerships',
+      closingCeremony: 'Closing Ceremony',
+      closingCeremonyDesc: 'Commissioning and send-off',
+      voices: 'Voices',
+      attendeesTitle: 'What Attendees Say',
+      testimonial1: '"PassionFruits is always passionate for Christ. It is a life changing experience."',
+      testimonial2: '"At PassionFruits, creativity and passion are not restrained but released as authentic expressions of worship and faith."',
+      attendee: 'Conference Attendee',
+      readyTitle: 'Ready to Join?',
+      readyDesc: 'Secure your spot at the PassionFruits Conference 2026. Registration is complimentary.',
+      registerNow: 'Register Now'
+    },
+    events: {
+      kingdomNews: 'Kingdom News',
+      heroTitle: 'Events & Updates',
+      heroSubtitle: 'Latest happenings and important notices from our ministry hub.',
+      noticeBoard: 'Notice Board',
+      worship: 'Worship',
+      mission: 'Mission',
+      retreat: 'Retreat',
+      event: 'Event',
+      card1Title: 'PF Youth Camp 2025',
+      card1Date: 'Mar 8, 2025',
+      card2Title: '2 Years Anniversary',
+      card2Date: 'Jan 7, 2025',
+      card3Title: 'Vancouver Evangelism Night',
+      card3Date: 'Nov 30, 2024',
+      card4Title: '2024 Retreat - Harvest',
+      card4Date: 'Sep 1, 2024',
+      card5Title: 'Worship & Prayer Night - Fresh Wind',
+      card5Date: 'Jun 8, 2024',
+      card6Title: 'Italy Mission: Milano',
+      card6Date: 'Jun 8, 2024',
+      card7Title: 'February Worship & Prayer Night',
+      card7Date: 'Jun 8, 2024',
+      card8Title: 'End of Year Celebration',
+      card8Date: 'Dec 23, 2023'
     },
     contactPage: {
       title: 'Get in Touch',
-      subtitle: 'Visit our creative hub in Toronto. We\'d love to hear from you.',
-      addressTitle: 'Our Location',
-      address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
-      emailTitle: 'Email Us',
+      heroTitle: 'Contact',
+      subtitle: 'Visit our creative hub in Toronto. We would love to hear from you.',
+      getInTouch: 'Get In Touch',
+      infoTitle: "Let's Build the Kingdom Together",
+      infoDesc: "Whether you're looking to partner, volunteer, or just say hello, we'd love to hear from you.",
+      addressTitle: 'Toronto Office',
+      address: 'Toronto, Ontario, Canada',
+      emailTitle: 'General Inquiries',
       email: 'passionfruits.ministry@gmail.com',
       instaTitle: 'Follow Us',
       instaHandle: '@passionfruits_ministry',
       formTitle: 'Send a Message',
+      nameLabel: 'Name',
+      emailLabel: 'Email',
+      messageLabel: 'Message',
       namePlaceholder: 'Your Name',
       emailPlaceholder: 'Email Address',
       messagePlaceholder: 'How can we help?',
-      sendBtn: 'Send Message'
+      sendBtn: 'Send Message',
+      thankYou: 'Thank you for your message!'
     }
   },
   ko: {
@@ -85,22 +286,66 @@ const translations = {
       events: '이벤트',
       about: '소개',
       contact: '문의',
-      join: '가입하기'
+      join: '함께하기'
+    },
+    common: {
+      ourVision: '우리의 비전',
+      footerDescription: '청년 문화의 창의적인 언어로 세상을 뒤집는 공동체입니다.',
+      explore: '둘러보기',
+      follow: '팔로우',
+      conference2026: '2026 컨퍼런스',
+      eventsNews: '이벤트 & 소식',
+      ourImpact: '우리의 영향력',
+      copyright: '© 2026 PassionFruits Ministry. Retro Roots, Future Vision.'
+    },
+    popup: {
+      specialEvent: '특별 이벤트',
+      titleLine1: '패션프루츠',
+      titleLine2: '2026 컨퍼런스',
+      desc: '킹덤 인플루언스: 트렌디하면서도 변화를 일으키는 청년 문화를 이끌어갑니다. 무브먼트에 함께하세요.',
+      registerNow: '지금 등록하기',
+      viewDetails: '자세히 보기',
+      hideToday: '오늘 다시 보지 않기'
     },
     hero: {
       influence: '킹덤 인플루언스',
       title: '패션 프루츠',
-      subtitle: '트렌디하면서도 변화를 이끄는 청년 문화를 선도합니다. 세상을 바꾸는 체인지메이커들의 움직임에 동참하세요.',
+      subtitle: '트렌디하면서도 변화를 일으키는 청년 문화를 이끌어갑니다. 세상을 바꾸는 체인지메이커들의 움직임에 함께하세요.',
       getStarted: '시작하기',
       vision: '우리의 비전'
+    },
+    home: {
+      latestUpdate: '최신 소식',
+      conferenceEvents: '컨퍼런스 & 이벤트',
+      moments: '순간들',
+      passionInAction: '행동하는 열정',
+      fullGallery: '전체 갤러리',
+      contact: '문의',
+      visitLine1: '우리의',
+      visitLine2: '크리에이티브 허브',
+      torontoOffice: '토론토 오피스',
+      officeAddress: '캐나다 온타리오 토론토',
+      generalInquiries: '일반 문의'
+    },
+    feature: {
+      majorEvent: '주요 이벤트',
+      kingdomInfluence: '킹덤 인플루언스:',
+      conf2026: '2026 컨퍼런스',
+      joinMovement: '무브먼트 참여하기',
+      ourMission: '우리의 미션',
+      missionDesc: '문화의 창의적인 언어로 예수 그리스도의 사랑을 전합니다.',
+      learnMore: '더 알아보기',
+      joinMovementTitle: '무브먼트 참여',
+      joinMovementDesc: '트렌디하면서도 변화를 일으키는 청년 문화를 이끌어갑니다.',
+      aboutUs: '소개 보기'
     },
     menu: {
       conf: '2026 컨퍼런스',
       confSub: '컨퍼런스',
       events: '이벤트',
-      eventsSub: '킹덤 뉴스',
+      eventsSub: '킹덤 소식',
       about: '소개',
-      aboutSub: '우리의 이야기',
+      aboutSub: '우리 이야기',
       vision: '비전',
       visionSub: '우리의 비전',
       contact: '문의',
@@ -108,108 +353,412 @@ const translations = {
       support: '후원',
       supportSub: '스폰서십'
     },
+    journey: {
+      title: '패션프루츠 여정',
+      subtitle: '우리의 길',
+      worshipTitle: '예배',
+      worshipDesc: '예수님을 만나다',
+      creativityTitle: '창의성',
+      creativityDesc: '복음의 예술',
+      missionsTitle: '선교',
+      missionsDesc: '글로벌 임팩트',
+      influenceTitle: '영향력',
+      influenceDesc: '킹덤 문화'
+    },
     schedule: {
       title: '사역',
-      subtitle: '스케줄',
-      desc: '우리의 사역은 창의적인 언어와 열정으로 가득합니다. 당신의 자리를 찾아보세요.',
+      subtitle: '일정',
+      desc: '우리의 사역은 창의적인 언어와 열정으로 가득합니다. 오늘 당신의 자리를 찾아보세요.',
       cta: '사역 참여하기',
       mon: '월요 예배',
       sun: '패션 예배',
       sat: '청년 모임',
-      thu: '크리에이티브 랩'
+      thu: '크리에이티브 랩',
+      monTime: '월 7:30 PM',
+      sunTime: '일 2:00 PM',
+      satTime: '토 6:00 PM',
+      thuTime: '목 7:00 PM',
+      torontoHub: '토론토 허브',
+      mainHall: '메인 홀',
+      cultureRoom: '컬처 룸',
+      studio: '스튜디오'
     },
     about: {
-      massiveTitle: '우리는 단순한 추종자가 아닌, 창조자입니다.',
-      massiveDesc: '정형화된 틀을 깨고 청년들의 창의적인 재능과 가공되지 않은 열정이 복음의 통로가 되는 공간을 만듭니다. 우리는 변화를 일으키는 트렌디한 청년 문화를 주도합니다.',
+      since: '2023년부터',
+      heroDesc: 'PassionFruits는 문화의 창의적인 언어로 예수 그리스도의 사랑을 전하는 청년 문화 선교 무브먼트입니다.',
+      massiveTitle: '우리는 단순한 추종자가 아니라, 창조자입니다.',
+      massiveDesc: '딱딱한 전통을 넘어 청년들의 창의적인 재능과 뜨거운 열정이 복음의 다리가 되는 공간을 만듭니다. 우리는 트렌디하면서도 변화를 일으키는 청년 문화를 이끌어갑니다.',
       creativeCall: '창조적인 부르심',
-      creativeQuote: '"예술과 문화는 우리가 다음 세대에게 예수님의 사랑을 전할 수 있는 가장 강력한 언어입니다."',
-      commitment: '우리의 다짐',
-      commitmentDesc: '소외된 이들을 향한 마음부터 사회를 치유하는 문화 프로젝트까지, 우리는 세상을 뒤집어 놓는 젊은 체인지메이커들의 공동체입니다.',
-      beliefsTitle: '우리의 믿음',
-      foundation: '신앙의 기초',
-      missionTitle: '예수를 향한 열정, 세상을 향한 문화'
+      creativeQuote: '"예술과 문화는 다음 세대에게 예수님의 사랑을 전할 수 있는 가장 강력한 언어입니다."',
+      commitment: '우리의 약속',
+      commitmentDesc: '소외된 이들을 돕는 일부터 사회를 치유하는 문화 프로젝트까지, 우리는 세상을 뒤집는 청년 체인지메이커 공동체입니다.',
+      missionLabel: '우리의 마음',
+      missionTitle: '예수님을 향한 열정, 세상을 향한 문화',
+      missionP1: '우리는 딱딱한 전통을 넘어 청년들의 창의적인 재능과 뜨거운 열정이 복음의 다리가 되는 공간을 만듭니다. 모든 사역 안에 그리스도의 마음이 흐르도록 하며, 트렌디하면서도 변화를 일으키는 청년 문화를 이끌어갑니다.',
+      missionP2: '소외된 이들을 돕는 일부터 사회를 치유하는 문화 프로젝트까지, 우리는 청년 체인지메이커 공동체입니다. 문화를 따라가기만 하지 않고 예수님의 진리와 사랑으로 문화를 이끌며 세상을 뒤집는 것을 꿈꿉니다.',
+      ministriesLabel: '우리가 하는 일',
+      ministriesTitle: '우리의 사역',
+      ministry1Title: '예배와 연합',
+      ministry1Desc: '매주 월요일 예배의 밤은 찬양과 교제를 위한 영적 엔진입니다. 연례 컨퍼런스는 킹덤 문화를 깊이 경험하는 3일간의 여정입니다.',
+      ministry2Title: '글로벌 선교',
+      ministry2Desc: '우리 선교팀은 유럽과 라틴아메리카에서 섬기며 희망의 씨앗을 심고 있습니다.',
+      ministry3Title: '"더 가스펠" 문화 예술',
+      ministry3Desc: '오리지널 뮤지컬 프로덕션을 통해 청년들이 예술로 하나님을 만나고 무대 위에서 진리를 전할 수 있는 플랫폼을 제공합니다.',
+      beliefsTitle: '우리가 믿는 것',
+      foundation: '믿음의 기초',
+      beliefBibleTitle: '성경 - 우리의 나침반',
+      beliefBibleDesc: '우리는 성경이 하나님의 무오한 말씀이며, 믿음과 삶의 최종 권위이자 궁극적인 안내서라고 믿습니다.',
+      beliefGodTitle: '하나님 - 창조주',
+      beliefGodDesc: '우리는 성부, 성자, 성령 삼위로 영원히 존재하시는 한 분의 참되고 살아계신 하나님을 믿습니다.',
+      beliefJesusTitle: '예수 그리스도 - 유일한 길',
+      beliefJesusDesc: '예수님은 완전한 하나님이시며 완전한 인간이십니다. 우리 죄를 위해 죽으시고 부활하셨으며 주님으로 승천하셨습니다.',
+      beliefSpiritTitle: '성령님 - 우리의 인도자',
+      beliefSpiritDesc: '성령님은 우리 안에 거하시며 삶을 변화시키고 사명을 살아내도록 능력을 주십니다.',
+      beliefSalvationTitle: '구원 - 최고의 선물',
+      beliefSalvationDesc: '구원은 선행으로 얻는 것이 아니라 예수님을 믿는 믿음을 통해 받는 은혜의 선물입니다.',
+      beliefMankindTitle: '인간 - 회복',
+      beliefMankindDesc: '우리는 하나님의 형상대로 창조되었으며, 모든 사람은 예수 그리스도 안에서 참된 정체성과 회복을 필요로 합니다.',
+      ctaTitle: '무브먼트에 함께하세요',
+      ctaDesc: '세상을 뒤집는 청년 체인지메이커 공동체의 일부가 되어주세요.',
+      conference2026: '2026 컨퍼런스',
+      followUs: '팔로우하기'
+    },
+    conference: {
+      heroDate: '2026년 8월 20-22일',
+      heroTitle: '사사기',
+      titleSuffix: '컨퍼런스',
+      heroSubtitle: '정복에서 정복으로',
+      verse: '"너희는 택하신 족속이요 왕 같은 제사장들이요 거룩한 나라..." - 베드로전서 2:9',
+      registerFree: '무료 등록하기',
+      lineup: '라인업',
+      speakersTitle: '강사진',
+      guestSpeaker1: '게스트 스피커 1',
+      guestSpeaker2: '게스트 스피커 2',
+      guestSpeaker3: '게스트 스피커 3',
+      guestSpeaker4: '게스트 스피커 4',
+      toBeAnnounced: '추후 공개',
+      timeline: '타임라인',
+      scheduleTitle: '컨퍼런스 일정',
+      day1: '1일차',
+      day2: '2일차',
+      day3: '3일차',
+      date1: '2026년 8월 20일',
+      date2: '2026년 8월 21일',
+      date3: '2026년 8월 22일',
+      registration: '등록',
+      checkIn: '체크인',
+      recreation: '레크리에이션',
+      haveFun: '즐거운 교제',
+      worshipPrayer: '예배와 기도',
+      worshipPrayerDesc: '깊은 예배의 시간',
+      morningWorship: '아침 예배',
+      morningWorshipDesc: '예배로 하루를 시작합니다',
+      breakoutSession: '브레이크아웃 세션',
+      breakoutSessionDesc: '세미나와 창의적 이니셔티브',
+      worshipNight: '예배의 밤',
+      worshipNightDesc: '강력한 예배의 밤',
+      churchConnection: '교회 연결',
+      churchConnectionDesc: '새로운 파트너십과 연결됩니다',
+      closingCeremony: '폐회식',
+      closingCeremonyDesc: '파송과 마무리',
+      voices: '참가자 이야기',
+      attendeesTitle: '참가자들의 말',
+      testimonial1: '"PassionFruits는 언제나 그리스도를 향한 열정으로 가득합니다. 삶을 바꾸는 경험입니다."',
+      testimonial2: '"PassionFruits 안에서 창의성과 열정은 억눌리지 않고 예배와 믿음의 진정한 표현으로 흘러나옵니다."',
+      attendee: '컨퍼런스 참가자',
+      readyTitle: '함께할 준비가 되셨나요?',
+      readyDesc: 'PassionFruits Conference 2026 자리를 예약하세요. 등록은 무료입니다.',
+      registerNow: '지금 등록하기'
+    },
+    events: {
+      kingdomNews: '킹덤 소식',
+      heroTitle: '이벤트 & 업데이트',
+      heroSubtitle: '미니스트리 허브의 최신 소식과 중요한 공지를 확인하세요.',
+      noticeBoard: '공지 게시판',
+      worship: '예배',
+      mission: '선교',
+      retreat: '수련회',
+      event: '이벤트',
+      card1Title: 'PF 청년 캠프 2025',
+      card1Date: '2025년 3월 8일',
+      card2Title: '2주년 기념',
+      card2Date: '2025년 1월 7일',
+      card3Title: '밴쿠버 전도 나이트',
+      card3Date: '2024년 11월 30일',
+      card4Title: '2024 리트릿 - 추수',
+      card4Date: '2024년 9월 1일',
+      card5Title: '예배와 기도의 밤 - 새 바람',
+      card5Date: '2024년 6월 8일',
+      card6Title: '이탈리아 선교: 밀라노',
+      card6Date: '2024년 6월 8일',
+      card7Title: '2월 예배와 기도의 밤',
+      card7Date: '2024년 6월 8일',
+      card8Title: '연말 셀러브레이션',
+      card8Date: '2023년 12월 23일'
     },
     contactPage: {
       title: '문의하기',
-      subtitle: '토론토의 크리에이티브 허브를 방문해 보세요. 여러분의 소중한 목소리를 기다립니다.',
-      addressTitle: '찾아오시는 길',
-      address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
-      emailTitle: '이메일 문의',
+      heroTitle: '문의',
+      subtitle: '토론토의 크리에이티브 허브를 방문해보세요. 여러분의 이야기를 기다립니다.',
+      getInTouch: '연락하기',
+      infoTitle: '함께 하나님 나라를 세워가요',
+      infoDesc: '파트너십, 봉사, 또는 간단한 인사까지 어떤 이야기든 환영합니다.',
+      addressTitle: '토론토 오피스',
+      address: '캐나다 온타리오 토론토',
+      emailTitle: '일반 문의',
       email: 'passionfruits.ministry@gmail.com',
-      instaTitle: '공식 인스타그램',
+      instaTitle: '팔로우하기',
       instaHandle: '@passionfruits_ministry',
-      formTitle: '메시지 남기기',
+      formTitle: '메시지 보내기',
+      nameLabel: '이름',
+      emailLabel: '이메일',
+      messageLabel: '메시지',
       namePlaceholder: '이름',
       emailPlaceholder: '이메일 주소',
       messagePlaceholder: '무엇을 도와드릴까요?',
-      sendBtn: '메시지 전송하기'
+      sendBtn: '메시지 보내기',
+      thankYou: '메시지를 보내주셔서 감사합니다!'
     }
   },
   zh: {
     nav: {
       home: '首页',
-      conference: '特会',
+      conference: '大会',
       events: '活动',
-      about: '关于我们',
-      contact: '联系我们',
+      about: '关于',
+      contact: '联系',
       join: '立即加入'
     },
+    common: {
+      ourVision: '我们的异象',
+      footerDescription: '用青年文化的创造性语言翻转世界。',
+      explore: '探索',
+      follow: '关注',
+      conference2026: '大会 2026',
+      eventsNews: '活动与新闻',
+      ourImpact: '我们的影响',
+      copyright: '© 2026 PassionFruits Ministry. Retro Roots, Future Vision.'
+    },
+    popup: {
+      specialEvent: '特别活动',
+      titleLine1: 'PassionFruits',
+      titleLine2: '大会 2026',
+      desc: '国度影响力: 引领既有时代感又带来转化的青年文化。加入这个行动。',
+      registerNow: '立即报名',
+      viewDetails: '查看详情',
+      hideToday: '今天不再显示'
+    },
     hero: {
-      influence: '神国影响力',
+      influence: '国度\u200B影响力',
       title: '热情 果实',
-      subtitle: '引领走在潮流尖端且具有变革力的青年文化。加入变革者的行列。',
-      getStarted: '立即开始',
-      vision: '我们的愿景'
+      subtitle: '引领既有时代感又带来转化的青年文化。加入改变者的行动。',
+      getStarted: '开始',
+      vision: '我们的异象'
+    },
+    home: {
+      latestUpdate: '最新消息',
+      conferenceEvents: '大会\u200B与\u200B活动',
+      moments: '精彩瞬间',
+      passionInAction: '行动中\u200B的\u200B热情',
+      fullGallery: '完整相册',
+      contact: '联系',
+      visitLine1: '访问我们的',
+      visitLine2: '创意中心',
+      torontoOffice: '多伦多办公室',
+      officeAddress: '加拿大安大略省多伦多',
+      generalInquiries: '一般咨询'
+    },
+    feature: {
+      majorEvent: '重点活动',
+      kingdomInfluence: '国度\u200B影响力:',
+      conf2026: '大会 2026',
+      joinMovement: '加入行动',
+      ourMission: '我们的使命',
+      missionDesc: '通过文化的创造性语言传递耶稣基督的爱。',
+      learnMore: '了解更多',
+      joinMovementTitle: '加入行动',
+      joinMovementDesc: '引领既有时代感又带来转化的青年文化。',
+      aboutUs: '关于我们'
     },
     menu: {
-      conf: '2026 特会',
-      confSub: '年度特会',
-      events: '近期活动',
-      eventsSub: '神国新闻',
+      conf: '大会 2026',
+      confSub: '大会',
+      events: '活动',
+      eventsSub: '国度新闻',
       about: '关于我们',
       aboutSub: '我们的故事',
       vision: '异象',
-      visionSub: '核心愿景',
-      contact: '联系我们',
-      contactSub: '保持沟通',
-      support: '支持事工',
-      supportSub: '赞助与合作'
+      visionSub: '我们的异象',
+      contact: '联系',
+      contactSub: '取得联系',
+      support: '支持',
+      supportSub: '赞助'
+    },
+    journey: {
+      title: 'PassionFruits 旅程',
+      subtitle: '我们的道路',
+      worshipTitle: '敬拜',
+      worshipDesc: '遇见耶稣',
+      creativityTitle: '创造力',
+      creativityDesc: '福音艺术',
+      missionsTitle: '宣教',
+      missionsDesc: '全球影响',
+      influenceTitle: '影响力',
+      influenceDesc: '国度文化'
     },
     schedule: {
-      title: '事工板块',
-      subtitle: '日程表',
-      desc: '我们的事工充满了创意的语言和热情。今天就找到属于你的位置。',
-      cta: '参与事工',
-      mon: '周一崇拜',
-      sun: '热情崇拜',
+      title: '事工',
+      subtitle: '时间表',
+      desc: '我们的事工充满创造性的语言与热情。今天找到你的位置。',
+      cta: '加入事工',
+      mon: '周一敬拜',
+      sun: 'Passion 敬拜',
       sat: '青年聚会',
-      thu: '创意实验室'
+      thu: '创意实验室',
+      monTime: '周一 7:30 PM',
+      sunTime: '周日 2:00 PM',
+      satTime: '周六 6:00 PM',
+      thuTime: '周四 7:00 PM',
+      torontoHub: '多伦多中心',
+      mainHall: '主会堂',
+      cultureRoom: '文化室',
+      studio: '工作室'
     },
     about: {
-      massiveTitle: '我们是创造者，而不仅仅是追随者。',
-      massiveDesc: '我们打破僵化的传统，创造一个让年轻人的创意天赋和纯粹热情成为福音桥梁的空间。我们引领着既潮流又具转型能力的青年文化。',
-      creativeCall: '创意的呼召',
-      creativeQuote: '“艺术和文化是我们向下一代传达耶稣之爱最强有力的语言。”',
+      since: '始于 2023',
+      heroDesc: 'PassionFruits 是一个青年文化宣教运动，致力于用文化的创造性语言传递耶稣基督的爱。',
+      massiveTitle: '我们是\u200B创造者，不只是\u200B跟随者。',
+      massiveDesc: '我们突破僵化传统，创造一个让青年的创意才能与真实热情成为福音桥梁的空间。',
+      creativeCall: '创造性的呼召',
+      creativeQuote: '"艺术与文化是向下一代传递耶稣之爱的强大语言。"',
       commitment: '我们的承诺',
-      commitmentDesc: '从支持弱势群体到发起治愈社会的文化项目，我们是一个致力于颠覆世界的年轻变革者社区。',
-      beliefsTitle: '我们的信仰',
-      foundation: '信仰基础',
-      missionTitle: '为耶稣燃烧热情，以文化改变世界'
+      commitmentDesc: '从支持边缘群体到发起医治社会的文化项目，我们是翻转世界的青年改变者群体。',
+      missionLabel: '我们的心',
+      missionTitle: '为耶稣燃烧，\u200B为世界创造文化',
+      missionP1: '我们突破僵化传统，创造一个让青年的创意才能与真实热情成为福音桥梁的空间。',
+      missionP2: '我们不只是跟随文化，而是用耶稣的真理与爱引领文化，勇敢地翻转世界。',
+      ministriesLabel: '我们所做的',
+      ministriesTitle: '我们的\u200B事工',
+      ministry1Title: '敬拜与合一',
+      ministry1Desc: '每周一的敬拜之夜成为赞美与团契的属灵引擎。',
+      ministry2Title: '全球宣教',
+      ministry2Desc: '我们的宣教团队在欧洲和拉丁美洲服事，撒下盼望的种子。',
+      ministry3Title: '"福音" 文化艺术',
+      ministry3Desc: '通过原创音乐剧，我们为青年提供通过艺术遇见神、在舞台上传递真理的平台。',
+      beliefsTitle: '我们的\u200B信仰',
+      foundation: '信仰根基',
+      beliefBibleTitle: '圣经 - 我们的指南',
+      beliefBibleDesc: '我们相信圣经是神无误的话语，是信仰与生活的最终权威。',
+      beliefGodTitle: '神 - 创造主',
+      beliefGodDesc: '我们相信独一真实且永活的神，以圣父、圣子、圣灵三个位格永恒存在。',
+      beliefJesusTitle: '耶稣基督 - 唯一道路',
+      beliefJesusDesc: '耶稣完全是神也完全是人，祂为我们的罪而死、复活并升天为主。',
+      beliefSpiritTitle: '圣灵 - 我们的引导者',
+      beliefSpiritDesc: '圣灵住在我们里面，更新生命并赐能力活出使命。',
+      beliefSalvationTitle: '救恩 - 最美礼物',
+      beliefSalvationDesc: '救恩不是靠行为赚取，而是因信耶稣领受的恩典礼物。',
+      beliefMankindTitle: '人类 - 恢复',
+      beliefMankindDesc: '我们按神的形象被造，每个人都需要在耶稣里找到真实身份与恢复。',
+      ctaTitle: '加入行动',
+      ctaDesc: '成为翻转世界的青年改变者群体的一部分。',
+      conference2026: '大会 2026',
+      followUs: '关注我们'
+    },
+    conference: {
+      heroDate: '2026年8月20-22日',
+      heroTitle: '士师记',
+      titleSuffix: '大会',
+      heroSubtitle: '从征服到得胜',
+      verse: '"惟有你们是被拣选的族类，是君尊的祭司..." - 彼得前书 2:9',
+      registerFree: '免费报名',
+      lineup: '阵容',
+      speakersTitle: '讲员',
+      guestSpeaker1: '嘉宾讲员 1',
+      guestSpeaker2: '嘉宾讲员 2',
+      guestSpeaker3: '嘉宾讲员 3',
+      guestSpeaker4: '嘉宾讲员 4',
+      toBeAnnounced: '即将公布',
+      timeline: '时间线',
+      scheduleTitle: '大会\u200B日程',
+      day1: '第 1 天',
+      day2: '第 2 天',
+      day3: '第 3 天',
+      date1: '2026年8月20日',
+      date2: '2026年8月21日',
+      date3: '2026年8月22日',
+      registration: '报到',
+      checkIn: '签到',
+      recreation: '休闲活动',
+      haveFun: '享受团契',
+      worshipPrayer: '敬拜与祷告',
+      worshipPrayerDesc: '亲密敬拜时间',
+      morningWorship: '晨间敬拜',
+      morningWorshipDesc: '以敬拜开始新的一天',
+      breakoutSession: '分组课程',
+      breakoutSessionDesc: '研讨会与创意项目',
+      worshipNight: '敬拜之夜',
+      worshipNightDesc: '有能力的敬拜之夜',
+      churchConnection: '教会连接',
+      churchConnectionDesc: '连接新的伙伴关系',
+      closingCeremony: '闭幕礼',
+      closingCeremonyDesc: '差派与结束',
+      voices: '声音',
+      attendeesTitle: '参加者\u200B分享',
+      testimonial1: '"PassionFruits 总是为基督充满热情，是改变生命的经历。"',
+      testimonial2: '"在 PassionFruits，创造力与热情被释放为敬拜和信心的真实表达。"',
+      attendee: '大会参加者',
+      readyTitle: '准备好\u200B加入了吗?',
+      readyDesc: '预留 PassionFruits Conference 2026 的席位。报名免费。',
+      registerNow: '立即报名'
+    },
+    events: {
+      kingdomNews: '国度新闻',
+      heroTitle: '活动\u200B与\u200B更新',
+      heroSubtitle: '查看我们事工中心的最新活动和重要通知。',
+      noticeBoard: '公告板',
+      worship: '敬拜',
+      mission: '宣教',
+      retreat: '退修会',
+      event: '活动',
+      card1Title: 'PF 青年营 2025',
+      card1Date: '2025年3月8日',
+      card2Title: '两周年纪念',
+      card2Date: '2025年1月7日',
+      card3Title: '温哥华布道之夜',
+      card3Date: '2024年11月30日',
+      card4Title: '2024 退修会 - 收割',
+      card4Date: '2024年9月1日',
+      card5Title: '敬拜祷告之夜 - 新风',
+      card5Date: '2024年6月8日',
+      card6Title: '意大利宣教: 米兰',
+      card6Date: '2024年6月8日',
+      card7Title: '二月敬拜祷告之夜',
+      card7Date: '2024年6月8日',
+      card8Title: '年末庆典',
+      card8Date: '2023年12月23日'
     },
     contactPage: {
-      title: '保持联系',
-      subtitle: '欢迎访问我们在多伦多的创意中心。我们非常期待听到您的声音。',
-      addressTitle: '我们的位置',
-      address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
-      emailTitle: '邮件联系',
+      title: '联系我们',
+      heroTitle: '联系',
+      subtitle: '欢迎来到我们位于多伦多的创意中心。我们期待听见你的消息。',
+      getInTouch: '取得联系',
+      infoTitle: '一起\u200B建造\u200B神的国',
+      infoDesc: '无论你想合作、服事，或只是打个招呼，我们都期待你的来信。',
+      addressTitle: '多伦多办公室',
+      address: '加拿大安大略省多伦多',
+      emailTitle: '一般咨询',
       email: 'passionfruits.ministry@gmail.com',
       instaTitle: '关注我们',
       instaHandle: '@passionfruits_ministry',
-      formTitle: '在线留言',
-      namePlaceholder: '您的姓名',
-      emailPlaceholder: '电子邮件',
-      messagePlaceholder: '有什么可以帮到您的？',
-      sendBtn: '发送消息'
+      formTitle: '发送信息',
+      nameLabel: '姓名',
+      emailLabel: '电子邮件',
+      messageLabel: '信息',
+      namePlaceholder: '你的姓名',
+      emailPlaceholder: '电子邮件地址',
+      messagePlaceholder: '我们可以如何帮助你?',
+      sendBtn: '发送信息',
+      thankYou: '感谢你的留言!'
     }
   },
   es: {
@@ -221,12 +770,56 @@ const translations = {
       contact: 'Contacto',
       join: 'Únete'
     },
+    common: {
+      ourVision: 'Nuestra visión',
+      footerDescription: 'Volteando el mundo a través del lenguaje creativo de la cultura juvenil.',
+      explore: 'Explorar',
+      follow: 'Seguir',
+      conference2026: 'Conferencia 2026',
+      eventsNews: 'Eventos y noticias',
+      ourImpact: 'Nuestro impacto',
+      copyright: '© 2026 PassionFruits Ministry. Retro Roots, Future Vision.'
+    },
+    popup: {
+      specialEvent: 'Evento especial',
+      titleLine1: 'PassionFruits',
+      titleLine2: 'Conferencia 2026',
+      desc: 'Influencia del Reino: lideramos una cultura juvenil tan actual como transformadora. Únete al movimiento.',
+      registerNow: 'Registrarse ahora',
+      viewDetails: 'Ver detalles',
+      hideToday: 'No mostrar de nuevo hoy'
+    },
     hero: {
       influence: 'Influencia del Reino',
       title: 'PASSION FRUITS',
-      subtitle: 'Liderando una cultura juvenil que es tan moderna como transformadora. Únete al movimiento de agentes de cambio.',
+      subtitle: 'Lideramos una cultura juvenil tan actual como transformadora. Únete al movimiento de agentes de cambio.',
       getStarted: 'Comenzar',
-      vision: 'Nuestra Visión'
+      vision: 'Nuestra visión'
+    },
+    home: {
+      latestUpdate: 'Última actualización',
+      conferenceEvents: 'Conferencia y eventos',
+      moments: 'Momentos',
+      passionInAction: 'Pasión en acción',
+      fullGallery: 'Galería completa',
+      contact: 'Contacto',
+      visitLine1: 'Visita nuestro',
+      visitLine2: 'Centro creativo',
+      torontoOffice: 'Oficina de Toronto',
+      officeAddress: 'Toronto, Ontario, Canadá',
+      generalInquiries: 'Consultas generales'
+    },
+    feature: {
+      majorEvent: 'Evento principal',
+      kingdomInfluence: 'Influencia del Reino:',
+      conf2026: 'Conf 2026',
+      joinMovement: 'Únete al movimiento',
+      ourMission: 'Nuestra misión',
+      missionDesc: 'Compartir el amor de Jesucristo a través del lenguaje creativo de la cultura.',
+      learnMore: 'Saber más',
+      joinMovementTitle: 'Únete al movimiento',
+      joinMovementDesc: 'Lideramos una cultura juvenil tan actual como transformadora.',
+      aboutUs: 'Sobre nosotros'
     },
     menu: {
       conf: 'Conf 2026',
@@ -234,49 +827,179 @@ const translations = {
       events: 'Eventos',
       eventsSub: 'Noticias del Reino',
       about: 'Nosotros',
-      aboutSub: 'Nuestra Historia',
+      aboutSub: 'Nuestra historia',
       vision: 'Visión',
-      visionSub: 'Nuestra Visión',
+      visionSub: 'Nuestra visión',
       contact: 'Contacto',
       contactSub: 'Escríbenos',
       support: 'Apoyo',
       supportSub: 'Patrocinio'
     },
+    journey: {
+      title: 'Camino PassionFruits',
+      subtitle: 'Nuestra ruta',
+      worshipTitle: 'Adoración',
+      worshipDesc: 'Encontrar a Jesús',
+      creativityTitle: 'Creatividad',
+      creativityDesc: 'Artes del Evangelio',
+      missionsTitle: 'Misiones',
+      missionsDesc: 'Impacto global',
+      influenceTitle: 'Influencia',
+      influenceDesc: 'Cultura del Reino'
+    },
     schedule: {
-      title: 'Ministerios',
-      subtitle: 'Horarios',
+      title: 'Ministerio',
+      subtitle: 'Horario',
       desc: 'Nuestros ministerios están llenos de lenguaje creativo y pasión. Encuentra tu lugar hoy.',
-      cta: 'Unirse al Ministerio',
-      mon: 'Adoración Lunes',
-      sun: 'Adoración Pasión',
-      sat: 'Reunión Juvenil',
-      thu: 'Laboratorio Creativo'
+      cta: 'Unirse a un ministerio',
+      mon: 'Adoración del lunes',
+      sun: 'Adoración Passion',
+      sat: 'Reunión juvenil',
+      thu: 'Laboratorio creativo',
+      monTime: 'Lun 7:30 PM',
+      sunTime: 'Dom 2:00 PM',
+      satTime: 'Sáb 6:00 PM',
+      thuTime: 'Jue 7:00 PM',
+      torontoHub: 'Centro de Toronto',
+      mainHall: 'Auditorio principal',
+      cultureRoom: 'Sala cultural',
+      studio: 'Estudio'
     },
     about: {
-      massiveTitle: 'Somos Creadores, no solo seguidores.',
-      massiveDesc: 'Rompemos con las tradiciones rígidas para crear un espacio donde los talentos creativos y la pasión pura de los jóvenes se conviertan en un puente para el Evangelio. Lideramos una cultura juvenil moderna y transformadora.',
-      creativeCall: 'El Llamado Creativo',
-      creativeQuote: '"El arte y la cultura son los lenguajes más poderosos que tenemos para comunicar el amor de Jesús a la próxima generación."',
-      commitment: 'Nuestro Compromiso',
-      commitmentDesc: 'Desde el apoyo a los marginados hasta el lanzamiento de proyectos culturales que sanan la sociedad, somos una comunidad de jóvenes agentes de cambio que están transformando el mundo.',
-      beliefsTitle: 'Lo Que Creemos',
-      foundation: 'Fundamentos',
-      missionTitle: 'Pasión por Jesús, Cultura para el Mundo'
+      since: 'Desde 2023',
+      heroDesc: 'PassionFruits es un movimiento juvenil de misión cultural dedicado a compartir el amor de Jesucristo a través del lenguaje creativo de la cultura.',
+      massiveTitle: 'Somos creadores, no solo seguidores.',
+      massiveDesc: 'Rompemos tradiciones rígidas para crear un espacio donde los talentos creativos y la pasión de los jóvenes se convierten en un puente para el Evangelio.',
+      creativeCall: 'El llamado creativo',
+      creativeQuote: '"El arte y la cultura son lenguajes poderosos para comunicar el amor de Jesús a la próxima generación."',
+      commitment: 'Nuestro compromiso',
+      commitmentDesc: 'Desde apoyar a los marginados hasta lanzar proyectos culturales que sanan la sociedad, somos una comunidad de jóvenes agentes de cambio.',
+      missionLabel: 'Nuestro corazón',
+      missionTitle: 'Pasión por Jesús, cultura para el mundo',
+      missionP1: 'Rompemos tradiciones rígidas para crear un espacio donde el talento creativo y la pasión de los jóvenes se convierten en un puente para el Evangelio.',
+      missionP2: 'No solo seguimos la cultura; la lideramos con la verdad y el amor de Jesús, apuntando con valentía a voltear el mundo.',
+      ministriesLabel: 'Lo que hacemos',
+      ministriesTitle: 'Nuestros ministerios',
+      ministry1Title: 'Adoración y unidad',
+      ministry1Desc: 'Cada lunes, nuestra noche de adoración sirve como motor espiritual para la alabanza y la comunión.',
+      ministry2Title: 'Misiones globales',
+      ministry2Desc: 'Nuestros equipos sirven en Europa y América Latina, sembrando esperanza.',
+      ministry3Title: '"The Gospel" (artes culturales)',
+      ministry3Desc: 'A través de nuestra producción musical original, ofrecemos una plataforma para que los jóvenes encuentren a Dios por medio de las artes.',
+      beliefsTitle: 'Lo que creemos',
+      foundation: 'Fundamento',
+      beliefBibleTitle: 'La Biblia - Nuestra brújula',
+      beliefBibleDesc: 'Creemos que la Biblia es la Palabra infalible de Dios y nuestra autoridad final para la fe y la vida.',
+      beliefGodTitle: 'Dios - El Creador',
+      beliefGodDesc: 'Creemos en un solo Dios verdadero y vivo, eternamente existente en tres personas: Padre, Hijo y Espíritu Santo.',
+      beliefJesusTitle: 'Jesucristo - Nuestro único camino',
+      beliefJesusDesc: 'Jesús es plenamente Dios y plenamente hombre. Murió por nuestros pecados, resucitó y ascendió como Señor.',
+      beliefSpiritTitle: 'Espíritu Santo - Nuestro guía',
+      beliefSpiritDesc: 'El Espíritu Santo habita en nosotros, transforma nuestras vidas y nos capacita para vivir nuestra misión.',
+      beliefSalvationTitle: 'Salvación - El regalo supremo',
+      beliefSalvationDesc: 'La salvación no se gana por obras; es un regalo de gracia recibido por la fe en Jesús.',
+      beliefMankindTitle: 'Humanidad - Restauración',
+      beliefMankindDesc: 'Fuimos creados a imagen de Dios, y toda persona necesita identidad y restauración en Jesucristo.',
+      ctaTitle: 'Únete al movimiento',
+      ctaDesc: 'Sé parte de una comunidad de jóvenes agentes de cambio que voltean el mundo.',
+      conference2026: 'Conferencia 2026',
+      followUs: 'Síguenos'
+    },
+    conference: {
+      heroDate: '20-22 de agosto de 2026',
+      heroTitle: 'JUECES',
+      titleSuffix: 'Conferencia',
+      heroSubtitle: 'Conquista para conquistar',
+      verse: '"Pero ustedes son linaje escogido, real sacerdocio, nación santa..." - 1 Pedro 2:9',
+      registerFree: 'Regístrate gratis',
+      lineup: 'Programa',
+      speakersTitle: 'Oradores visionarios',
+      guestSpeaker1: 'Invitado 1',
+      guestSpeaker2: 'Invitado 2',
+      guestSpeaker3: 'Invitado 3',
+      guestSpeaker4: 'Invitado 4',
+      toBeAnnounced: 'Por anunciar',
+      timeline: 'Cronograma',
+      scheduleTitle: 'Horario de la conferencia',
+      day1: 'Día 1',
+      day2: 'Día 2',
+      day3: 'Día 3',
+      date1: '20 de agosto de 2026',
+      date2: '21 de agosto de 2026',
+      date3: '22 de agosto de 2026',
+      registration: 'Registro',
+      checkIn: 'Llegada',
+      recreation: 'Recreación',
+      haveFun: 'Tiempo de convivencia',
+      worshipPrayer: 'Adoración y oración',
+      worshipPrayerDesc: 'Tiempo íntimo de adoración',
+      morningWorship: 'Adoración matutina',
+      morningWorshipDesc: 'Comienza el día adorando',
+      breakoutSession: 'Sesión por grupos',
+      breakoutSessionDesc: 'Seminarios e iniciativas creativas',
+      worshipNight: 'Noche de adoración',
+      worshipNightDesc: 'Una noche poderosa de adoración',
+      churchConnection: 'Conexión con iglesias',
+      churchConnectionDesc: 'Conecta con nuevas alianzas',
+      closingCeremony: 'Ceremonia de cierre',
+      closingCeremonyDesc: 'Comisión y envío',
+      voices: 'Voces',
+      attendeesTitle: 'Lo que dicen los asistentes',
+      testimonial1: '"PassionFruits siempre está lleno de pasión por Cristo. Es una experiencia que cambia la vida."',
+      testimonial2: '"En PassionFruits, la creatividad y la pasión se liberan como expresiones auténticas de adoración y fe."',
+      attendee: 'Asistente de la conferencia',
+      readyTitle: '¿Listo para unirte?',
+      readyDesc: 'Reserva tu lugar en PassionFruits Conference 2026. La inscripción es gratuita.',
+      registerNow: 'Registrarse ahora'
+    },
+    events: {
+      kingdomNews: 'Noticias del Reino',
+      heroTitle: 'Eventos y actualizaciones',
+      heroSubtitle: 'Últimas novedades y avisos importantes de nuestro centro ministerial.',
+      noticeBoard: 'Tablón de avisos',
+      worship: 'Adoración',
+      mission: 'Misión',
+      retreat: 'Retiro',
+      event: 'Evento',
+      card1Title: 'Campamento juvenil PF 2025',
+      card1Date: '8 de marzo de 2025',
+      card2Title: 'Segundo aniversario',
+      card2Date: '7 de enero de 2025',
+      card3Title: 'Noche de evangelismo en Vancouver',
+      card3Date: '30 de noviembre de 2024',
+      card4Title: 'Retiro 2024 - Cosecha',
+      card4Date: '1 de septiembre de 2024',
+      card5Title: 'Noche de adoración y oración - Viento fresco',
+      card5Date: '8 de junio de 2024',
+      card6Title: 'Misión Italia: Milano',
+      card6Date: '8 de junio de 2024',
+      card7Title: 'Noche de adoración y oración de febrero',
+      card7Date: '8 de junio de 2024',
+      card8Title: 'Celebración de fin de año',
+      card8Date: '23 de diciembre de 2023'
     },
     contactPage: {
-      title: 'Ponte en Contacto',
+      title: 'Ponte en contacto',
+      heroTitle: 'Contacto',
       subtitle: 'Visita nuestro centro creativo en Toronto. Nos encantaría saber de ti.',
-      addressTitle: 'Nuestra Ubicación',
-      address: '1057 McNicoll Ave, Scarborough, ON M1W 2L8, Canada',
-      emailTitle: 'Envíanos un Correo',
+      getInTouch: 'Ponte en contacto',
+      infoTitle: 'Construyamos juntos el Reino',
+      infoDesc: 'Ya sea que quieras colaborar, servir o simplemente saludar, nos encantaría saber de ti.',
+      addressTitle: 'Oficina de Toronto',
+      address: 'Toronto, Ontario, Canadá',
+      emailTitle: 'Consultas generales',
       email: 'passionfruits.ministry@gmail.com',
       instaTitle: 'Síguenos',
       instaHandle: '@passionfruits_ministry',
-      formTitle: 'Enviar un Mensaje',
-      namePlaceholder: 'Tu Nombre',
-      emailPlaceholder: 'Correo Electrónico',
+      formTitle: 'Enviar un mensaje',
+      nameLabel: 'Nombre',
+      emailLabel: 'Correo',
+      messageLabel: 'Mensaje',
+      namePlaceholder: 'Tu nombre',
+      emailPlaceholder: 'Correo electrónico',
       messagePlaceholder: '¿Cómo podemos ayudarte?',
-      sendBtn: 'Enviar Mensaje'
+      sendBtn: 'Enviar mensaje',
+      thankYou: '¡Gracias por tu mensaje!'
     }
   }
 }
@@ -284,23 +1007,41 @@ const translations = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en')
+  const [language, setLanguageState] = useState<Language>('en')
 
-  const t = (path: string) => {
+  useEffect(() => {
+    const stored = readStoredLanguage()
+    if (stored) setLanguageState(stored)
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
+
+  const setLanguage = useCallback((lang: Language) => {
+    setLanguageState(lang)
+    writeStoredLanguage(lang)
+  }, [])
+
+  const t = useCallback((path: string) => {
     const keys = path.split('.')
-    let result: any = translations[language]
+    let result: TranslationValue | undefined = translations[language]
+
     for (const key of keys) {
-      if (result && result[key]) {
+      if (typeof result === 'object' && result !== null && key in result) {
         result = result[key]
       } else {
         return path
       }
     }
-    return result
-  }
+
+    return typeof result === 'string' ? result : path
+  }, [language])
+
+  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t])
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   )

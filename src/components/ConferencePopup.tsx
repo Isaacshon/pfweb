@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface ConferencePopupProps {
   trigger?: boolean
 }
 
 export const ConferencePopup = ({ trigger }: ConferencePopupProps) => {
+  const { t } = useLanguage()
   const [isVisible, setIsVisible] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
 
@@ -77,27 +79,27 @@ export const ConferencePopup = ({ trigger }: ConferencePopupProps) => {
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-8">
           <div className="mt-auto">
             <span className="inline-block px-4 py-1 bg-brand-yellow text-brand-dark rounded-full text-xs font-black uppercase tracking-widest mb-6 border-2 border-brand-dark shadow-md">
-              Special Event
+              {t('popup.specialEvent')}
             </span>
             <h3 className="text-3xl font-black text-white mb-4 leading-tight uppercase tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
-              PassionFruits<br/>Conference 2026
+              {t('popup.titleLine1')}<br />{t('popup.titleLine2')}
             </h3>
             <p className="text-white text-sm mb-10 leading-relaxed max-w-[280px] mx-auto font-bold drop-shadow-md">
-              Kingdom Influence: Leading a youth culture that is as trendy as it is transformative. Join the movement.
+              {t('popup.desc')}
             </p>
             <Link 
-              href="/conference" 
+              href="/conference/register"
               onClick={handleClose}
               className="block w-full py-4 bg-brand-yellow text-brand-dark rounded-2xl font-black text-sm uppercase shadow-[0_8px_0px_#1a1a1a] hover:translate-y-1 hover:shadow-[0_4px_0px_#1a1a1a] transition-all active:scale-95 mb-6"
             >
-              Register Now
+              {t('popup.registerNow')}
             </Link>
             <Link 
               href="/conference"
               onClick={handleClose}
               className="text-white font-black text-xs uppercase hover:text-brand-yellow transition-colors underline underline-offset-4 tracking-widest"
             >
-              View Details
+              {t('popup.viewDetails')}
             </Link>
           </div>
         </div>
@@ -108,7 +110,7 @@ export const ConferencePopup = ({ trigger }: ConferencePopupProps) => {
         onClick={handleDontShowToday}
         className="mt-6 relative z-10 px-6 py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white/80 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white/20 hover:text-white transition-all animate-in slide-in-from-top-4 fade-in duration-700"
       >
-        Do not show this again today
+        {t('popup.hideToday')}
       </button>
     </div>
   )
