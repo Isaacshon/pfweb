@@ -1,6 +1,8 @@
 export const CONFERENCE_REGISTRATION_FEE_CAD = 100
 export const ETRANSFER_PAYMENT_METHOD = 'Interac e-Transfer'
 export const SQUARE_PAYMENT_METHOD = 'Square Checkout'
+export const ADULT_AGE_CONFIRMATION = 'Yes, I am older than 18'
+export const GUARDIAN_CONSENT_AGE_CONFIRMATION = 'I am 18 and will submit a parent/guardian consent form'
 
 export const conferenceRegistrationHeaders = [
   'Participant Name',
@@ -44,6 +46,10 @@ export const conferenceRegistrationHeaders = [
   'Media Consent',
   'Guidelines Consent',
   'Age Confirmation',
+  'Guardian Name',
+  'Guardian Relation',
+  'Guardian Phone',
+  'Guardian Email',
   'Guardian Consent',
   'Accuracy Confirmation',
 ] as const
@@ -70,6 +76,10 @@ export type ConferenceRegistrationPayload = {
   mediaConsent?: string
   guidelinesConsent?: string
   ageConfirmation: string
+  guardianName?: string
+  guardianRelation?: string
+  guardianPhone?: string
+  guardianEmail?: string
   guardianConsent?: string
   accuracyConfirm?: string
   groupRegistrationCode?: string
@@ -141,6 +151,10 @@ export function normalizeConferenceRegistrationPayload(input: unknown): Conferen
     mediaConsent: cleanString(source.mediaConsent),
     guidelinesConsent: cleanString(source.guidelinesConsent),
     ageConfirmation: cleanString(source.ageConfirmation),
+    guardianName: cleanString(source.guardianName),
+    guardianRelation: cleanString(source.guardianRelation),
+    guardianPhone: cleanString(source.guardianPhone),
+    guardianEmail: cleanString(source.guardianEmail),
     guardianConsent: cleanString(source.guardianConsent),
     accuracyConfirm: cleanString(source.accuracyConfirm),
     groupRegistrationCode: cleanString(source.groupRegistrationCode).toUpperCase(),
@@ -153,7 +167,14 @@ export function validateConferenceRegistration(payload: ConferenceRegistrationPa
   if (!payload.mediaConsent) missingFields.push('mediaConsent')
   if (!payload.guidelinesConsent) missingFields.push('guidelinesConsent')
   if (!payload.accuracyConfirm) missingFields.push('accuracyConfirm')
-  if (payload.ageConfirmation.includes('I am 18') && !payload.guardianConsent) {
+  if (requiresGuardianConsent(payload)) {
+    if (!payload.guardianName) missingFields.push('guardianName')
+    if (!payload.guardianRelation) missingFields.push('guardianRelation')
+    if (!payload.guardianPhone) missingFields.push('guardianPhone')
+    if (!payload.guardianEmail) missingFields.push('guardianEmail')
+  }
+
+  if (requiresGuardianConsent(payload) && !payload.guardianConsent) {
     missingFields.push('guardianConsent')
   }
 
@@ -161,6 +182,10 @@ export function validateConferenceRegistration(payload: ConferenceRegistrationPa
     isValid: missingFields.length === 0,
     missingFields,
   }
+}
+
+export function requiresGuardianConsent(payload: Pick<ConferenceRegistrationPayload, 'ageConfirmation'>) {
+  return payload.ageConfirmation === GUARDIAN_CONSENT_AGE_CONFIRMATION
 }
 
 export function createConferenceRegistrationRecord(
@@ -205,7 +230,7 @@ export function buildConferenceRegistrationSheetRow(record: ConferenceRegistrati
   const consentSummary = [
     record.mediaConsent ? 'Media' : '',
     record.guidelinesConsent ? 'Guidelines' : '',
-    record.guardianConsent ? 'Guardian' : '',
+    record.guardianConsent ? `Guardian${record.guardianName ? `: ${record.guardianName}` : ''}` : '',
     record.accuracyConfirm ? 'Accuracy' : '',
   ].filter(Boolean).join(' + ')
 
@@ -251,6 +276,10 @@ export function buildConferenceRegistrationSheetRow(record: ConferenceRegistrati
     record.mediaConsent || '',
     record.guidelinesConsent || '',
     record.ageConfirmation,
+    record.guardianName || '',
+    record.guardianRelation || '',
+    record.guardianPhone || '',
+    record.guardianEmail || '',
     record.guardianConsent || '',
     record.accuracyConfirm || '',
   ]

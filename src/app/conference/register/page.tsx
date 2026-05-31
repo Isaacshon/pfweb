@@ -5,7 +5,13 @@ import Link from 'next/link'
 import { useLanguage, type Language } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
-import { normalizeConferenceRegistrationPayload, type ConferenceRegistrationPayload } from '@/lib/conferenceRegistration'
+import {
+  ADULT_AGE_CONFIRMATION,
+  GUARDIAN_CONSENT_AGE_CONFIRMATION,
+  normalizeConferenceRegistrationPayload,
+  requiresGuardianConsent,
+  type ConferenceRegistrationPayload,
+} from '@/lib/conferenceRegistration'
 import { QRCodeSVG } from 'qrcode.react'
 
 type PaymentInstructions = {
@@ -69,6 +75,10 @@ const validationLabels: Record<Language, Record<RegistrationField, string>> = {
     mediaConsent: 'media consent',
     guidelinesConsent: 'conference guidelines consent',
     ageConfirmation: 'age confirmation',
+    guardianName: 'parent/guardian full name',
+    guardianRelation: 'parent/guardian relation',
+    guardianPhone: 'parent/guardian phone number',
+    guardianEmail: 'parent/guardian email',
     guardianConsent: 'parent/guardian consent confirmation',
     accuracyConfirm: 'information accuracy confirmation',
     groupRegistrationCode: 'group registration code',
@@ -95,6 +105,10 @@ const validationLabels: Record<Language, Record<RegistrationField, string>> = {
     mediaConsent: '미디어 사용 동의',
     guidelinesConsent: '컨퍼런스 가이드라인 동의',
     ageConfirmation: '나이 확인',
+    guardianName: '부모/보호자 이름',
+    guardianRelation: '부모/보호자 관계',
+    guardianPhone: '부모/보호자 전화번호',
+    guardianEmail: '부모/보호자 이메일',
     guardianConsent: '부모/보호자 동의 확인',
     accuracyConfirm: '정보 정확성 확인',
     groupRegistrationCode: '그룹 등록 코드',
@@ -121,6 +135,10 @@ const validationLabels: Record<Language, Record<RegistrationField, string>> = {
     mediaConsent: '媒体使用同意',
     guidelinesConsent: '大会守则同意',
     ageConfirmation: '年龄确认',
+    guardianName: '家长/监护人姓名',
+    guardianRelation: '家长/监护人关系',
+    guardianPhone: '家长/监护人电话',
+    guardianEmail: '家长/监护人邮箱',
     guardianConsent: '家长/监护人同意确认',
     accuracyConfirm: '信息准确确认',
     groupRegistrationCode: '团体注册码',
@@ -147,6 +165,10 @@ const validationLabels: Record<Language, Record<RegistrationField, string>> = {
     mediaConsent: 'consentimiento de medios',
     guidelinesConsent: 'consentimiento de reglas',
     ageConfirmation: 'confirmacion de edad',
+    guardianName: 'nombre completo del padre/tutor',
+    guardianRelation: 'relacion del padre/tutor',
+    guardianPhone: 'telefono del padre/tutor',
+    guardianEmail: 'correo del padre/tutor',
     guardianConsent: 'confirmacion de padre/tutor',
     accuracyConfirm: 'confirmacion de informacion correcta',
     groupRegistrationCode: 'codigo de registro grupal',
@@ -167,7 +189,7 @@ const validationMessages: Record<Language, {
     required: (field) => `Please complete ${field}.`,
     email: 'Please enter a valid email address.',
     age: 'Age must be between 18 and 25.',
-    guardianConsent: 'Please confirm the parent/guardian consent form.',
+    guardianConsent: 'Please complete the parent/guardian consent form.',
   },
   ko: {
     title: '필수 항목 확인',
@@ -175,7 +197,7 @@ const validationMessages: Record<Language, {
     required: (field) => `${field} 항목을 작성해 주세요.`,
     email: '올바른 이메일 주소를 입력해 주세요.',
     age: '나이는 18세부터 25세 사이여야 합니다.',
-    guardianConsent: '부모/보호자 동의서 제출 확인을 체크해 주세요.',
+    guardianConsent: '부모/보호자 동의서를 작성하고 확인해 주세요.',
   },
   zh: {
     title: '请确认必填项目',
@@ -183,7 +205,7 @@ const validationMessages: Record<Language, {
     required: (field) => `请填写${field}。`,
     email: '请输入有效的电子邮箱。',
     age: '年龄必须在18到25岁之间。',
-    guardianConsent: '请确认会提交家长/监护人同意书。',
+    guardianConsent: '请填写并确认家长/监护人同意书。',
   },
   es: {
     title: 'Revisa los campos requeridos',
@@ -191,7 +213,7 @@ const validationMessages: Record<Language, {
     required: (field) => `Completa ${field}.`,
     email: 'Ingresa un correo electronico valido.',
     age: 'La edad debe estar entre 18 y 25.',
-    guardianConsent: 'Confirma el formulario de consentimiento de padre/tutor.',
+    guardianConsent: 'Completa el formulario de consentimiento de padre/tutor.',
   },
 }
 
@@ -399,7 +421,14 @@ function buildRegistrationFieldErrors(payload: ConferenceRegistrationPayload, la
     errors.age = copy.age
   }
 
-  if (payload.ageConfirmation.includes('I am 18') && !payload.guardianConsent) {
+  if (requiresGuardianConsent(payload)) {
+    if (!payload.guardianName) errors.guardianName = copy.required(labels.guardianName)
+    if (!payload.guardianRelation) errors.guardianRelation = copy.required(labels.guardianRelation)
+    if (!payload.guardianPhone) errors.guardianPhone = copy.required(labels.guardianPhone)
+    if (!payload.guardianEmail) errors.guardianEmail = copy.required(labels.guardianEmail)
+  }
+
+  if (requiresGuardianConsent(payload) && !payload.guardianConsent) {
     errors.guardianConsent = copy.guardianConsent
   }
 
@@ -434,6 +463,7 @@ export default function ConferenceRegistrationPage() {
   const [statusType, setStatusType] = useState<'idle' | 'success' | 'error'>('idle')
   const [paymentInstructions, setPaymentInstructions] = useState<PaymentInstructions | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [showGuardianConsentForm, setShowGuardianConsentForm] = useState(false)
   const validationCopy = validationMessages[language]
 
   const clearFieldError = (name: string) => {
@@ -449,6 +479,23 @@ export default function ConferenceRegistrationPage() {
   const handleFormChange = (event: React.FormEvent<HTMLFormElement>) => {
     const target = event.target
     if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+      if (target instanceof HTMLInputElement && target.name === 'ageConfirmation') {
+        const needsGuardianConsent = target.value === GUARDIAN_CONSENT_AGE_CONFIRMATION
+        setShowGuardianConsentForm(needsGuardianConsent)
+
+        if (!needsGuardianConsent) {
+          setFieldErrors((current) => {
+            const next = { ...current }
+            delete next.guardianName
+            delete next.guardianRelation
+            delete next.guardianPhone
+            delete next.guardianEmail
+            delete next.guardianConsent
+            return next
+          })
+        }
+      }
+
       clearFieldError(target.name)
     }
   }
@@ -459,6 +506,7 @@ export default function ConferenceRegistrationPage() {
     const form = event.currentTarget
     const formData = new FormData(form)
     const payload = normalizeConferenceRegistrationPayload(Object.fromEntries(formData))
+    setShowGuardianConsentForm(requiresGuardianConsent(payload))
 
     const nextErrors = buildRegistrationFieldErrors(payload, language)
     if (Object.keys(nextErrors).length > 0) {
@@ -587,7 +635,9 @@ export default function ConferenceRegistrationPage() {
                   <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-dark">Base Registration Fee</p>
                   <p className="mt-2 text-3xl font-black text-brand-dark">100 CAD</p>
                   <p className="mt-2 text-xs font-bold leading-relaxed text-brand-dark/70">
-                    Group registration codes can reduce the final payment amount after validation.
+                    If you are registering as a church, please contact us through our email.
+                    <br />
+                    Contact Info: passionfruitsministry@gmail.com
                   </p>
                 </div>
               </div>
@@ -688,10 +738,31 @@ export default function ConferenceRegistrationPage() {
                 <CheckboxField name="guidelinesConsent" error={fieldErrors.guidelinesConsent} required>
                   I agree to follow conference guidelines and respect fellow attendees and staff.
                 </CheckboxField>
-                <RadioGroup label="Are you older than 18?" name="ageConfirmation" options={['Yes, I am older than 18', 'I am 18 and will submit a parent/guardian consent form']} error={fieldErrors.ageConfirmation} required />
-                <CheckboxField name="guardianConsent" error={fieldErrors.guardianConsent}>
-                  Parent/Guardian consent form will be submitted separately if applicable.
-                </CheckboxField>
+                <RadioGroup label="Are you older than 18?" name="ageConfirmation" options={[ADULT_AGE_CONFIRMATION, GUARDIAN_CONSENT_AGE_CONFIRMATION]} error={fieldErrors.ageConfirmation} required />
+                {showGuardianConsentForm && (
+                  <div className="rounded-[1.5rem] border-2 border-brand-purple/20 bg-brand-purple/5 p-5 md:p-6">
+                    <div className="mb-5 flex items-start gap-3">
+                      <span className="material-icons flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-purple text-lg text-white">assignment</span>
+                      <div>
+                        <p className="text-sm font-black uppercase tracking-[0.2em] text-brand-purple">Parent/Guardian Consent Form</p>
+                        <p className="mt-2 text-sm font-bold leading-relaxed text-slate-600">
+                          Since you are 18, please complete this section now with your parent/guardian information.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                      <TextField label="Parent/Guardian Full Name" name="guardianName" error={fieldErrors.guardianName} required />
+                      <TextField label="Relation" name="guardianRelation" error={fieldErrors.guardianRelation} required />
+                      <TextField label="Parent/Guardian Phone" name="guardianPhone" type="tel" error={fieldErrors.guardianPhone} required />
+                      <TextField label="Parent/Guardian Email" name="guardianEmail" type="email" error={fieldErrors.guardianEmail} required />
+                    </div>
+                    <div className="mt-5">
+                      <CheckboxField name="guardianConsent" error={fieldErrors.guardianConsent} required>
+                        I confirm that my parent/guardian has reviewed this registration and gives consent for me to attend PassionFruits Conference 2026.
+                      </CheckboxField>
+                    </div>
+                  </div>
+                )}
                 <CheckboxField name="accuracyConfirm" error={fieldErrors.accuracyConfirm} required>
                   I confirm that all information provided is accurate.
                 </CheckboxField>
@@ -707,7 +778,7 @@ export default function ConferenceRegistrationPage() {
                   <div className="space-y-2">
                     <TextField label="Group Registration Code" name="groupRegistrationCode" placeholder="Optional" />
                     <p className="text-xs font-bold leading-relaxed text-slate-500">
-                      Use this only if your church or group received a limited-use registration code.
+                      If you have group registration code, please enter your code.
                     </p>
                   </div>
                 </div>
