@@ -308,19 +308,22 @@ function RadioGroup({
   options,
   required = false,
   error,
+  columns = 2,
 }: {
   label: string
   name: RegistrationField
   options: string[]
   required?: boolean
   error?: string
+  columns?: 1 | 2
 }) {
   const errorId = `${name}-error`
+  const gridClass = columns === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'
 
   return (
     <fieldset className="space-y-3" aria-describedby={error ? errorId : undefined}>
       <legend className={labelClass}>{label}{required ? ' *' : ''}</legend>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className={`grid gap-3 ${gridClass}`}>
         {options.map((option) => (
           <label key={option} className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border-2 bg-white px-4 py-3 text-sm font-black text-brand-dark transition hover:border-brand-purple ${error ? 'border-red-300' : 'border-slate-300'}`}>
             <input
@@ -464,6 +467,7 @@ export default function ConferenceRegistrationPage() {
   const [paymentInstructions, setPaymentInstructions] = useState<PaymentInstructions | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [showGuardianConsentForm, setShowGuardianConsentForm] = useState(false)
+  const [showGroupRegistrationFields, setShowGroupRegistrationFields] = useState(false)
   const validationCopy = validationMessages[language]
 
   const clearFieldError = (name: string) => {
@@ -496,6 +500,20 @@ export default function ConferenceRegistrationPage() {
         }
       }
 
+      if (target instanceof HTMLInputElement && target.name === 'attendingWithGroup') {
+        const isAttendingWithGroup = target.value === 'Yes'
+        setShowGroupRegistrationFields(isAttendingWithGroup)
+
+        if (!isAttendingWithGroup) {
+          setFieldErrors((current) => {
+            const next = { ...current }
+            delete next.groupName
+            delete next.groupRegistrationCode
+            return next
+          })
+        }
+      }
+
       clearFieldError(target.name)
     }
   }
@@ -507,6 +525,7 @@ export default function ConferenceRegistrationPage() {
     const formData = new FormData(form)
     const payload = normalizeConferenceRegistrationPayload(Object.fromEntries(formData))
     setShowGuardianConsentForm(requiresGuardianConsent(payload))
+    setShowGroupRegistrationFields(payload.attendingWithGroup === 'Yes')
 
     const nextErrors = buildRegistrationFieldErrors(payload, language)
     if (Object.keys(nextErrors).length > 0) {
@@ -712,13 +731,17 @@ export default function ConferenceRegistrationPage() {
                   <TextField label="Pastor / Leader Name" name="pastorName" placeholder="Optional" />
                 </div>
                 <RadioGroup label="Are you attending with a group?" name="attendingWithGroup" options={['Yes', 'No']} error={fieldErrors.attendingWithGroup} required />
-                <TextField label="If yes, group / church name" name="groupName" />
-                <div className="rounded-[1.5rem] border-2 border-brand-purple/10 bg-brand-purple/5 p-5">
-                  <TextField label="Group Registration Code" name="groupRegistrationCode" placeholder="Optional" />
-                  <p className="mt-3 text-xs font-bold leading-relaxed text-slate-500">
-                    If you have group registration code, please enter your code.
-                  </p>
-                </div>
+                {showGroupRegistrationFields && (
+                  <div className="rounded-[1.5rem] border-2 border-brand-purple/10 bg-brand-purple/5 p-5">
+                    <div className="grid grid-cols-1 gap-5">
+                      <TextField label="Group / Church Name" name="groupName" />
+                      <TextField label="Group Registration Code" name="groupRegistrationCode" placeholder="Optional" />
+                    </div>
+                    <p className="mt-3 text-xs font-bold leading-relaxed text-slate-500">
+                      If you have group registration code, please enter your code.
+                    </p>
+                  </div>
+                )}
               </FormSection>
 
               <FormSection number="3" title="Emergency Contact Info.">
