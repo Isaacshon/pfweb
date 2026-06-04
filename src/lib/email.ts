@@ -17,7 +17,7 @@ export async function sendRegistrationEmail({
     return { ok: false, code: 'resend_key_missing' }
   }
 
-  const logoUrl = 'https://www.passionfruits.ca/IMG_6847.PNG'
+  const logoUrl = 'https://www.passionfruits.ca/IMG_6847_cropped.png'
   const isPaid = paymentStatus === 'paid'
   const subjectText = isPaid ? 'Registration & Payment Confirmed' : 'Registration Received (Payment Pending)'
 
@@ -38,7 +38,7 @@ export async function sendRegistrationEmail({
               
               <!-- Premium Header Banner with Logo (Brand Purple #9a78b4) -->
               <div style="background-color: #9a78b4; padding: 24px 16px; text-align: center;">
-                <img src="${logoUrl}" alt="PassionFruits Logo" style="height: 72px; width: auto; display: inline-block; border: none; outline: none; vertical-align: middle;" />
+                <img src="${logoUrl}" alt="PassionFruits Logo" style="height: 110px; max-width: 100%; width: auto; display: inline-block; border: none; outline: none; vertical-align: middle;" />
               </div>
               
               <!-- Brand Yellow Accent Line -->
