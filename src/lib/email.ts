@@ -3,11 +3,13 @@ export async function sendRegistrationEmail({
   name,
   registrationId,
   amountCad,
+  paymentStatus = 'paid',
 }: {
   email: string
   name: string
   registrationId: string
   amountCad: number
+  paymentStatus?: string
 }) {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
@@ -16,6 +18,8 @@ export async function sendRegistrationEmail({
   }
 
   const logoUrl = 'https://www.passionfruits.ca/IMG_6847.PNG'
+  const isPaid = paymentStatus === 'paid'
+  const subjectText = isPaid ? 'Registration & Payment Confirmed' : 'Registration Received (Payment Pending)'
 
   try {
     const response = await fetch('https://api.resend.com/emails', {
@@ -27,7 +31,7 @@ export async function sendRegistrationEmail({
       body: JSON.stringify({
         from: 'PassionFruits <no-reply@passionfruits.ca>',
         to: [email],
-        subject: `[PassionFruits] Conference 2026 Registration & Payment Confirmed - ${registrationId}`,
+        subject: `[PassionFruits] Conference 2026 ${subjectText} - ${registrationId}`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #fffbbd;">
             <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
@@ -41,12 +45,18 @@ export async function sendRegistrationEmail({
               <div style="padding: 40px 32px;">
                 
                 <!-- Content Title -->
-                <h2 style="font-size: 20px; font-weight: 800; color: #9a78b4; margin-top: 0; margin-bottom: 12px; border-bottom: 2px solid #fffbbd; padding-bottom: 10px; letter-spacing: -0.02em;">Registration & Payment Confirmed</h2>
+                <h2 style="font-size: 20px; font-weight: 800; color: #9a78b4; margin-top: 0; margin-bottom: 12px; border-bottom: 2px solid #fffbbd; padding-bottom: 10px; letter-spacing: -0.02em;">
+                  ${isPaid ? 'Registration & Payment Confirmed' : 'Registration Received'}
+                </h2>
                 
                 <!-- Message -->
                 <p style="font-size: 15px; line-height: 1.6; color: #121c2a; margin-top: 20px; margin-bottom: 16px;">Dear <strong>${name}</strong>,</p>
                 <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-top: 0; margin-bottom: 12px;">Thank you for registering for the PassionFruits Conference 2026: <strong>Judges: Conquest to Conquer</strong>.</p>
-                <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-top: 0; margin-bottom: 24px;">Your payment has been successfully processed and your registration is now confirmed. We look forward to worshipping, growing, and encountering God together with you!</p>
+                <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-top: 0; margin-bottom: 24px;">
+                  ${isPaid 
+                    ? 'Your payment has been successfully processed and your registration is now confirmed. We look forward to worshipping, growing, and encountering God together with you!' 
+                    : 'Your registration form has been received. Please complete your payment to finalize your registration. We look forward to seeing you!'}
+                </p>
                 
                 <!-- Details Receipt Table -->
                 <div style="margin: 25px 0; padding: 20px; background-color: #f8f9ff; border-radius: 16px; border: 1px solid #fffbbd;">
@@ -61,21 +71,28 @@ export async function sendRegistrationEmail({
                       <td style="padding: 6px 0; font-size: 13px; color: #121c2a; font-weight: 700; text-align: right;">PassionFruits Conference 2026</td>
                     </tr>
                     <tr>
-                      <td style="padding: 6px 0; font-size: 13px; color: #64748b; font-weight: 600;">Amount Paid</td>
+                      <td style="padding: 6px 0; font-size: 13px; color: #64748b; font-weight: 600;">Amount</td>
                       <td style="padding: 6px 0; font-size: 13px; color: #121c2a; font-weight: 800; text-align: right;">${amountCad} CAD</td>
                     </tr>
                     <tr>
                       <td style="padding: 6px 0; font-size: 13px; color: #64748b; font-weight: 600;">Payment Status</td>
-                      <td style="padding: 6px 0; font-size: 13px; color: #9a78b4; font-weight: 800; text-align: right; text-transform: uppercase;">Paid</td>
+                      <td style="padding: 6px 0; font-size: 13px; color: #9a78b4; font-weight: 800; text-align: right; text-transform: uppercase;">
+                        ${isPaid ? 'Paid' : 'Pending'}
+                      </td>
                     </tr>
                   </table>
                 </div>
 
-                <!-- Download App Link -->
-                <p style="font-size: 14px; line-height: 1.5; color: #475569; margin: 25px 0;">
-                  Please download the <strong>PassionFruits App</strong> to easily check the conference schedule, announcements, and stay updated: 
-                  <a href="https://www.passionfruits.ca/app/download?install=1" style="color: #9a78b4; text-decoration: underline; font-weight: bold;">Download App</a>
-                </p>
+                <!-- Download App Link & QR Code -->
+                <div style="margin: 35px 0; text-align: center; background-color: #ffffff; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                  <p style="font-size: 16px; font-weight: 800; color: #121c2a; margin: 0 0 15px 0;">Get the PassionFruits App</p>
+                  <p style="font-size: 13px; line-height: 1.5; color: #475569; margin: 0 0 20px 0;">
+                    Scan the QR code below or tap the button to easily check the conference schedule, announcements, and stay updated!
+                  </p>
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.passionfruits.ca/app/download?install=1" alt="App Download QR Code" style="width: 150px; height: 150px; margin-bottom: 20px; border-radius: 12px; border: 1px solid #e2e8f0; padding: 5px;" />
+                  <br />
+                  <a href="https://www.passionfruits.ca/app/download?install=1" style="display: inline-block; background-color: #9a78b4; color: #ffffff; padding: 12px 24px; text-decoration: none; font-weight: 700; border-radius: 8px; font-size: 14px;">Download App</a>
+                </div>
 
                 <!-- Support Info -->
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #fffbbd; font-size: 12px; color: #64748b; line-height: 1.6;">

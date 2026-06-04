@@ -16,6 +16,7 @@ import {
   getPresetSquareCheckoutLink,
   getSquareCheckoutConfig,
 } from '@/lib/squareCheckout'
+import { sendRegistrationEmail } from '@/lib/email'
 
 const groupCodeErrorCodes = new Set([
   'group_registration_code_not_found',
@@ -88,6 +89,17 @@ export async function POST(request: Request) {
     ? sheetsResult.discountCad
     : record.discountCad
 
+  const notifyUser = (status: string) => {
+    const name = [payload.firstName, payload.lastName].filter(Boolean).join(' ') || 'Participant'
+    sendRegistrationEmail({
+      email: payload.email,
+      name,
+      registrationId: record.registrationId,
+      amountCad: finalAmountCad,
+      paymentStatus: status,
+    }).catch(err => console.error('Failed to send registration email:', err))
+  }
+
   // Build the redirect URL for Square to return to after payment completion
   const origin = request.headers.get('origin')
     || request.headers.get('referer')?.replace(/\/[^/]*$/, '')
@@ -115,6 +127,7 @@ export async function POST(request: Request) {
         squareOrderId: squarePaymentLink.orderId,
       })
 
+      notifyUser('pending')
       return Response.json({
         ok: true,
         registrationId: record.registrationId,
@@ -148,6 +161,7 @@ export async function POST(request: Request) {
           squareOrderId: '',
         })
 
+        notifyUser('pending')
         return Response.json({
           ok: true,
           registrationId: record.registrationId,
@@ -177,6 +191,7 @@ export async function POST(request: Request) {
         squareOrderId: '',
       })
 
+      notifyUser('pending')
       return Response.json({
         ok: true,
         code: 'square_checkout_unavailable',
@@ -208,6 +223,7 @@ export async function POST(request: Request) {
     })
   }
 
+  notifyUser(finalAmountCad <= 0 ? 'paid' : 'pending')
   return Response.json({
     ok: true,
     registrationId: record.registrationId,
