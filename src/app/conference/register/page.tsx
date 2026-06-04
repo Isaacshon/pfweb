@@ -16,18 +16,7 @@ import { QRCodeSVG } from 'qrcode.react'
 
 const APP_INSTALL_URL = 'https://www.passionfruits.ca/app/download?install=1'
 
-type PaymentInstructions = {
-  method: string
-  checkoutUrl?: string
-  squarePaymentLinkId?: string
-  squareOrderId?: string
-  fallbackMethod?: string
-  fallbackRecipientEmail?: string
-  recipientEmail?: string
-  amountCad: number
-  discountCad?: number
-  memo: string
-}
+
 
 type RegistrationField = keyof ConferenceRegistrationPayload
 type FieldErrors = Partial<Record<RegistrationField, string>>
@@ -471,11 +460,10 @@ function focusFirstInvalidField(form: HTMLFormElement, errors: FieldErrors) {
 export default function ConferenceRegistrationPage() {
   const { t, language } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [statusType, setStatusType] = useState<'idle' | 'success' | 'error'>('idle')
-  const [paymentInstructions, setPaymentInstructions] = useState<PaymentInstructions | null>(null)
+
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [showGuardianConsentForm, setShowGuardianConsentForm] = useState(false)
   const [showGroupRegistrationFields, setShowGroupRegistrationFields] = useState(false)
@@ -575,17 +563,21 @@ export default function ConferenceRegistrationPage() {
         throw new Error(result.message || 'Registration could not be submitted.')
       }
 
-      setSubmitted(true)
-      setPaymentInstructions(result.paymentInstructions || null)
-      setStatusType('success')
-      setStatusMessage(result.paymentInstructions?.checkoutUrl
-        ? `Registration received. Complete payment with Square below. ID: ${result.registrationId}`
-        : `Registration received, but Square Checkout is not available yet. Please contact PassionFruits Ministry. ID: ${result.registrationId}`)
+      // Redirect directly to Square checkout or completion page
+      const checkoutUrl = result.paymentInstructions?.checkoutUrl
+      if (checkoutUrl) {
+        setStatusType('success')
+        setStatusMessage('Redirecting to payment...')
+        window.location.href = checkoutUrl
+        return
+      }
+
+      // No checkout URL (waived or unavailable) — go to completion page
+      window.location.href = `/conference/register/complete?registrationId=${encodeURIComponent(result.registrationId)}&status=${result.paymentStatus || 'pending'}`
     } catch (error) {
+      setIsSubmitting(false)
       setStatusType('error')
       setStatusMessage(error instanceof Error ? error.message : 'Registration could not be submitted.')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -829,52 +821,18 @@ export default function ConferenceRegistrationPage() {
                 </CheckboxField>
               </FormSection>
 
-              {paymentInstructions && (
-                <div className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 shadow-[0_18px_50px_rgba(16,185,129,0.12)] md:p-8">
-                  <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-700">Square Checkout</p>
-                      <h3 className="mt-3 text-2xl font-black text-brand-dark">
-                        {paymentInstructions.amountCad > 0 ? `Pay ${paymentInstructions.amountCad} CAD` : 'Payment waived'}
-                      </h3>
-                      {typeof paymentInstructions.discountCad === 'number' && paymentInstructions.discountCad > 0 && (
-                        <p className="mt-2 text-sm font-black text-emerald-700">
-                          Group discount applied: -{paymentInstructions.discountCad} CAD
-                        </p>
-                      )}
-                      {!paymentInstructions.checkoutUrl && (
-                        <p className="mt-3 text-sm font-bold leading-relaxed text-red-600">
-                          Square checkout link is not available. Please contact PassionFruits Ministry.
-                        </p>
-                      )}
-                    </div>
-                    <a
-                      href={paymentInstructions.checkoutUrl || undefined}
-                      aria-disabled={!paymentInstructions.checkoutUrl}
-                      className={`inline-flex w-full items-center justify-center gap-3 rounded-full px-7 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg transition sm:w-auto ${paymentInstructions.checkoutUrl ? 'bg-brand-dark hover:scale-[1.01] active:scale-95' : 'pointer-events-none bg-slate-300'}`}
-                    >
-                      Pay with Square
-                      <span className="material-icons text-lg">open_in_new</span>
-                    </a>
-                  </div>
-                </div>
-              )}
+
 
               <div className="sticky bottom-4 z-30 rounded-[2rem] border-2 border-brand-purple/30 bg-white/95 p-5 shadow-2xl shadow-brand-purple/10 backdrop-blur md:static md:p-8">
                 <p className="text-lg font-black text-brand-dark">We cannot wait to worship, grow, and encounter God together with you at PassionFruits Conference 2026.</p>
-                <p className="mt-3 text-sm font-bold text-slate-500">After submitting, continue to Square Checkout to complete your registration.</p>
+                <p className="mt-3 text-sm font-bold text-slate-500">You will be redirected to Square to complete your payment securely.</p>
                 <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-brand-dark px-8 py-5 text-sm font-black uppercase tracking-[0.22em] text-white shadow-xl transition hover:scale-[1.01] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto">
-                  {isSubmitting ? 'Creating Checkout...' : 'Submit and Create Checkout'}
-                  <span className="material-icons text-lg">{isSubmitting ? 'sync' : 'send'}</span>
+                  {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
+                  <span className="material-icons text-lg">{isSubmitting ? 'sync' : 'payment'}</span>
                 </button>
                 {statusMessage && (
                   <p className={`mt-5 rounded-2xl px-4 py-3 text-sm font-black ${statusType === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
                     {statusMessage}
-                  </p>
-                )}
-                {submitted && statusType === 'success' && (
-                  <p className="mt-3 text-xs font-bold uppercase tracking-widest text-slate-400">
-                    Payment pending until checkout is complete
                   </p>
                 )}
               </div>

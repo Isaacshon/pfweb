@@ -64,10 +64,12 @@ export async function createSquarePaymentLink({
   registrationId,
   amountCad,
   payload,
+  redirectUrl,
 }: {
   registrationId: string
   amountCad: number
   payload: ConferenceRegistrationPayload
+  redirectUrl?: string
 }): Promise<SquarePaymentLink> {
   const config = getSquareCheckoutConfig()
   if (!config.configured) {
@@ -105,6 +107,7 @@ export async function createSquarePaymentLink({
         allow_tipping: false,
         ask_for_shipping_address: false,
         merchant_support_email: process.env.SQUARE_MERCHANT_SUPPORT_EMAIL || undefined,
+        redirect_url: redirectUrl || undefined,
       },
     }),
   })

@@ -88,43 +88,21 @@ export async function POST(request: Request) {
     ? sheetsResult.discountCad
     : record.discountCad
 
-  const presetCheckoutUrl = finalAmountCad > 0 ? getPresetSquareCheckoutLink(finalAmountCad) : null
-
-  if (presetCheckoutUrl) {
-    const updateResult = await updateConferencePaymentLink({
-      registrationId: record.registrationId,
-      paymentStatus: 'checkout_link_created',
-      paymentMethod: SQUARE_PAYMENT_METHOD,
-      finalAmountCad,
-      squareCheckoutUrl: presetCheckoutUrl,
-      squarePaymentLinkId: '',
-      squareOrderId: '',
-    })
-
-    return Response.json({
-      ok: true,
-      registrationId: record.registrationId,
-      paymentStatus: updateResult?.ok === false ? 'pending' : 'checkout_link_created',
-      finalAmountCad,
-      discountCad,
-      paymentInstructions: {
-        method: SQUARE_PAYMENT_METHOD,
-        checkoutUrl: presetCheckoutUrl,
-        fallbackMethod: ETRANSFER_PAYMENT_METHOD,
-        fallbackRecipientEmail: eTransferEmail,
-        amountCad: finalAmountCad,
-        discountCad,
-        memo: record.paymentMemo,
-      },
-    })
-  }
+  // Build the redirect URL for Square to return to after payment completion
+  const origin = request.headers.get('origin')
+    || request.headers.get('referer')?.replace(/\/[^/]*$/, '')
+    || process.env.NEXT_PUBLIC_SITE_URL
+    || 'https://www.passionfruits.ca'
+  const completePageUrl = `${origin.replace(/\/$/, '')}/conference/register/complete`
 
   if (squareConfig.configured && finalAmountCad > 0) {
     try {
+      const redirectUrl = `${completePageUrl}?registrationId=${encodeURIComponent(record.registrationId)}`
       const squarePaymentLink = await createSquarePaymentLink({
         registrationId: record.registrationId,
         amountCad: finalAmountCad,
         payload,
+        redirectUrl,
       })
 
       const updateResult = await updateConferencePaymentLink({
@@ -156,6 +134,39 @@ export async function POST(request: Request) {
         },
       })
     } catch (error) {
+      // Dynamic link creation failed — try preset checkout link as fallback
+      const presetCheckoutUrl = getPresetSquareCheckoutLink(finalAmountCad)
+
+      if (presetCheckoutUrl) {
+        await updateConferencePaymentLink({
+          registrationId: record.registrationId,
+          paymentStatus: 'checkout_link_created',
+          paymentMethod: SQUARE_PAYMENT_METHOD,
+          finalAmountCad,
+          squareCheckoutUrl: presetCheckoutUrl,
+          squarePaymentLinkId: '',
+          squareOrderId: '',
+        })
+
+        return Response.json({
+          ok: true,
+          registrationId: record.registrationId,
+          paymentStatus: 'checkout_link_created',
+          finalAmountCad,
+          discountCad,
+          paymentInstructions: {
+            method: SQUARE_PAYMENT_METHOD,
+            checkoutUrl: presetCheckoutUrl,
+            fallbackMethod: ETRANSFER_PAYMENT_METHOD,
+            fallbackRecipientEmail: eTransferEmail,
+            amountCad: finalAmountCad,
+            discountCad,
+            memo: record.paymentMemo,
+          },
+        })
+      }
+
+      // No preset link either — fall back to e-Transfer
       await updateConferencePaymentLink({
         registrationId: record.registrationId,
         paymentStatus: 'pending_e_transfer',
