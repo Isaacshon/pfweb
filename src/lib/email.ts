@@ -36,7 +36,7 @@ export async function sendRegistrationEmail({
               
               <!-- Premium Header Banner with Logo -->
               <div style="background-color: #111827; padding: 32px 16px; text-align: center;">
-                <img src="${logoUrl}" alt="PassionFruits" style="height: 44px; width: auto; display: inline-block; border: none; outline: none;" />
+                <img src="${logoUrl}" alt="PassionFruits" style="height: 76px; width: auto; display: inline-block; border: none; outline: none;" />
               </div>
 
               <!-- Main Content Body -->
