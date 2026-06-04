@@ -34,9 +34,9 @@ export async function sendRegistrationEmail({
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #f8fafc;">
             <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9;">
               
-              <!-- Premium Header Banner with Logo -->
-              <div style="background-color: #111827; padding: 32px 16px; text-align: center;">
-                <img src="${logoUrl}" alt="PassionFruits" style="height: 76px; width: auto; display: inline-block; border: none; outline: none;" />
+              <!-- Premium Header Banner with Logo (Background removed, padding compacted) -->
+              <div style="background-color: #ffffff; padding: 20px 16px; text-align: center; border-bottom: 1px solid #f1f5f9;">
+                <img src="${logoUrl}" alt="PassionFruits" style="height: 72px; width: auto; display: inline-block; border: none; outline: none; vertical-align: middle;" />
               </div>
 
               <!-- Main Content Body -->
@@ -48,7 +48,7 @@ export async function sendRegistrationEmail({
                     <span style="font-size: 32px; color: #10b981; line-height: 64px; font-weight: bold; font-family: system-ui, -apple-system, sans-serif;">✓</span>
                   </div>
                   <h2 style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.03em;">Registration Confirmed!</h2>
-                  <p style="font-size: 13px; color: #059669; font-weight: 800; margin: 6px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em;">결제 및 등록 완료</p>
+                  <p style="font-size: 13px; color: #059669; font-weight: 800; margin: 6px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em;">Payment Completed</p>
                 </div>
 
                 <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-top: 0; margin-bottom: 16px;">
@@ -77,16 +77,16 @@ export async function sendRegistrationEmail({
                     </tr>
                     <tr>
                       <td style="padding: 8px 0; font-size: 13px; color: #64748b; font-weight: 600;">Payment Status</td>
-                      <td style="padding: 8px 0; font-size: 13px; color: #059669; font-weight: 800; text-align: right;">Paid (완료)</td>
+                      <td style="padding: 8px 0; font-size: 13px; color: #059669; font-weight: 800; text-align: right; text-transform: uppercase;">Paid</td>
                     </tr>
                   </table>
                 </div>
 
                 <!-- Custom App Download Banner with image QR code -->
                 <div style="background-color: #faf5ff; border-radius: 20px; border: 1px solid #f3e8ff; padding: 28px 24px; text-align: center; box-shadow: inset 0 2px 4px 0 rgba(109, 40, 217, 0.02);">
-                  <h3 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 800; color: #6D28D9; letter-spacing: -0.01em;">PassionFruits App 출시!</h3>
+                  <h3 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 800; color: #6D28D9; letter-spacing: -0.01em;">Download the PassionFruits App!</h3>
                   <p style="margin: 0 0 20px 0; font-size: 12px; line-height: 1.5; color: #7c3aed; font-weight: 600;">
-                    앱을 다운로드하셔서 컨퍼런스 세부 일정, 안내 사항 및 최신 소식을 간편하게 확인해보세요.
+                    Download the app to easily check the conference schedule, announcements, and stay updated.
                   </p>
                   
                   <!-- White box wrapper for the QR image -->
@@ -103,7 +103,7 @@ export async function sendRegistrationEmail({
 
                 <!-- Modern Footer Support Info -->
                 <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #64748b; line-height: 1.6;">
-                  <p style="margin: 0 0 6px 0;"><strong>도움이 필요하신가요?</strong> <a href="mailto:passionfruitsministry@gmail.com" style="color: #6D28D9; text-decoration: none; font-weight: 700;">passionfruitsministry@gmail.com</a>으로 연락해 주시면 정성껏 도와드리겠습니다.</p>
+                  <p style="margin: 0 0 6px 0;"><strong>Need help?</strong> Feel free to contact us at <a href="mailto:passionfruitsministry@gmail.com" style="color: #6D28D9; text-decoration: none; font-weight: 700;">passionfruitsministry@gmail.com</a> and we will be happy to assist you.</p>
                   <p style="margin: 0;">Blessings,<br/><strong>PassionFruits Ministry Team</strong></p>
                 </div>
 
@@ -118,7 +118,7 @@ export async function sendRegistrationEmail({
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Failed to send email via Resend:', errorText)
-      return { ok: false, error: errorText }
+      return { ok: false, code: 'resend_key_missing' }
     }
 
     return { ok: true }
