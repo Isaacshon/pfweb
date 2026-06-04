@@ -1,5 +1,6 @@
 import { updateConferenceSquarePayment } from '@/lib/conferenceSheets'
 import { verifySquareWebhookSignature } from '@/lib/squareCheckout'
+import { sendRegistrationEmail } from '@/lib/email'
 
 export const runtime = 'nodejs'
 
@@ -14,6 +15,16 @@ type SquareWebhookEvent = {
         receipt_url?: string
         updated_at?: string
         created_at?: string
+        buyer_email_address?: string
+        note?: string
+        amount_money?: {
+          amount?: number
+          currency?: string
+        }
+        billing_address?: {
+          first_name?: string
+          last_name?: string
+        }
       }
     }
   }
@@ -79,6 +90,31 @@ export async function POST(request: Request) {
       },
       { status: 502 }
     )
+  }
+
+  // Send registration confirmation email on successful payment
+  if (paymentStatus === 'paid' && payment.buyer_email_address) {
+    // Extract registrationId (e.g., PF-XXXX) from the payment note
+    const noteText = payment.note || ''
+    const match = noteText.match(/PF-[A-Z0-9]+/i)
+    const registrationId = match ? match[0].toUpperCase() : 'PF-CONFIRMED'
+
+    // Formulate attendee name
+    const buyerName = payment.billing_address
+      ? [payment.billing_address.first_name, payment.billing_address.last_name].filter(Boolean).join(' ')
+      : 'Participant'
+
+    // Get amount in CAD (convert from cents)
+    const amountCad = typeof payment.amount_money?.amount === 'number'
+      ? payment.amount_money.amount / 100
+      : 100
+
+    sendRegistrationEmail({
+      email: payment.buyer_email_address,
+      name: buyerName,
+      registrationId,
+      amountCad,
+    }).catch((err) => console.error('Failed to send payment confirmation email:', err))
   }
 
   return Response.json({ ok: true })

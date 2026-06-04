@@ -16,7 +16,6 @@ import {
   getPresetSquareCheckoutLink,
   getSquareCheckoutConfig,
 } from '@/lib/squareCheckout'
-import { sendRegistrationEmail } from '@/lib/email'
 
 const groupCodeErrorCodes = new Set([
   'group_registration_code_not_found',
@@ -116,14 +115,6 @@ export async function POST(request: Request) {
         squareOrderId: squarePaymentLink.orderId,
       })
 
-      sendRegistrationEmail({
-        email: payload.email,
-        name: `${payload.firstName} ${payload.lastName}`,
-        registrationId: record.registrationId,
-        amountCad: finalAmountCad,
-        checkoutUrl: squarePaymentLink.url,
-      }).catch((err) => console.error('Email send error:', err))
-
       return Response.json({
         ok: true,
         registrationId: record.registrationId,
@@ -157,14 +148,6 @@ export async function POST(request: Request) {
           squareOrderId: '',
         })
 
-        sendRegistrationEmail({
-          email: payload.email,
-          name: `${payload.firstName} ${payload.lastName}`,
-          registrationId: record.registrationId,
-          amountCad: finalAmountCad,
-          checkoutUrl: presetCheckoutUrl,
-        }).catch((err) => console.error('Email send error:', err))
-
         return Response.json({
           ok: true,
           registrationId: record.registrationId,
@@ -193,14 +176,6 @@ export async function POST(request: Request) {
         squarePaymentLinkId: '',
         squareOrderId: '',
       })
-
-      sendRegistrationEmail({
-        email: payload.email,
-        name: `${payload.firstName} ${payload.lastName}`,
-        registrationId: record.registrationId,
-        amountCad: finalAmountCad,
-        checkoutUrl: '',
-      }).catch((err) => console.error('Email send error:', err))
 
       return Response.json({
         ok: true,
@@ -232,14 +207,6 @@ export async function POST(request: Request) {
       squareOrderId: '',
     })
   }
-
-  sendRegistrationEmail({
-    email: payload.email,
-    name: `${payload.firstName} ${payload.lastName}`,
-    registrationId: record.registrationId,
-    amountCad: finalAmountCad,
-    checkoutUrl: '',
-  }).catch((err) => console.error('Email send error:', err))
 
   return Response.json({
     ok: true,
