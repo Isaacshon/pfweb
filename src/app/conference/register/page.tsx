@@ -657,9 +657,6 @@ export default function ConferenceRegistrationPage() {
                 <div className="mt-6 rounded-2xl bg-brand-dark p-5 text-white">
                   <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-yellow">Registration Fee</p>
                   <p className="mt-3 text-4xl font-black leading-none">100 CAD</p>
-                  <p className="mt-3 text-xs font-bold leading-relaxed text-white/70">
-                    Payment is completed securely through Square after submitting this form.
-                  </p>
                 </div>
                 <div className="mt-6 rounded-2xl bg-brand-yellow/60 p-5">
                   <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-dark">Church Group Registration</p>

@@ -6,6 +6,9 @@ import { useSearchParams } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
+import { QRCodeSVG } from 'qrcode.react'
+
+const APP_INSTALL_URL = 'https://www.passionfruits.ca/app/download?install=1'
 
 function CompletionContent() {
   const { t } = useLanguage()
@@ -100,6 +103,33 @@ function CompletionContent() {
                   <span>{text}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Download App Section */}
+          <div className="rounded-[2rem] border-2 border-slate-200 bg-slate-50 p-6 md:p-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-purple">Download the App</p>
+            <div className="mt-5 flex flex-col md:flex-row items-center gap-6">
+              <div className="rounded-2xl bg-white p-4 shadow-sm shrink-0">
+                <QRCodeSVG value={APP_INSTALL_URL} size={120} level="H" includeMargin={false} />
+              </div>
+              <div className="text-center md:text-left">
+                <p className="text-base font-black text-brand-dark">
+                  앱을 통해 간편하게 소식을 확인하세요!
+                </p>
+                <p className="mt-1 text-sm font-bold text-slate-500">
+                  Stay updated, connect with the community, and check event schedules easily on the PassionFruits App.
+                </p>
+                <a
+                  href={APP_INSTALL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-purple px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition hover:scale-[1.02] active:scale-95"
+                >
+                  <span className="material-icons text-sm">download</span>
+                  Install App
+                </a>
+              </div>
             </div>
           </div>
 
