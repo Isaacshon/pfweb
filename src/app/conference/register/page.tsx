@@ -14,6 +14,8 @@ import {
 } from '@/lib/conferenceRegistration'
 import { QRCodeSVG } from 'qrcode.react'
 
+const APP_INSTALL_URL = 'https://www.passionfruits.ca/app/download?install=1'
+
 type PaymentInstructions = {
   method: string
   checkoutUrl?: string
@@ -79,6 +81,7 @@ const validationLabels: Record<Language, Record<RegistrationField, string>> = {
     guardianRelation: 'parent/guardian relation',
     guardianPhone: 'parent/guardian phone number',
     guardianEmail: 'parent/guardian email',
+    guardianSignature: 'parent/guardian signature',
     guardianConsent: 'parent/guardian consent confirmation',
     accuracyConfirm: 'information accuracy confirmation',
     groupRegistrationCode: 'group registration code',
@@ -109,6 +112,7 @@ const validationLabels: Record<Language, Record<RegistrationField, string>> = {
     guardianRelation: '부모/보호자 관계',
     guardianPhone: '부모/보호자 전화번호',
     guardianEmail: '부모/보호자 이메일',
+    guardianSignature: '부모/보호자 서명',
     guardianConsent: '부모/보호자 동의 확인',
     accuracyConfirm: '정보 정확성 확인',
     groupRegistrationCode: '그룹 등록 코드',
@@ -139,6 +143,7 @@ const validationLabels: Record<Language, Record<RegistrationField, string>> = {
     guardianRelation: '家长/监护人关系',
     guardianPhone: '家长/监护人电话',
     guardianEmail: '家长/监护人邮箱',
+    guardianSignature: '家长/监护人签名',
     guardianConsent: '家长/监护人同意确认',
     accuracyConfirm: '信息准确确认',
     groupRegistrationCode: '团体注册码',
@@ -169,6 +174,7 @@ const validationLabels: Record<Language, Record<RegistrationField, string>> = {
     guardianRelation: 'relacion del padre/tutor',
     guardianPhone: 'telefono del padre/tutor',
     guardianEmail: 'correo del padre/tutor',
+    guardianSignature: 'firma del padre/tutor',
     guardianConsent: 'confirmacion de padre/tutor',
     accuracyConfirm: 'confirmacion de informacion correcta',
     groupRegistrationCode: 'codigo de registro grupal',
@@ -188,7 +194,7 @@ const validationMessages: Record<Language, {
     summary: 'Please review the highlighted fields before submitting.',
     required: (field) => `Please complete ${field}.`,
     email: 'Please enter a valid email address.',
-    age: 'Age must be between 18 and 25.',
+    age: 'Please enter a valid age.',
     guardianConsent: 'Please complete the parent/guardian consent form.',
   },
   ko: {
@@ -196,7 +202,7 @@ const validationMessages: Record<Language, {
     summary: '제출하기 전에 표시된 항목을 확인해 주세요.',
     required: (field) => `${field} 항목을 작성해 주세요.`,
     email: '올바른 이메일 주소를 입력해 주세요.',
-    age: '나이는 18세부터 25세 사이여야 합니다.',
+    age: '올바른 나이를 입력해 주세요.',
     guardianConsent: '부모/보호자 동의서를 작성하고 확인해 주세요.',
   },
   zh: {
@@ -204,7 +210,7 @@ const validationMessages: Record<Language, {
     summary: '提交前请确认标记的项目。',
     required: (field) => `请填写${field}。`,
     email: '请输入有效的电子邮箱。',
-    age: '年龄必须在18到25岁之间。',
+    age: '请输入有效的年龄。',
     guardianConsent: '请填写并确认家长/监护人同意书。',
   },
   es: {
@@ -212,14 +218,14 @@ const validationMessages: Record<Language, {
     summary: 'Revisa los campos marcados antes de enviar.',
     required: (field) => `Completa ${field}.`,
     email: 'Ingresa un correo electronico valido.',
-    age: 'La edad debe estar entre 18 y 25.',
+    age: 'Ingresa una edad valida.',
     guardianConsent: 'Completa el formulario de consentimiento de padre/tutor.',
   },
 }
 
-const inputClass = 'w-full rounded-2xl border-2 border-slate-300 bg-white px-5 py-4 text-base font-bold text-brand-dark outline-none transition placeholder:text-slate-300 focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/10'
-const textareaClass = `${inputClass} min-h-28 resize-y leading-relaxed`
-const labelClass = 'text-[11px] font-black uppercase tracking-[0.22em] text-slate-600'
+const inputClass = 'w-full rounded-2xl border-2 border-slate-200 bg-slate-50/70 px-5 py-4 text-base font-bold text-brand-dark outline-none transition placeholder:text-slate-300 focus:border-brand-purple focus:bg-white focus:ring-4 focus:ring-brand-purple/10'
+const textareaClass = `${inputClass} min-h-32 resize-y leading-relaxed`
+const labelClass = 'text-[11px] font-black uppercase tracking-[0.2em] text-slate-700'
 
 function TextField({
   label,
@@ -325,7 +331,7 @@ function RadioGroup({
       <legend className={labelClass}>{label}{required ? ' *' : ''}</legend>
       <div className={`grid gap-3 ${gridClass}`}>
         {options.map((option) => (
-          <label key={option} className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border-2 bg-white px-4 py-3 text-sm font-black text-brand-dark transition hover:border-brand-purple ${error ? 'border-red-300' : 'border-slate-300'}`}>
+          <label key={option} className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border-2 bg-slate-50/70 px-4 py-3 text-sm font-black text-brand-dark transition hover:border-brand-purple hover:bg-white ${error ? 'border-red-300' : 'border-slate-200'}`}>
             <input
               type="radio"
               name={name}
@@ -361,7 +367,7 @@ function CheckboxField({
 
   return (
     <div className="space-y-2">
-      <label className={`flex cursor-pointer gap-4 rounded-2xl border-2 bg-white p-5 text-sm font-bold leading-relaxed text-slate-700 transition hover:border-brand-purple ${error ? 'border-red-300 bg-red-50/40' : 'border-slate-300'}`}>
+      <label className={`flex cursor-pointer gap-4 rounded-2xl border-2 bg-slate-50/70 p-5 text-sm font-bold leading-relaxed text-slate-700 transition hover:border-brand-purple hover:bg-white ${error ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}>
         <input
           type="checkbox"
           name={name}
@@ -392,9 +398,9 @@ function FormSection({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-[2rem] border-2 border-slate-200 bg-white p-6 shadow-sm md:p-8">
-      <div className="mb-6 flex items-center gap-4">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-purple text-xs font-black text-white">
+    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] md:p-8">
+      <div className="mb-7 flex items-center gap-4 border-b border-slate-100 pb-5">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-purple text-xs font-black text-white shadow-lg shadow-brand-purple/20">
           {number}
         </span>
         <h2 className="text-xl font-black uppercase tracking-tight text-brand-dark md:text-2xl">{title}</h2>
@@ -420,8 +426,12 @@ function buildRegistrationFieldErrors(payload: ConferenceRegistrationPayload, la
   }
 
   const ageNumber = Number(payload.age)
-  if (payload.age && (!Number.isFinite(ageNumber) || ageNumber < 18 || ageNumber > 25)) {
+  if (payload.age && !Number.isFinite(ageNumber)) {
     errors.age = copy.age
+  }
+
+  if (payload.attendingWithGroup === 'Yes' && !payload.groupName) {
+    errors.groupName = copy.required(labels.groupName)
   }
 
   if (requiresGuardianConsent(payload)) {
@@ -429,6 +439,7 @@ function buildRegistrationFieldErrors(payload: ConferenceRegistrationPayload, la
     if (!payload.guardianRelation) errors.guardianRelation = copy.required(labels.guardianRelation)
     if (!payload.guardianPhone) errors.guardianPhone = copy.required(labels.guardianPhone)
     if (!payload.guardianEmail) errors.guardianEmail = copy.required(labels.guardianEmail)
+    if (!payload.guardianSignature) errors.guardianSignature = copy.required(labels.guardianSignature)
   }
 
   if (requiresGuardianConsent(payload) && !payload.guardianConsent) {
@@ -494,6 +505,7 @@ export default function ConferenceRegistrationPage() {
             delete next.guardianRelation
             delete next.guardianPhone
             delete next.guardianEmail
+            delete next.guardianSignature
             delete next.guardianConsent
             return next
           })
@@ -566,9 +578,9 @@ export default function ConferenceRegistrationPage() {
       setSubmitted(true)
       setPaymentInstructions(result.paymentInstructions || null)
       setStatusType('success')
-      setStatusMessage(result.code === 'square_checkout_unavailable'
-        ? `Registration received. Square Checkout is unavailable, so use the e-Transfer backup. ID: ${result.registrationId}`
-        : `Registration received. Complete payment with the checkout link below. ID: ${result.registrationId}`)
+      setStatusMessage(result.paymentInstructions?.checkoutUrl
+        ? `Registration received. Complete payment with Square below. ID: ${result.registrationId}`
+        : `Registration received, but Square Checkout is not available yet. Please contact PassionFruits Ministry. ID: ${result.registrationId}`)
     } catch (error) {
       setStatusType('error')
       setStatusMessage(error instanceof Error ? error.message : 'Registration could not be submitted.')
@@ -650,6 +662,13 @@ export default function ConferenceRegistrationPage() {
                 <p className="mt-5 text-base font-bold leading-relaxed text-slate-600">
                   We are excited to have you join PassionFruits Conference 2026. Please complete the form carefully.
                 </p>
+                <div className="mt-6 rounded-2xl bg-brand-dark p-5 text-white">
+                  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-yellow">Registration Fee</p>
+                  <p className="mt-3 text-4xl font-black leading-none">100 CAD</p>
+                  <p className="mt-3 text-xs font-bold leading-relaxed text-white/70">
+                    Payment is completed securely through Square after submitting this form.
+                  </p>
+                </div>
                 <div className="mt-6 rounded-2xl bg-brand-yellow/60 p-5">
                   <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-dark">Church Group Registration</p>
                   <p className="mt-2 text-xs font-bold leading-relaxed text-brand-dark/70">
@@ -688,6 +707,17 @@ export default function ConferenceRegistrationPage() {
                     www.passionfruits.ca
                   </a>
                 </div>
+                <div className="mt-6 border-t border-slate-200 pt-6">
+                  <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-purple">Install the App</p>
+                  <div className="mt-4 flex items-center gap-4">
+                    <div className="rounded-2xl bg-white p-3 shadow-sm">
+                      <QRCodeSVG value={APP_INSTALL_URL} size={112} level="H" includeMargin={false} />
+                    </div>
+                    <p className="text-xs font-bold leading-relaxed text-slate-500">
+                      Scan to open the PassionFruits app install page on iOS or Android.
+                    </p>
+                  </div>
+                </div>
               </div>
             </aside>
 
@@ -716,7 +746,7 @@ export default function ConferenceRegistrationPage() {
                   <TextField label="First Name" name="firstName" error={fieldErrors.firstName} required />
                   <TextField label="Last Name" name="lastName" error={fieldErrors.lastName} required />
                   <TextField label="Preferred Name" name="preferredName" />
-                  <TextField label="Age" name="age" type="number" min={18} max={25} error={fieldErrors.age} required />
+                  <TextField label="Age" name="age" type="number" error={fieldErrors.age} required />
                 </div>
                 <RadioGroup label="Gender" name="gender" options={['Male', 'Female']} error={fieldErrors.gender} required />
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -734,7 +764,7 @@ export default function ConferenceRegistrationPage() {
                 {showGroupRegistrationFields && (
                   <div className="rounded-[1.5rem] border-2 border-brand-purple/10 bg-brand-purple/5 p-5">
                     <div className="grid grid-cols-1 gap-5">
-                      <TextField label="Group / Church Name" name="groupName" />
+                      <TextField label="Group / Church Name" name="groupName" error={fieldErrors.groupName} required />
                       <TextField label="Group Registration Code" name="groupRegistrationCode" placeholder="Optional" />
                     </div>
                     <p className="mt-3 text-xs font-bold leading-relaxed text-slate-500">
@@ -770,7 +800,7 @@ export default function ConferenceRegistrationPage() {
                 {showGuardianConsentForm && (
                   <div className="rounded-[1.5rem] border-2 border-brand-purple/20 bg-brand-purple/5 p-5 md:p-6">
                     <div className="mb-5 flex items-start gap-3">
-                      <span className="material-icons flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-purple text-lg text-white">assignment</span>
+                      <span className="material-icons flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-purple text-lg text-white">family_restroom</span>
                       <div>
                         <p className="text-sm font-black uppercase tracking-[0.2em] text-brand-purple">Parent/Guardian Consent Form</p>
                         <p className="mt-2 text-sm font-bold leading-relaxed text-slate-600">
@@ -783,6 +813,9 @@ export default function ConferenceRegistrationPage() {
                       <TextField label="Relation" name="guardianRelation" error={fieldErrors.guardianRelation} required />
                       <TextField label="Parent/Guardian Phone" name="guardianPhone" type="tel" error={fieldErrors.guardianPhone} required />
                       <TextField label="Parent/Guardian Email" name="guardianEmail" type="email" error={fieldErrors.guardianEmail} required />
+                      <div className="md:col-span-2">
+                        <TextField label="Parent/Guardian Signature" name="guardianSignature" placeholder="Type full name as signature" error={fieldErrors.guardianSignature} required />
+                      </div>
                     </div>
                     <div className="mt-5">
                       <CheckboxField name="guardianConsent" error={fieldErrors.guardianConsent} required>
@@ -797,67 +830,39 @@ export default function ConferenceRegistrationPage() {
               </FormSection>
 
               {paymentInstructions && (
-                <div className="rounded-[2rem] border-2 border-emerald-200 bg-emerald-50 p-6 md:p-8">
+                <div className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 shadow-[0_18px_50px_rgba(16,185,129,0.12)] md:p-8">
                   <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-700">
-                        {paymentInstructions.checkoutUrl ? 'Square Checkout' : 'E-Transfer Backup'}
-                      </p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-700">Square Checkout</p>
                       <h3 className="mt-3 text-2xl font-black text-brand-dark">
                         {paymentInstructions.amountCad > 0 ? `Pay ${paymentInstructions.amountCad} CAD` : 'Payment waived'}
                       </h3>
-                      <div className="mt-5 grid gap-3 text-sm font-bold text-slate-700">
-                        {paymentInstructions.checkoutUrl ? (
-                          <>
-                            <p><span className="font-black text-brand-dark">Method:</span> Apple Pay, Google Pay, or card through Square</p>
-                            {paymentInstructions.squareOrderId && (
-                              <p><span className="font-black text-brand-dark">Order:</span> {paymentInstructions.squareOrderId}</p>
-                            )}
-                          </>
-                        ) : (
-                          <p><span className="font-black text-brand-dark">Recipient:</span> {paymentInstructions.recipientEmail}</p>
-                        )}
-                        {typeof paymentInstructions.discountCad === 'number' && paymentInstructions.discountCad > 0 && (
-                          <p><span className="font-black text-brand-dark">Group discount:</span> -{paymentInstructions.discountCad} CAD</p>
-                        )}
-                        <p><span className="font-black text-brand-dark">Memo:</span> {paymentInstructions.memo}</p>
-                        <p><span className="font-black text-brand-dark">Status:</span> Pending payment confirmation</p>
-                      </div>
-                      {paymentInstructions.checkoutUrl && (
-                        <a
-                          href={paymentInstructions.checkoutUrl}
-                          className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-brand-dark px-6 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg transition hover:scale-[1.01] active:scale-95 sm:w-auto"
-                        >
-                          Pay with Square
-                          <span className="material-icons text-lg">open_in_new</span>
-                        </a>
+                      {typeof paymentInstructions.discountCad === 'number' && paymentInstructions.discountCad > 0 && (
+                        <p className="mt-2 text-sm font-black text-emerald-700">
+                          Group discount applied: -{paymentInstructions.discountCad} CAD
+                        </p>
                       )}
-                      {paymentInstructions.checkoutUrl && paymentInstructions.fallbackRecipientEmail && (
-                        <p className="mt-4 text-xs font-bold leading-relaxed text-emerald-800/70">
-                          If checkout does not work, send e-Transfer to {paymentInstructions.fallbackRecipientEmail} and use the same memo.
+                      {!paymentInstructions.checkoutUrl && (
+                        <p className="mt-3 text-sm font-bold leading-relaxed text-red-600">
+                          Square checkout link is not available. Please contact PassionFruits Ministry.
                         </p>
                       )}
                     </div>
-                    <div className="rounded-3xl bg-white p-4 shadow-sm">
-                      <QRCodeSVG
-                        value={paymentInstructions.checkoutUrl || [
-                          'Interac e-Transfer',
-                          'PassionFruits Conference 2026',
-                          `Recipient: ${paymentInstructions.recipientEmail}`,
-                          `Amount CAD: ${paymentInstructions.amountCad}`,
-                          `Memo: ${paymentInstructions.memo}`,
-                        ].join('\n')}
-                        size={148}
-                        level="M"
-                      />
-                    </div>
+                    <a
+                      href={paymentInstructions.checkoutUrl || undefined}
+                      aria-disabled={!paymentInstructions.checkoutUrl}
+                      className={`inline-flex w-full items-center justify-center gap-3 rounded-full px-7 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg transition sm:w-auto ${paymentInstructions.checkoutUrl ? 'bg-brand-dark hover:scale-[1.01] active:scale-95' : 'pointer-events-none bg-slate-300'}`}
+                    >
+                      Pay with Square
+                      <span className="material-icons text-lg">open_in_new</span>
+                    </a>
                   </div>
                 </div>
               )}
 
               <div className="sticky bottom-4 z-30 rounded-[2rem] border-2 border-brand-purple/30 bg-white/95 p-5 shadow-2xl shadow-brand-purple/10 backdrop-blur md:static md:p-8">
                 <p className="text-lg font-black text-brand-dark">We cannot wait to worship, grow, and encounter God together with you at PassionFruits Conference 2026.</p>
-                <p className="mt-3 text-sm font-bold text-slate-500">After submitting, continue to the secure checkout link to complete your registration.</p>
+                <p className="mt-3 text-sm font-bold text-slate-500">After submitting, continue to Square Checkout to complete your registration.</p>
                 <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-brand-dark px-8 py-5 text-sm font-black uppercase tracking-[0.22em] text-white shadow-xl transition hover:scale-[1.01] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto">
                   {isSubmitting ? 'Creating Checkout...' : 'Submit and Create Checkout'}
                   <span className="material-icons text-lg">{isSubmitting ? 'sync' : 'send'}</span>

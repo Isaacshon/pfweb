@@ -50,6 +50,7 @@ export const conferenceRegistrationHeaders = [
   'Guardian Relation',
   'Guardian Phone',
   'Guardian Email',
+  'Guardian Signature',
   'Guardian Consent',
   'Accuracy Confirmation',
 ] as const
@@ -80,6 +81,7 @@ export type ConferenceRegistrationPayload = {
   guardianRelation?: string
   guardianPhone?: string
   guardianEmail?: string
+  guardianSignature?: string
   guardianConsent?: string
   accuracyConfirm?: string
   groupRegistrationCode?: string
@@ -155,6 +157,7 @@ export function normalizeConferenceRegistrationPayload(input: unknown): Conferen
     guardianRelation: cleanString(source.guardianRelation),
     guardianPhone: cleanString(source.guardianPhone),
     guardianEmail: cleanString(source.guardianEmail),
+    guardianSignature: cleanString(source.guardianSignature),
     guardianConsent: cleanString(source.guardianConsent),
     accuracyConfirm: cleanString(source.accuracyConfirm),
     groupRegistrationCode: cleanString(source.groupRegistrationCode).toUpperCase(),
@@ -167,11 +170,15 @@ export function validateConferenceRegistration(payload: ConferenceRegistrationPa
   if (!payload.mediaConsent) missingFields.push('mediaConsent')
   if (!payload.guidelinesConsent) missingFields.push('guidelinesConsent')
   if (!payload.accuracyConfirm) missingFields.push('accuracyConfirm')
+  if (payload.attendingWithGroup === 'Yes' && !payload.groupName) {
+    missingFields.push('groupName')
+  }
   if (requiresGuardianConsent(payload)) {
     if (!payload.guardianName) missingFields.push('guardianName')
     if (!payload.guardianRelation) missingFields.push('guardianRelation')
     if (!payload.guardianPhone) missingFields.push('guardianPhone')
     if (!payload.guardianEmail) missingFields.push('guardianEmail')
+    if (!payload.guardianSignature) missingFields.push('guardianSignature')
   }
 
   if (requiresGuardianConsent(payload) && !payload.guardianConsent) {
@@ -280,6 +287,7 @@ export function buildConferenceRegistrationSheetRow(record: ConferenceRegistrati
     record.guardianRelation || '',
     record.guardianPhone || '',
     record.guardianEmail || '',
+    record.guardianSignature || '',
     record.guardianConsent || '',
     record.accuracyConfirm || '',
   ]
