@@ -17,7 +17,7 @@ export async function sendRegistrationEmail({
 
   // Dynamic QR Code generation for email clients (which cannot render SVG dynamically)
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent('https://www.passionfruits.ca/app/download?install=1')}`
-  const logoUrl = 'https://www.passionfruits.ca/logo.png'
+  const logoUrl = 'https://www.passionfruits.ca/IMG_6847.PNG'
 
   try {
     const response = await fetch('https://api.resend.com/emails', {
