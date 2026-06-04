@@ -810,7 +810,9 @@ export default function ConferenceRegistrationPage() {
                         {paymentInstructions.checkoutUrl ? (
                           <>
                             <p><span className="font-black text-brand-dark">Method:</span> Apple Pay, Google Pay, or card through Square</p>
-                            <p><span className="font-black text-brand-dark">Order:</span> {paymentInstructions.squareOrderId}</p>
+                            {paymentInstructions.squareOrderId && (
+                              <p><span className="font-black text-brand-dark">Order:</span> {paymentInstructions.squareOrderId}</p>
+                            )}
                           </>
                         ) : (
                           <p><span className="font-black text-brand-dark">Recipient:</span> {paymentInstructions.recipientEmail}</p>

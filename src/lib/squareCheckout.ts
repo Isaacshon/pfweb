@@ -18,6 +18,11 @@ type SquarePaymentLinkResponse = {
   }
 }
 
+const presetSquareCheckoutLinks: Record<number, string> = {
+  80: process.env.SQUARE_CHECKOUT_LINK_80_CAD || 'https://square.link/u/TaEXIJyG',
+  100: process.env.SQUARE_CHECKOUT_LINK_100_CAD || 'https://square.link/u/HKQLyskc',
+}
+
 export class SquareCheckoutError extends Error {
   code = 'square_checkout_failed'
 }
@@ -43,6 +48,16 @@ export function getSquareCheckoutConfig() {
       ? 'https://connect.squareup.com'
       : 'https://connect.squareupsandbox.com',
   }
+}
+
+export function getPresetSquareCheckoutLink(amountCad: number) {
+  const roundedAmount = Math.round(amountCad)
+
+  if (Math.abs(amountCad - roundedAmount) > 0.01) {
+    return null
+  }
+
+  return presetSquareCheckoutLinks[roundedAmount] || null
 }
 
 export async function createSquarePaymentLink({

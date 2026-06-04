@@ -11,7 +11,11 @@ import {
   getConferenceSheetsConfig,
   updateConferencePaymentLink,
 } from '@/lib/conferenceSheets'
-import { createSquarePaymentLink, getSquareCheckoutConfig } from '@/lib/squareCheckout'
+import {
+  createSquarePaymentLink,
+  getPresetSquareCheckoutLink,
+  getSquareCheckoutConfig,
+} from '@/lib/squareCheckout'
 
 const groupCodeErrorCodes = new Set([
   'group_registration_code_not_found',
@@ -83,6 +87,37 @@ export async function POST(request: Request) {
   const discountCad = typeof sheetsResult?.discountCad === 'number'
     ? sheetsResult.discountCad
     : record.discountCad
+
+  const presetCheckoutUrl = finalAmountCad > 0 ? getPresetSquareCheckoutLink(finalAmountCad) : null
+
+  if (presetCheckoutUrl) {
+    const updateResult = await updateConferencePaymentLink({
+      registrationId: record.registrationId,
+      paymentStatus: 'checkout_link_created',
+      paymentMethod: SQUARE_PAYMENT_METHOD,
+      finalAmountCad,
+      squareCheckoutUrl: presetCheckoutUrl,
+      squarePaymentLinkId: '',
+      squareOrderId: '',
+    })
+
+    return Response.json({
+      ok: true,
+      registrationId: record.registrationId,
+      paymentStatus: updateResult?.ok === false ? 'pending' : 'checkout_link_created',
+      finalAmountCad,
+      discountCad,
+      paymentInstructions: {
+        method: SQUARE_PAYMENT_METHOD,
+        checkoutUrl: presetCheckoutUrl,
+        fallbackMethod: ETRANSFER_PAYMENT_METHOD,
+        fallbackRecipientEmail: eTransferEmail,
+        amountCad: finalAmountCad,
+        discountCad,
+        memo: record.paymentMemo,
+      },
+    })
+  }
 
   if (squareConfig.configured && finalAmountCad > 0) {
     try {
