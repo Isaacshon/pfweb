@@ -29,23 +29,26 @@ export async function sendRegistrationEmail({
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        from: 'PassionFruits <no-reply@passionfruits.ca>',
+        from: process.env.RESEND_FROM_EMAIL || 'PassionFruits <no-reply@passionfruits.ca>',
         to: [email],
         subject: `[PassionFruits] Conference 2026 ${subjectText} - ${registrationId}`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #fffbbd;">
-            <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: transparent;">
+            <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
               
-              <!-- Premium Header Banner with Logo (Brand Purple #9a78b4, compacted padding) -->
+              <!-- Premium Header Banner with Logo (Brand Purple #9a78b4) -->
               <div style="background-color: #9a78b4; padding: 24px 16px; text-align: center;">
                 <img src="${logoUrl}" alt="PassionFruits Logo" style="height: 72px; width: auto; display: inline-block; border: none; outline: none; vertical-align: middle;" />
               </div>
+              
+              <!-- Brand Yellow Accent Line -->
+              <div style="background-color: #fffbbd; height: 6px; width: 100%;"></div>
 
               <!-- Main Content Body -->
               <div style="padding: 40px 32px;">
                 
                 <!-- Content Title -->
-                <h2 style="font-size: 20px; font-weight: 800; color: #9a78b4; margin-top: 0; margin-bottom: 12px; border-bottom: 2px solid #fffbbd; padding-bottom: 10px; letter-spacing: -0.02em;">
+                <h2 style="font-size: 20px; font-weight: 800; color: #9a78b4; margin-top: 0; margin-bottom: 12px; padding-bottom: 10px; letter-spacing: -0.02em;">
                   ${isPaid ? 'Registration & Payment Confirmed' : 'Registration Received'}
                 </h2>
                 
@@ -59,8 +62,8 @@ export async function sendRegistrationEmail({
                 </p>
                 
                 <!-- Details Receipt Table -->
-                <div style="margin: 25px 0; padding: 20px; background-color: #f8f9ff; border-radius: 16px; border: 1px solid #fffbbd;">
-                  <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: 800; color: #9a78b4; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #fffbbd; padding-bottom: 6px;">Registration Summary</p>
+                <div style="margin: 25px 0; padding: 20px; background-color: #f8f9ff; border-radius: 12px; border-left: 4px solid #fffbbd;">
+                  <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: 800; color: #9a78b4; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Registration Summary</p>
                   <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                       <td style="padding: 6px 0; font-size: 13px; color: #64748b; font-weight: 600;">Registration ID</td>
@@ -84,7 +87,7 @@ export async function sendRegistrationEmail({
                 </div>
 
                 <!-- Download App Link & QR Code -->
-                <div style="margin: 35px 0; text-align: center; background-color: #ffffff; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <div style="margin: 35px 0; text-align: center; background-color: #ffffff; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; border-top: 4px solid #fffbbd; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
                   <p style="font-size: 16px; font-weight: 800; color: #121c2a; margin: 0 0 15px 0;">Get the PassionFruits App</p>
                   <p style="font-size: 13px; line-height: 1.5; color: #475569; margin: 0 0 20px 0;">
                     Scan the QR code below or tap the button to easily check the conference schedule, announcements, and stay updated!
@@ -95,7 +98,7 @@ export async function sendRegistrationEmail({
                 </div>
 
                 <!-- Support Info -->
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #fffbbd; font-size: 12px; color: #64748b; line-height: 1.6;">
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; line-height: 1.6;">
                   <p style="margin: 0 0 5px 0;"><strong>Need help?</strong> Feel free to contact us at <a href="mailto:passionfruitsministry@gmail.com" style="color: #9a78b4; text-decoration: none; font-weight: 700;">passionfruitsministry@gmail.com</a> and we will be happy to assist you.</p>
                   <p style="margin: 0;">Blessings,<br/><strong>PassionFruits Ministry Team</strong></p>
                 </div>
