@@ -17,7 +17,7 @@ export async function sendRegistrationEmail({
     return { ok: false, code: 'resend_key_missing' }
   }
 
-  const logoUrl = 'https://www.passionfruits.ca/IMG_6847_cropped.png?v=2'
+  const logoUrl = 'https://raw.githubusercontent.com/Isaacshon/pfweb/main/public/IMG_6847_cropped.png'
   const isPaid = paymentStatus === 'paid'
   const subjectText = isPaid ? 'Registration & Payment Confirmed' : 'Registration Received (Payment Pending)'
 
