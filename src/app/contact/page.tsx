@@ -36,13 +36,25 @@ export default function Contact() {
   const emailTitle = localizedContent?.emailTitle || t('contactPage.emailTitle')
   const emailDetail = localizedContent?.emailDetail || t('contactPage.email')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (messageContent.trim() === 'Pfadmin1!') {
-      router.push('/admin')
-    } else {
-      alert(t('contactPage.thankYou'))
+
+    try {
+      const response = await fetch('/api/admin/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: messageContent.trim() }),
+      })
+
+      if (response.ok) {
+        router.push('/admin')
+        return
+      }
+    } catch {
+      // Fall through to the public contact confirmation.
     }
+
+    alert(t('contactPage.thankYou'))
   }
 
   return (

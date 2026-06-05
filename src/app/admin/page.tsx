@@ -294,15 +294,24 @@ export default function AdminDashboard() {
     e?.preventDefault()
     setIsUploading(true)
     try {
-      const saveResults = await Promise.all([
-        supabase.from('site_settings').upsert({ key: 'page_content', value: pageContent }),
-        supabase.from('site_settings').upsert({ key: 'map_address', value: mapAddress }),
-        supabase.from('site_settings').upsert({ key: 'hero_video', value: heroVideoUrl }),
-        supabase.from('site_settings').upsert({ key: 'about_image', value: aboutImageUrl }),
-        supabase.from('site_settings').upsert({ key: 'admin_settings', value: siteSettings })
-      ])
-      const saveError = saveResults.find(result => result.error)?.error
-      if (saveError) throw saveError
+      const response = await fetch('/api/admin/site-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settings: [
+            { key: 'page_content', value: pageContent },
+            { key: 'map_address', value: mapAddress },
+            { key: 'hero_video', value: heroVideoUrl },
+            { key: 'about_image', value: aboutImageUrl },
+            { key: 'admin_settings', value: siteSettings },
+          ],
+        }),
+      })
+
+      const result = await response.json().catch(() => null)
+      if (!response.ok || result?.ok === false) {
+        throw new Error(result?.message || 'Could not save changes.')
+      }
 
       setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
       showNotice({
