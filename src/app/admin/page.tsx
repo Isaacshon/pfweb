@@ -150,12 +150,12 @@ export default function AdminDashboard() {
         { icon: 'star', title: 'INFLUENCE', desc: 'KINGDOM CULTURE', iconUrl: '' }
       ],
       menuItems: [
-        { icon: 'event', label: 'Conference', subLabel: '2026 Conf', iconUrl: '' },
-        { icon: 'campaign', label: 'Events', subLabel: 'Kingdom News', iconUrl: '' },
-        { icon: 'groups', label: 'About', subLabel: 'Our Story', iconUrl: '' },
-        { icon: 'visibility', label: 'Vision', subLabel: 'Our Vision', iconUrl: '' },
-        { icon: 'mail', label: 'Contact', subLabel: 'Get in Touch', iconUrl: '' },
-        { icon: 'favorite', label: 'Support', subLabel: 'Sponsorship', iconUrl: '' }
+        { icon: 'event', label: 'Conference', subLabel: '2026 Conf', href: '/conference', iconUrl: '' },
+        { icon: 'campaign', label: 'Events', subLabel: 'Kingdom News', href: '/events', iconUrl: '' },
+        { icon: 'groups', label: 'About', subLabel: 'Our Story', href: '/about', iconUrl: '' },
+        { icon: 'visibility', label: 'Vision', subLabel: 'Our Vision', href: '/about', iconUrl: '' },
+        { icon: 'mail', label: 'Contact', subLabel: 'Get in Touch', href: '/contact', iconUrl: '' },
+        { icon: 'favorite', label: 'Support', subLabel: 'Sponsorship', href: '/contact', iconUrl: '' }
       ]
     },
     about: {

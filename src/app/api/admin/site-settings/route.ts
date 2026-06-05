@@ -17,6 +17,43 @@ type SiteSettingPayload = {
   value: unknown
 }
 
+const defaultMenuHrefs = [
+  '/conference',
+  '/events',
+  '/about',
+  '/about',
+  '/contact',
+  '/contact',
+]
+
+function normalizePageContent(value: unknown) {
+  if (!value || typeof value !== 'object') return value
+
+  const pageContent = value as { home?: unknown }
+  if (!pageContent.home || typeof pageContent.home !== 'object') return value
+
+  const home = pageContent.home as { menuItems?: unknown }
+  if (!Array.isArray(home.menuItems)) return value
+
+  return {
+    ...pageContent,
+    home: {
+      ...home,
+      menuItems: home.menuItems.map((item, index) => {
+        if (!item || typeof item !== 'object') return item
+
+        const href = (item as { href?: unknown }).href
+        return {
+          ...item,
+          href: typeof href === 'string' && href.trim()
+            ? href
+            : defaultMenuHrefs[index] || '/',
+        }
+      }),
+    },
+  }
+}
+
 function normalizeSettings(body: unknown): SiteSettingPayload[] {
   if (!body || typeof body !== 'object' || !('settings' in body)) {
     throw new Error('Missing settings payload.')
@@ -39,7 +76,9 @@ function normalizeSettings(body: unknown): SiteSettingPayload[] {
 
     return {
       key,
-      value: (item as { value?: unknown }).value ?? null,
+      value: key === 'page_content'
+        ? normalizePageContent((item as { value?: unknown }).value ?? null)
+        : (item as { value?: unknown }).value ?? null,
     }
   })
 }
