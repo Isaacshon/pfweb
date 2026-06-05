@@ -5,24 +5,17 @@ import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
-import { supabase } from '@/lib/supabase'
+import { getSiteSettingValue, useLiveSiteSettings } from '@/lib/liveSiteSettings'
 
 export default function ConferencePage() {
   const { t, language } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [content, setContent] = useState<any>(null)
 
-  useEffect(() => {
-    fetchSettings()
-  }, [])
-
-  const fetchSettings = async () => {
-    const { data } = await supabase.from('site_settings').select('*')
-    if (data) {
-      const pageContent = data.find(s => s.key === 'page_content')?.value
-      if (pageContent && pageContent.conference) setContent(pageContent.conference)
-    }
-  }
+  useLiveSiteSettings((settingsData) => {
+    const pageContent = getSiteSettingValue(settingsData, 'page_content')
+    if (pageContent && pageContent.conference) setContent(pageContent.conference)
+  })
 
   const localizedContent = language === 'en' ? content : null
   const heroDate = localizedContent?.heroDate || t('conference.heroDate')

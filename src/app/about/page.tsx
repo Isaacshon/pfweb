@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
-import { supabase } from '@/lib/supabase'
+import { getSiteSettingValue, useLiveSiteSettings } from '@/lib/liveSiteSettings'
 
 const beliefs = (t: (key: string) => string) => [
   { icon: 'menu_book', title: t('about.beliefBibleTitle'), desc: t('about.beliefBibleDesc') },
@@ -31,18 +31,14 @@ export default function AboutPage() {
 
   useEffect(() => {
     setIsLoaded(true)
-    fetchSettings()
   }, [])
 
-  const fetchSettings = async () => {
-    const { data } = await supabase.from('site_settings').select('*')
-    if (data) {
-      const pageContent = data.find(s => s.key === 'page_content')?.value
-      const aboutImg = data.find(s => s.key === 'about_image')?.value
-      if (pageContent && pageContent.about) setContent(pageContent.about)
-      if (aboutImg) setAboutImage(aboutImg)
-    }
-  }
+  useLiveSiteSettings((settingsData) => {
+    const pageContent = getSiteSettingValue(settingsData, 'page_content')
+    const aboutImg = getSiteSettingValue(settingsData, 'about_image')
+    if (pageContent && pageContent.about) setContent(pageContent.about)
+    if (aboutImg) setAboutImage(aboutImg)
+  })
 
   const localizedContent = language === 'en' ? content : null
   const massiveTitle = localizedContent?.massiveTitle || t('about.massiveTitle')

@@ -13,6 +13,7 @@ import { BrandHeading } from '@/components/BrandHeading'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { supabase } from '@/lib/supabase'
+import { getSiteSettingValue, useLiveSiteSettings } from '@/lib/liveSiteSettings'
 
 const INTRO_PLAYED_KEY = 'pf_intro_played'
 
@@ -69,26 +70,19 @@ export default function Home() {
     }
   }
 
-  useEffect(() => {
-    const fetchSiteSettings = async () => {
-      const { data: settingsData } = await supabase
-        .from('site_settings')
-        .select('*')
-      
-      if (settingsData) {
-        const content = settingsData.find(s => s.key === 'page_content')?.value
-        const address = settingsData.find(s => s.key === 'map_address')?.value
-        const video = settingsData.find(s => s.key === 'hero_video')?.value
+  useLiveSiteSettings((settingsData) => {
+    const content = getSiteSettingValue(settingsData, 'page_content')
+    const address = getSiteSettingValue(settingsData, 'map_address')
+    const video = getSiteSettingValue(settingsData, 'hero_video')
 
-        if (content && content.home) {
-          setPageContent(content)
-        }
-        if (address) setMapAddress(address)
-        if (video) setHeroVideoUrl(video)
-      }
+    if (content && content.home) {
+      setPageContent(content)
     }
+    if (address) setMapAddress(address)
+    if (video) setHeroVideoUrl(video)
+  })
 
-    fetchSiteSettings()
+  useEffect(() => {
     fetchGallery()
   }, [])
 

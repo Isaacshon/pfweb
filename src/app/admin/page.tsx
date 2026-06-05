@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { notifySiteSettingsPublished } from '@/lib/liveSiteSettings'
 
 type AdminNotice = {
   type: 'success' | 'error' | 'info'
@@ -314,6 +315,7 @@ export default function AdminDashboard() {
       }
 
       setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+      notifySiteSettingsPublished()
       showNotice({
         type: 'success',
         title: 'Published',

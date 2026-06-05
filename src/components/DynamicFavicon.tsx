@@ -1,36 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState } from 'react'
+import { getSiteSettingValue, useLiveSiteSettings } from '@/lib/liveSiteSettings'
 
 export const DynamicFavicon = () => {
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchBranding = async () => {
-      const { data } = await supabase
-        .from('site_settings')
-        .select('*')
-        .eq('key', 'page_content')
-        .maybeSingle()
-      
-      if (data?.value?.branding?.faviconUrl) {
-        setFaviconUrl(data.value.branding.faviconUrl)
-      } else {
-        // Check admin_settings key
-        const { data: brandingData } = await supabase
-          .from('site_settings')
-          .select('*')
-          .eq('key', 'admin_settings')
-          .maybeSingle()
-        
-        if (brandingData?.value?.faviconUrl) {
-          setFaviconUrl(brandingData.value.faviconUrl)
-        }
-      }
+  useLiveSiteSettings((settingsData) => {
+    const pageContent = getSiteSettingValue(settingsData, 'page_content')
+    const adminSettings = getSiteSettingValue(settingsData, 'admin_settings')
+
+    if (pageContent?.branding?.faviconUrl) {
+      setFaviconUrl(pageContent.branding.faviconUrl)
+      return
     }
-    fetchBranding()
-  }, [])
+
+    if (adminSettings?.faviconUrl) {
+      setFaviconUrl(adminSettings.faviconUrl)
+    }
+  })
 
   if (!faviconUrl) return null
 

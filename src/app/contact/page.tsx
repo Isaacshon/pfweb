@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
-import { supabase } from '@/lib/supabase'
+import { getSiteSettingValue, useLiveSiteSettings } from '@/lib/liveSiteSettings'
 
 export default function Contact() {
   const { t, language } = useLanguage()
@@ -18,16 +18,12 @@ export default function Contact() {
   
   useEffect(() => {
     setIsLoaded(true)
-    fetchSettings()
   }, [])
 
-  const fetchSettings = async () => {
-    const { data } = await supabase.from('site_settings').select('*')
-    if (data) {
-      const pageContent = data.find(s => s.key === 'page_content')?.value
-      if (pageContent && pageContent.contact) setContent(pageContent.contact)
-    }
-  }
+  useLiveSiteSettings((settingsData) => {
+    const pageContent = getSiteSettingValue(settingsData, 'page_content')
+    if (pageContent && pageContent.contact) setContent(pageContent.contact)
+  })
 
   const localizedContent = language === 'en' ? content : null
   const heroTitle = localizedContent?.heroTitle || t('contactPage.heroTitle')

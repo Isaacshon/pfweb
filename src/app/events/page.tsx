@@ -6,6 +6,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
 import { supabase } from '@/lib/supabase'
+import { getSiteSettingValue, useLiveSiteSettings } from '@/lib/liveSiteSettings'
 
 const events = (t: (key: string) => string) => [
   { title: t('events.card1Title'), date: t('events.card1Date'), category: t('events.worship'), image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=600' },
@@ -25,19 +26,18 @@ export default function EventsPage() {
   const [content, setContent] = useState<any>(null)
 
   useEffect(() => {
-    fetchData()
+    fetchPosts()
   }, [])
 
-  const fetchData = async () => {
+  const fetchPosts = async () => {
     const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false })
     if (postsData) setBoardPosts(postsData)
-
-    const { data: settingsData } = await supabase.from('site_settings').select('*')
-    if (settingsData) {
-      const pageContent = settingsData.find(s => s.key === 'page_content')?.value
-      if (pageContent && pageContent.events) setContent(pageContent.events)
-    }
   }
+
+  useLiveSiteSettings((settingsData) => {
+    const pageContent = getSiteSettingValue(settingsData, 'page_content')
+    if (pageContent && pageContent.events) setContent(pageContent.events)
+  })
 
   const localizedContent = language === 'en' ? content : null
   const heroTitle = localizedContent?.heroTitle || t('events.heroTitle')
