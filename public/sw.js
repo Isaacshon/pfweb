@@ -1,11 +1,15 @@
 // PassionFruits Service Worker
-const CACHE_NAME = 'pf-v2';
+const CACHE_NAME = 'pf-v3';
 const PRECACHE_URLS = [
-  '/',
   '/logo.png',
   '/manifest.json',
   '/images/PF app logo iphone.png',
 ];
+
+const isCacheableAsset = (url) => (
+  url.origin === self.location.origin
+  && PRECACHE_URLS.includes(url.pathname)
+);
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -36,16 +40,12 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => response)
-        .catch(() => caches.match('/'))
-    );
+    event.respondWith(fetch(request));
     return;
   }
 
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) {
+  if (!isCacheableAsset(url)) {
     return;
   }
 

@@ -60,11 +60,29 @@ export default function RootLayout({
         <Script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js" strategy="afterInteractive" />
 
         {/* PWA Service Worker Registration */}
-        <Script id="service-worker-registration" strategy="afterInteractive">
+        <Script id="service-worker-registration" strategy="beforeInteractive">
           {`
             if ('serviceWorker' in navigator) {
+              var pfReloadingForServiceWorker = false;
+              navigator.serviceWorker.addEventListener('controllerchange', function() {
+                if (pfReloadingForServiceWorker) return;
+                pfReloadingForServiceWorker = true;
+                window.location.reload();
+              });
+
               window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                if ('caches' in window) {
+                  caches.keys().then(function(cacheNames) {
+                    return Promise.all(
+                      cacheNames
+                        .filter(function(cacheName) { return cacheName.indexOf('pf-') === 0 && cacheName !== 'pf-v3'; })
+                        .map(function(cacheName) { return caches.delete(cacheName); })
+                    );
+                  }).catch(function() {});
+                }
+
+                navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(function(registration) {
+                  registration.update();
                   console.log('SW registered');
                 }, function(err) {
                   console.log('SW failed: ', err);
