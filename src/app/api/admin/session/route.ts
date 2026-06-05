@@ -49,3 +49,16 @@ export async function POST(request: Request) {
 
   return Response.json({ ok: true })
 }
+
+export async function DELETE() {
+  const cookieStore = await cookies()
+  cookieStore.set(ADMIN_SESSION_COOKIE, '', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 0,
+    path: '/',
+  })
+
+  return Response.json({ ok: true })
+}

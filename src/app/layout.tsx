@@ -16,6 +16,7 @@ export const metadata: Metadata = {
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { DynamicFavicon } from "@/components/DynamicFavicon";
+import { VisitTracker } from "@/components/VisitTracker";
 
 export default function RootLayout({
   children,
@@ -51,6 +52,7 @@ export default function RootLayout({
       <body className="h-full overscroll-none select-none">
         <ThemeProvider>
           <LanguageProvider>
+            <VisitTracker />
             {children}
           </LanguageProvider>
         </ThemeProvider>

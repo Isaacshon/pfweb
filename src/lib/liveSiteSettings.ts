@@ -11,6 +11,13 @@ export type SiteSettingRow = {
 const LIVE_SETTINGS_CHANNEL = 'pf-site-settings'
 const LIVE_SETTINGS_STORAGE_KEY = 'pf_site_settings_published_at'
 const DEFAULT_POLL_MS = 10000
+const SITE_SETTING_KEYS = [
+  'page_content',
+  'map_address',
+  'hero_video',
+  'about_image',
+  'admin_settings',
+]
 
 export function getSiteSettingValue(rows: SiteSettingRow[], key: string) {
   return rows.find((row) => row.key === key)?.value
@@ -52,6 +59,7 @@ export function useLiveSiteSettings(
     const { data, error } = await supabase
       .from('site_settings')
       .select('*')
+      .in('key', SITE_SETTING_KEYS)
 
     if (!error && data) {
       onSettingsRef.current(data as SiteSettingRow[])
@@ -92,7 +100,7 @@ export function useLiveSiteSettings(
 
     const realtimeChannel = supabase
       .channel(realtimeChannelNameRef.current)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, refreshIfActive)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings', filter: 'key=eq.page_content' }, refreshIfActive)
       .subscribe()
 
     return () => {

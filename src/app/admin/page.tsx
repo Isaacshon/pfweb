@@ -23,13 +23,14 @@ function MetricCard({
   label: string
   value: string | number
   detail: string
-  tone?: 'purple' | 'dark' | 'yellow' | 'emerald'
+  tone?: 'purple' | 'dark' | 'yellow' | 'emerald' | 'blue'
 }) {
   const toneClass = {
     purple: 'bg-[#efe9ff] text-[#6f56c9]',
     dark: 'bg-[#101828] text-white',
     yellow: 'bg-[#fff4bf] text-[#8a6900]',
     emerald: 'bg-[#dff8ea] text-[#138a4b]',
+    blue: 'bg-[#e3f0ff] text-[#2563eb]',
   }[tone]
 
   return (
@@ -129,6 +130,8 @@ export default function AdminDashboard() {
   const [gallery, setGallery] = useState<any[]>([])
   const [profiles, setProfiles] = useState<any[]>([])
   const [todayAttendance, setTodayAttendance] = useState<any[]>([])
+  const [todayVisitors, setTodayVisitors] = useState(0)
+  const [visitorDate, setVisitorDate] = useState('')
   const [worshipSets, setWorshipSets] = useState<any[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [siteSettings, setSiteSettings] = useState({
@@ -216,6 +219,29 @@ export default function AdminDashboard() {
     setNotice(nextNotice)
   }
 
+  const fetchAnalytics = async () => {
+    try {
+      const response = await fetch('/api/admin/analytics')
+      if (!response.ok) return
+
+      const result = await response.json()
+      if (result?.ok) {
+        setTodayVisitors(Number(result.todayVisitors || 0))
+        setVisitorDate(String(result.date || ''))
+      }
+    } catch {
+      // Analytics is secondary; do not block the admin dashboard.
+    }
+  }
+
+  const handleAdminLogout = async () => {
+    try {
+      await fetch('/api/admin/session', { method: 'DELETE' })
+    } finally {
+      router.push('/')
+    }
+  }
+
   useEffect(() => {
     setIsLoaded(true)
     fetchInitialData()
@@ -279,6 +305,7 @@ export default function AdminDashboard() {
       if (profilesData) setProfiles(profilesData)
       if (attendanceData) setTodayAttendance(attendanceData)
       if (worshipData) setWorshipSets(worshipData)
+      await fetchAnalytics()
       setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     } catch (error: any) {
       showNotice({
@@ -643,6 +670,14 @@ export default function AdminDashboard() {
             <span className="material-icons text-base">open_in_new</span>
             View site
           </button>
+
+          <button
+            onClick={handleAdminLogout}
+            className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#f1f4f9] px-5 py-4 text-[11px] font-black text-slate-600 transition hover:bg-red-50 hover:text-red-600"
+          >
+            <span className="material-icons text-base">logout</span>
+            Log out
+          </button>
         </div>
       </aside>
 
@@ -662,7 +697,7 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
+            <div className="grid grid-cols-3 gap-3 sm:flex sm:items-center">
               <Link
                 href="/conference/register"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#fff7bf] px-4 py-3 text-[11px] font-black text-[#111827] transition hover:scale-[1.01] active:scale-95"
@@ -676,6 +711,13 @@ export default function AdminDashboard() {
               >
                 <span className="material-icons text-base">edit_note</span>
                 Edit site
+              </button>
+              <button
+                onClick={handleAdminLogout}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#f1f4f9] px-4 py-3 text-[11px] font-black text-slate-600 transition hover:bg-red-50 hover:text-red-600 active:scale-95"
+              >
+                <span className="material-icons text-base">logout</span>
+                Exit
               </button>
             </div>
           </div>
@@ -1368,11 +1410,12 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
                     <MetricCard icon="article" label="Board posts" value={posts.length} detail="Public updates available on Events." tone="purple" />
                     <MetricCard icon="photo_library" label="Gallery" value={gallery.length} detail="Images stored in Supabase Storage." tone="dark" />
                     <MetricCard icon="groups" label="People" value={profiles.length || '-'} detail={`${leaderCount} leaders / ${worshipTeamCount} worship team`} tone="yellow" />
                     <MetricCard icon="fact_check" label="Today" value={todayAttendance.length || 0} detail="Attendance scans collected today." tone="emerald" />
+                    <MetricCard icon="visibility" label="Visitors" value={todayVisitors} detail={`Unique site visitors${visitorDate ? ` on ${visitorDate}` : ' today'}.`} tone="blue" />
                   </div>
                 </div>
 
