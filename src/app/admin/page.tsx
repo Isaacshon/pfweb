@@ -5,15 +5,130 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+type AdminNotice = {
+  type: 'success' | 'error' | 'info'
+  title: string
+  detail?: string
+}
+
+function MetricCard({
+  icon,
+  label,
+  value,
+  detail,
+  tone = 'purple',
+}: {
+  icon: string
+  label: string
+  value: string | number
+  detail: string
+  tone?: 'purple' | 'dark' | 'yellow' | 'emerald'
+}) {
+  const toneClass = {
+    purple: 'bg-brand-purple/10 text-brand-purple',
+    dark: 'bg-brand-dark text-white',
+    yellow: 'bg-brand-yellow text-brand-dark',
+    emerald: 'bg-emerald-100 text-emerald-700',
+  }[tone]
+
+  return (
+    <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">{label}</p>
+          <p className="mt-3 font-mono text-3xl font-black leading-none text-brand-dark">{value}</p>
+        </div>
+        <span className={`material-icons flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${toneClass}`}>
+          {icon}
+        </span>
+      </div>
+      <p className="mt-4 text-xs font-bold leading-relaxed text-slate-500">{detail}</p>
+    </article>
+  )
+}
+
+function EmptyState({ icon, title, detail }: { icon: string; title: string; detail: string }) {
+  return (
+    <div className="rounded-[2rem] border border-dashed border-slate-200 bg-white/70 p-8 text-center">
+      <span className="material-icons text-4xl text-slate-300">{icon}</span>
+      <p className="mt-4 text-sm font-black uppercase tracking-[0.16em] text-brand-dark">{title}</p>
+      <p className="mt-2 text-xs font-bold leading-relaxed text-slate-500">{detail}</p>
+    </div>
+  )
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  detail,
+}: {
+  eyebrow: string
+  title: string
+  detail?: string
+}) {
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-purple">{eyebrow}</p>
+        <h3 className="mt-2 text-2xl font-black tracking-tight text-brand-dark">{title}</h3>
+      </div>
+      {detail && <p className="max-w-md text-sm font-bold leading-relaxed text-slate-500">{detail}</p>}
+    </div>
+  )
+}
+
+const MAX_IMAGE_UPLOAD_BYTES = 5 * 1024 * 1024
+const ACCEPTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+const focusRingClass = 'focus:outline-none focus:ring-4 focus:ring-brand-purple/15 focus:border-brand-purple'
+
+function validateImageFile(file: File) {
+  if (!ACCEPTED_IMAGE_TYPES.has(file.type)) {
+    return 'Please upload a JPG, PNG, WEBP, or GIF image.'
+  }
+
+  if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
+    return 'Please keep image uploads under 5MB.'
+  }
+
+  return ''
+}
+
+function buildStoragePath(file: File, folder: string) {
+  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const safeBase = file.name
+    .replace(/\.[^/.]+$/, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'upload'
+  const uniqueId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+  return `${folder}/${safeBase}-${uniqueId}.${extension}`
+}
+
+function extractGalleryStoragePath(url: string) {
+  const marker = '/gallery/'
+  const path = url.includes(marker) ? url.split(marker).pop() : url.split('/').pop()
+  return path ? decodeURIComponent(path.split('?')[0]) : ''
+}
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [activePage, setActivePage] = useState('home')
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isFetching, setIsFetching] = useState(true)
+  const [lastSyncedAt, setLastSyncedAt] = useState('')
+  const [notice, setNotice] = useState<AdminNotice | null>(null)
   const router = useRouter()
 
   // --- Real State (Functional) ---
   const [posts, setPosts] = useState<any[]>([])
   const [gallery, setGallery] = useState<any[]>([])
+  const [profiles, setProfiles] = useState<any[]>([])
+  const [todayAttendance, setTodayAttendance] = useState<any[]>([])
+  const [worshipSets, setWorshipSets] = useState<any[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [siteSettings, setSiteSettings] = useState({
     adminName: 'PF Leader',
@@ -94,6 +209,11 @@ export default function AdminDashboard() {
 
   // --- Form States ---
   const [newPost, setNewPost] = useState({ title: '', content: '' })
+  const [postSearch, setPostSearch] = useState('')
+
+  const showNotice = (nextNotice: AdminNotice) => {
+    setNotice(nextNotice)
+  }
 
   useEffect(() => {
     setIsLoaded(true)
@@ -101,52 +221,101 @@ export default function AdminDashboard() {
   }, [])
 
   const fetchInitialData = async () => {
-    const { data: galleryData } = await supabase.from('gallery').select('*').order('created_at', { ascending: false })
-    if (galleryData) setGallery(galleryData)
+    setIsFetching(true)
+    try {
+      const [
+        { data: galleryData, error: galleryError },
+        { data: postsData, error: postsError },
+        { data: settingsData, error: settingsError },
+      ] = await Promise.all([
+        supabase.from('gallery').select('*').order('created_at', { ascending: false }),
+        supabase.from('posts').select('*').order('date', { ascending: false }),
+        supabase.from('site_settings').select('*'),
+      ])
 
-    const { data: postsData } = await supabase.from('posts').select('*').order('date', { ascending: false })
-    if (postsData) setPosts(postsData)
+      if (galleryError) throw galleryError
+      if (postsError) throw postsError
+      if (settingsError) throw settingsError
 
-    const { data: settingsData } = await supabase.from('site_settings').select('*')
-    if (settingsData) {
-      const content = settingsData.find(s => s.key === 'page_content')?.value
-      const address = settingsData.find(s => s.key === 'map_address')?.value
-      const video = settingsData.find(s => s.key === 'hero_video')?.value
-      const aboutImg = settingsData.find(s => s.key === 'about_image')?.value
-      const settings = settingsData.find(s => s.key === 'admin_settings')?.value
+      if (galleryData) setGallery(galleryData)
+      if (postsData) setPosts(postsData)
 
-      if (content) {
-        setPageContent({
-          ...defaultPageContent,
-          ...content,
-          home: { ...defaultPageContent.home, ...content.home },
-          about: { ...defaultPageContent.about, ...content.about },
-          conference: { ...defaultPageContent.conference, ...content.conference },
-          events: { ...defaultPageContent.events, ...(content.events || {}) },
-          contact: { ...defaultPageContent.contact, ...content.contact }
-        })
+      if (settingsData) {
+        const content = settingsData.find(s => s.key === 'page_content')?.value
+        const address = settingsData.find(s => s.key === 'map_address')?.value
+        const video = settingsData.find(s => s.key === 'hero_video')?.value
+        const aboutImg = settingsData.find(s => s.key === 'about_image')?.value
+        const settings = settingsData.find(s => s.key === 'admin_settings')?.value
+
+        if (content) {
+          setPageContent({
+            ...defaultPageContent,
+            ...content,
+            home: { ...defaultPageContent.home, ...content.home },
+            about: { ...defaultPageContent.about, ...content.about },
+            conference: { ...defaultPageContent.conference, ...content.conference },
+            events: { ...defaultPageContent.events, ...(content.events || {}) },
+            contact: { ...defaultPageContent.contact, ...content.contact }
+          })
+        }
+        if (address) setMapAddress(address)
+        if (video) setHeroVideoUrl(video)
+        if (aboutImg) setAboutImageUrl(aboutImg)
+        if (settings) setSiteSettings(settings)
       }
-      if (address) setMapAddress(address)
-      if (video) setHeroVideoUrl(video)
-      if (aboutImg) setAboutImageUrl(aboutImg)
-      if (settings) setSiteSettings(settings)
+
+      const today = new Date().toLocaleDateString('en-CA')
+      const [
+        { data: profilesData },
+        { data: attendanceData },
+        { data: worshipData },
+      ] = await Promise.all([
+        supabase.from('profiles').select('id, nickname, username, role').limit(200),
+        supabase.from('attendance').select('user_id, service_date').eq('service_date', today),
+        supabase.from('worship_sets').select('id, title, date, songs, team_members').order('date', { ascending: false }).limit(5),
+      ])
+
+      if (profilesData) setProfiles(profilesData)
+      if (attendanceData) setTodayAttendance(attendanceData)
+      if (worshipData) setWorshipSets(worshipData)
+      setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+    } catch (error: any) {
+      showNotice({
+        type: 'error',
+        title: 'Sync failed',
+        detail: error?.message || 'Could not load Supabase content.',
+      })
+    } finally {
+      setIsFetching(false)
     }
   }
 
-  const handleSaveContent = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSaveContent = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault()
     setIsUploading(true)
     try {
-      await Promise.all([
+      const saveResults = await Promise.all([
         supabase.from('site_settings').upsert({ key: 'page_content', value: pageContent }),
         supabase.from('site_settings').upsert({ key: 'map_address', value: mapAddress }),
         supabase.from('site_settings').upsert({ key: 'hero_video', value: heroVideoUrl }),
         supabase.from('site_settings').upsert({ key: 'about_image', value: aboutImageUrl }),
         supabase.from('site_settings').upsert({ key: 'admin_settings', value: siteSettings })
       ])
-      alert('All changes saved to Supabase and published!')
+      const saveError = saveResults.find(result => result.error)?.error
+      if (saveError) throw saveError
+
+      setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+      showNotice({
+        type: 'success',
+        title: 'Published',
+        detail: 'Site content and branding settings were saved to Supabase.',
+      })
     } catch (error: any) {
-      alert('Error saving: ' + error.message)
+      showNotice({
+        type: 'error',
+        title: 'Publish failed',
+        detail: error?.message || 'Could not save changes.',
+      })
     } finally {
       setIsUploading(false)
     }
@@ -157,7 +326,11 @@ export default function AdminDashboard() {
       setPageContent(defaultPageContent)
       setMapAddress('Toronto, Ontario, Canada')
       setHeroVideoUrl('/hero-video.mp4')
-      alert('Reset locally. Please Save to apply.')
+      showNotice({
+        type: 'info',
+        title: 'Reset staged',
+        detail: 'Default content is loaded locally. Publish to apply it to the live site.',
+      })
     }
   }
 
@@ -172,21 +345,37 @@ export default function AdminDashboard() {
           title: newPost.title, 
           content: newPost.content, 
           author: siteSettings.adminName || 'PF Leader', 
-          date: new Date().toISOString().split('T')[0] 
+          date: new Date().toLocaleDateString('en-CA'),
+          type: 'notice',
         }])
         .select()
       
       if (error) throw error
       if (data) setPosts([data[0], ...posts])
       setNewPost({ title: '', content: '' })
-    } catch (err: any) { alert(err.message) }
+      showNotice({
+        type: 'success',
+        title: 'Post created',
+        detail: newPost.title,
+      })
+    } catch (err: any) {
+      showNotice({
+        type: 'error',
+        title: 'Post failed',
+        detail: err?.message || 'Could not create post.',
+      })
+    }
   }
 
   const handleDeletePost = async (id: any) => {
     if (window.confirm('Delete this post?')) {
       const { error } = await supabase.from('posts').delete().eq('id', id)
-      if (error) alert(error.message)
-      else setPosts(posts.filter(p => p.id !== id))
+      if (error) {
+        showNotice({ type: 'error', title: 'Delete failed', detail: error.message })
+      } else {
+        setPosts(posts.filter(p => p.id !== id))
+        showNotice({ type: 'success', title: 'Post deleted', detail: 'The board post was removed.' })
+      }
     }
   }
 
@@ -194,11 +383,20 @@ export default function AdminDashboard() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      showNotice({
+        type: 'error',
+        title: 'Upload blocked',
+        detail: validationError,
+      })
+      e.target.value = ''
+      return
+    }
+
     setIsUploading(true)
     try {
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `${fileName}`
+      const filePath = buildStoragePath(file, 'gallery')
 
       const { error: uploadError } = await supabase.storage
         .from('gallery')
@@ -220,11 +418,20 @@ export default function AdminDashboard() {
       if (insertedData) {
         setGallery([insertedData[0], ...gallery])
       }
-      alert('Image uploaded successfully!')
+      showNotice({
+        type: 'success',
+        title: 'Image uploaded',
+        detail: file.name,
+      })
     } catch (error: any) {
-      alert('Error uploading image: ' + error.message)
+      showNotice({
+        type: 'error',
+        title: 'Upload failed',
+        detail: error?.message || 'Could not upload image.',
+      })
     } finally {
       setIsUploading(false)
+      e.target.value = ''
     }
   }
 
@@ -239,14 +446,32 @@ export default function AdminDashboard() {
 
       if (dbError) throw dbError
 
-      const fileName = url.split('/').pop()
-      if (fileName) {
-        await supabase.storage.from('gallery').remove([fileName])
+      const storagePath = extractGalleryStoragePath(url)
+      if (storagePath) {
+        const { error: storageError } = await supabase.storage.from('gallery').remove([storagePath])
+        if (storageError) {
+          showNotice({
+            type: 'info',
+            title: 'Image removed from database',
+            detail: `Storage cleanup warning: ${storageError.message}`,
+          })
+          setGallery(gallery.filter(item => item.id !== id))
+          return
+        }
       }
 
       setGallery(gallery.filter(item => item.id !== id))
+      showNotice({
+        type: 'success',
+        title: 'Image removed',
+        detail: 'The gallery item was removed from Supabase.',
+      })
     } catch (error: any) {
-      alert('Error deleting image: ' + error.message)
+      showNotice({
+        type: 'error',
+        title: 'Delete failed',
+        detail: error?.message || 'Could not delete image.',
+      })
     }
   }
 
@@ -266,31 +491,118 @@ export default function AdminDashboard() {
     { id: 'contact', label: 'Contact' },
   ]
 
+  const currentTab = menuItems.find(item => item.id === activeTab)
+  const recentPosts = posts.slice(0, 4)
+  const recentGallery = gallery.slice(0, 6)
+  const filteredPosts = posts.filter(post => {
+    const query = postSearch.trim().toLowerCase()
+    if (!query) return true
+    return [post.title, post.content, post.author, post.date]
+      .filter(Boolean)
+      .some(value => String(value).toLowerCase().includes(query))
+  })
+  const completedChecks = [
+    posts.length > 0,
+    gallery.length > 0,
+    Boolean(heroVideoUrl),
+    Boolean(siteSettings.faviconUrl),
+    !isFetching,
+  ].filter(Boolean).length
+  const healthScore = Math.round((completedChecks / 5) * 100)
+  const leaderCount = profiles.filter(profile => profile.role === 'leader').length
+  const worshipTeamCount = profiles.filter(profile => profile.role === 'worship_team').length
+  const nextWorshipSet = worshipSets
+    .slice()
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))[0]
+  const nextSetSongs = Array.isArray(nextWorshipSet?.songs) ? nextWorshipSet.songs : []
+  const nextSetTeam = Array.isArray(nextWorshipSet?.team_members) ? nextWorshipSet.team_members : []
+  const missingSheets = nextSetSongs.filter((song: any) => !song?.sheetUrl).length
+  const activePageMeta = pages.find(page => page.id === activePage)
+  const contentStatus = pages.map(page => {
+    const value = pageContent[page.id]
+    const filledFields = value && typeof value === 'object'
+      ? Object.values(value).filter(Boolean).length
+      : 0
+
+    return {
+      ...page,
+      status: filledFields > 0 ? 'Ready' : 'Needs content',
+      count: filledFields,
+    }
+  })
+  const actionItems = [
+    {
+      title: 'Review home hero',
+      detail: pageContent.home?.heroTitle || 'Home title missing',
+      icon: 'home',
+      onClick: () => {
+        setActiveTab('content')
+        setActivePage('home')
+      },
+    },
+    {
+      title: 'Update conference',
+      detail: pageContent.conference?.heroDate || 'Conference date missing',
+      icon: 'event',
+      onClick: () => {
+        setActiveTab('content')
+        setActivePage('conference')
+      },
+    },
+    {
+      title: 'Manage gallery',
+      detail: `${gallery.length} images online`,
+      icon: 'photo_library',
+      onClick: () => setActiveTab('gallery'),
+    },
+    {
+      title: 'Brand settings',
+      detail: siteSettings.faviconUrl ? 'Favicon uploaded' : 'Favicon missing',
+      icon: 'tune',
+      onClick: () => setActiveTab('settings'),
+    },
+  ]
+  const noticeClass = notice?.type === 'success'
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+    : notice?.type === 'error'
+      ? 'border-red-200 bg-red-50 text-red-700'
+      : 'border-brand-purple/20 bg-brand-purple/10 text-brand-dark'
+
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen bg-[#f6f7fb] font-sans text-brand-dark lg:grid lg:grid-cols-[280px_1fr]">
       <aside className={`
-        w-72 bg-brand-dark text-white p-8 flex flex-col fixed h-full z-20
+        z-30 border-b border-white/10 bg-brand-dark text-white lg:sticky lg:top-0 lg:h-screen lg:border-b-0
         transition-all duration-700
-        ${isLoaded ? 'translate-x-0' : '-translate-x-full'}
+        ${isLoaded ? 'opacity-100' : 'opacity-0'}
       `}>
-        <div className="mb-12 flex items-center gap-4">
-          <div className="w-10 h-10 bg-brand-purple rounded-xl flex items-center justify-center">
-            <span className="material-icons text-white text-2xl">shield_person</span>
+        <div className="flex items-center justify-between gap-4 px-5 py-5 lg:flex-col lg:items-stretch lg:p-7">
+          <div className="flex items-center gap-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-purple shadow-lg shadow-brand-purple/30">
+              <span className="material-icons text-2xl text-white">admin_panel_settings</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-black uppercase leading-none tracking-tight">PF Admin</h1>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.26em] text-white/45">Operations</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-black text-xl tracking-tighter uppercase leading-none">PF Admin</h1>
-            <p className="text-[10px] text-white/40 font-black tracking-widest uppercase mt-1">Control Center</p>
-          </div>
+
+          <button
+            onClick={() => fetchInitialData()}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-white/15 lg:mt-6"
+          >
+            <span className={`material-icons text-sm ${isFetching ? 'animate-spin' : ''}`}>sync</span>
+            Sync
+          </button>
         </div>
 
-        <nav className="flex-1 space-y-2">
+        <nav className="flex gap-2 overflow-x-auto px-5 pb-5 [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:px-7 lg:pb-7 [&::-webkit-scrollbar]:hidden">
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`
-                w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all
-                ${activeTab === item.id ? 'bg-brand-purple text-white shadow-lg' : 'text-white/50 hover:bg-white/5 hover:text-white'}
+                flex min-w-max items-center gap-3 rounded-2xl px-5 py-4 text-[11px] font-black uppercase tracking-[0.16em] transition-all
+                ${activeTab === item.id ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/30' : 'text-white/55 hover:bg-white/10 hover:text-white'}
               `}
             >
               <span className="material-icons text-xl">{item.icon}</span>
@@ -299,57 +611,103 @@ export default function AdminDashboard() {
           ))}
         </nav>
 
-        <button 
-          onClick={() => router.push('/contact')}
-          className="mt-auto flex items-center gap-4 px-6 py-4 text-white/40 hover:text-white transition-colors font-black text-xs uppercase tracking-widest"
-        >
-          <span className="material-icons text-xl">logout</span>
-          Exit Admin
-        </button>
+        <div className="hidden px-7 pb-7 lg:block">
+          <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-brand-yellow">Live status</p>
+            <p className="mt-3 text-3xl font-black leading-none">{healthScore}%</p>
+            <p className="mt-2 text-xs font-bold leading-relaxed text-white/50">
+              {lastSyncedAt ? `Synced ${lastSyncedAt}` : 'Waiting for first sync'}
+            </p>
+          </div>
+
+          <button
+            onClick={() => router.push('/')}
+            className="mt-5 flex w-full items-center justify-center gap-3 rounded-2xl bg-white/10 px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/55 transition hover:bg-white/15 hover:text-white"
+          >
+            <span className="material-icons text-base">open_in_new</span>
+            View site
+          </button>
+        </div>
       </aside>
 
       <main className={`
-        flex-1 ml-72 p-12 transition-all duration-[800ms] delay-300
-        ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
+        mx-auto min-w-0 w-full max-w-[1440px] px-5 py-6 transition-all duration-[800ms] delay-300 sm:px-7 lg:px-10 lg:py-9 xl:px-12
+        ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
       `}>
-        <header className="flex justify-between items-center mb-12">
-          <div>
-            <h2 className="text-4xl font-black text-brand-dark uppercase tracking-tighter">
-              {menuItems.find(i => i.id === activeTab)?.label}
-            </h2>
-            <p className="text-slate-400 font-bold mt-1 uppercase text-xs tracking-widest">
-              Welcome back, {siteSettings.adminName}
-            </p>
-          </div>
-          <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm relative">
-              <span className="material-icons">notifications</span>
-              <span className="absolute top-3 right-3 w-2 h-2 bg-brand-purple rounded-full border-2 border-white"></span>
+        <header className="mb-8 rounded-[2rem] border border-white bg-white/80 p-5 shadow-[0_18px_60px_rgba(15,23,42,0.07)] backdrop-blur md:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-purple">Control Center</p>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-brand-dark md:text-5xl">
+                {currentTab?.label}
+              </h2>
+              <p className="mt-2 text-sm font-bold leading-relaxed text-slate-500">
+                Welcome back, {siteSettings.adminName}. Manage public content, media, posts, and branding from one workspace.
+              </p>
             </div>
-            <div className="flex items-center gap-4 bg-white p-2 pr-6 rounded-2xl border border-slate-100 shadow-sm">
-              <div className="w-8 h-8 rounded-xl bg-[#fffbbd] flex items-center justify-center text-brand-dark">
-                <span className="material-icons text-sm">person_pin</span>
+
+            <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
+              <Link
+                href="/conference/register"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-yellow px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-brand-dark transition hover:scale-[1.01] active:scale-95"
+              >
+                <span className="material-icons text-base">how_to_reg</span>
+                Register
+              </Link>
+              <button
+                onClick={() => setActiveTab('content')}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-dark px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:scale-[1.01] active:scale-95"
+              >
+                <span className="material-icons text-base">edit_note</span>
+                Edit site
+              </button>
+            </div>
+          </div>
+
+          {notice && (
+            <div className={`mt-5 flex items-start justify-between gap-4 rounded-2xl border px-4 py-3 ${noticeClass}`}>
+              <div className="flex gap-3">
+                <span className="material-icons text-lg">
+                  {notice.type === 'success' ? 'check_circle' : notice.type === 'error' ? 'error' : 'info'}
+                </span>
+                <div>
+                  <p className="text-sm font-black">{notice.title}</p>
+                  {notice.detail && <p className="mt-1 text-xs font-bold leading-relaxed opacity-80">{notice.detail}</p>}
+                </div>
               </div>
-              <span className="font-black text-[10px] uppercase tracking-widest text-brand-dark">{siteSettings.adminName}</span>
+              <button
+                onClick={() => setNotice(null)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/60"
+                aria-label="Dismiss notice"
+              >
+                <span className="material-icons text-sm">close</span>
+              </button>
             </div>
-          </div>
+          )}
         </header>
 
         {activeTab === 'content' && (
           <div className="space-y-8">
-            <div className="flex gap-4 p-2 bg-slate-200/50 rounded-2xl w-fit">
-              {pages.map(page => (
-                <button
-                  key={page.id}
-                  onClick={() => setActivePage(page.id)}
-                  className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activePage === page.id ? 'bg-white text-brand-purple shadow-sm' : 'text-slate-500 hover:text-brand-dark'}`}
-                >
-                  {page.label}
-                </button>
-              ))}
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_18px_55px_rgba(15,23,42,0.06)] md:p-7">
+              <SectionHeader
+                eyebrow="Site content"
+                title={`Editing ${activePageMeta?.label || 'Page'}`}
+                detail="Choose a page, update the fields, then publish when the preview content looks right."
+              />
+              <div className="mt-6 flex gap-3 overflow-x-auto rounded-2xl bg-slate-100 p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {pages.map(page => (
+                  <button
+                    key={page.id}
+                    onClick={() => setActivePage(page.id)}
+                    className={`min-w-max rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${activePage === page.id ? 'bg-white text-brand-purple shadow-sm' : 'text-slate-500 hover:text-brand-dark'}`}
+                  >
+                    {page.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_18px_55px_rgba(15,23,42,0.06)] md:p-8">
               <form onSubmit={handleSaveContent} className="space-y-10">
                 {activePage === 'home' && (
                   <div className="space-y-10">
@@ -405,7 +763,7 @@ export default function AdminDashboard() {
                                 if (error) throw error
                                 const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
                                 setHeroVideoUrl(publicUrl)
-                              } catch (err: any) { alert(err.message) }
+                              } catch (err: any) { showNotice({ type: 'error', title: 'Video upload failed', detail: err?.message || 'Could not upload video.' }) }
                               finally { setIsUploading(false) }
                             }}
                           />
@@ -440,7 +798,7 @@ export default function AdminDashboard() {
                                         const items = [...pageContent.home.menuItems];
                                         items[idx].iconUrl = publicUrl;
                                         setPageContent({...pageContent, home: {...pageContent.home, menuItems: items}});
-                                      } catch (err: any) { alert(err.message) }
+                                      } catch (err: any) { showNotice({ type: 'error', title: 'Icon upload failed', detail: err?.message || 'Could not upload icon.' }) }
                                       finally { setIsUploading(false) }
                                     }}
                                   />
@@ -514,7 +872,7 @@ export default function AdminDashboard() {
                                           const items = [...pageContent.home.journeyItems];
                                           items[idx].iconUrl = publicUrl;
                                           setPageContent({...pageContent, home: {...pageContent.home, journeyItems: items}});
-                                        } catch (err: any) { alert(err.message) }
+                                        } catch (err: any) { showNotice({ type: 'error', title: 'Icon upload failed', detail: err?.message || 'Could not upload icon.' }) }
                                         finally { setIsUploading(false) }
                                       }}
                                     />
@@ -623,7 +981,7 @@ export default function AdminDashboard() {
                                 if (error) throw error
                                 const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
                                 setAboutImageUrl(publicUrl)
-                              } catch (err: any) { alert(err.message) }
+                              } catch (err: any) { showNotice({ type: 'error', title: 'Photo upload failed', detail: err?.message || 'Could not upload photo.' }) }
                               finally { setIsUploading(false) }
                             }}
                           />
@@ -691,7 +1049,7 @@ export default function AdminDashboard() {
                                         const items = [...pageContent.about.beliefs];
                                         items[idx].iconUrl = publicUrl;
                                         setPageContent({...pageContent, about: {...pageContent.about, beliefs: items}});
-                                      } catch (err: any) { alert(err.message) }
+                                      } catch (err: any) { showNotice({ type: 'error', title: 'Icon upload failed', detail: err?.message || 'Could not upload icon.' }) }
                                       finally { setIsUploading(false) }
                                     }}
                                   />
@@ -949,107 +1307,263 @@ export default function AdminDashboard() {
 
         {/* Dashboard Content */}
         {activeTab === 'dashboard' && (
-          <div className="space-y-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                <h4 className="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-1">Board Posts</h4>
-                <p className="text-3xl font-black text-brand-dark">{posts.length}</p>
-              </div>
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                <h4 className="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-1">Gallery Images</h4>
-                <p className="text-3xl font-black text-brand-dark">{gallery.length}</p>
-              </div>
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <MetricCard icon="article" label="Board posts" value={posts.length} detail="Public updates available on Events." tone="purple" />
+              <MetricCard icon="photo_library" label="Gallery" value={gallery.length} detail="Images stored in Supabase Storage." tone="dark" />
+              <MetricCard icon="groups" label="People" value={profiles.length || '-'} detail={`${leaderCount} leaders / ${worshipTeamCount} worship team`} tone="yellow" />
+              <MetricCard icon="fact_check" label="Today" value={todayAttendance.length || 0} detail="Attendance scans collected today." tone="emerald" />
             </div>
 
-            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-              <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight mb-8">Quick Post</h3>
-              <form onSubmit={handleAddPost} className="space-y-4">
-                <input 
-                  type="text" 
-                  value={newPost.title}
-                  onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-                  placeholder="Post Title" 
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple transition-all font-bold"
+            <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)] md:p-7">
+                <SectionHeader
+                  eyebrow="Operational snapshot"
+                  title="What needs attention"
+                  detail={lastSyncedAt ? `Last synced at ${lastSyncedAt}` : 'Data sync is pending.'}
                 />
-                <textarea 
-                  value={newPost.content}
-                  onChange={(e) => setNewPost({...newPost, content: e.target.value})}
-                  placeholder="Content" 
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple transition-all font-bold h-32"
-                />
-                <button type="submit" className="px-8 py-4 bg-brand-dark text-white rounded-2xl font-black text-xs uppercase tracking-widest">
-                  Create Post
-                </button>
-              </form>
-            </div>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-[1.5rem] bg-brand-dark p-5 text-white">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-brand-yellow">Publish health</p>
+                        <p className="mt-3 font-mono text-4xl font-black leading-none">{healthScore}%</p>
+                      </div>
+                      <span className="material-icons text-4xl text-white/30">monitoring</span>
+                    </div>
+                    <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-full rounded-full bg-brand-yellow" style={{ width: `${healthScore}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Next worship set</p>
+                    <p className="mt-3 text-lg font-black text-brand-dark">{nextWorshipSet?.title || 'No set scheduled'}</p>
+                    <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+                      <div className="rounded-2xl bg-white p-3">
+                        <p className="font-mono text-xl font-black">{nextSetSongs.length}</p>
+                        <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">Songs</p>
+                      </div>
+                      <div className="rounded-2xl bg-white p-3">
+                        <p className="font-mono text-xl font-black">{nextSetTeam.length}</p>
+                        <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">Team</p>
+                      </div>
+                      <div className="rounded-2xl bg-white p-3">
+                        <p className="font-mono text-xl font-black">{missingSheets}</p>
+                        <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">Sheets</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                  {contentStatus.map(page => (
+                    <button
+                      key={page.id}
+                      onClick={() => {
+                        setActiveTab('content')
+                        setActivePage(page.id)
+                      }}
+                      className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-brand-purple hover:shadow-sm"
+                    >
+                      <span>
+                        <span className="block text-sm font-black text-brand-dark">{page.label}</span>
+                        <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{page.count} fields tracked</span>
+                      </span>
+                      <span className={`rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-widest ${page.status === 'Ready' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+                        {page.status}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
+                  <SectionHeader eyebrow="Quick post" title="Publish an update" />
+                  <form onSubmit={handleAddPost} className="mt-5 space-y-4">
+                    <input
+                      type="text"
+                      value={newPost.title}
+                      onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                      placeholder="Post title"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm font-bold outline-none transition focus:border-brand-purple focus:bg-white"
+                    />
+                    <textarea
+                      value={newPost.content}
+                      onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                      placeholder="Write the update"
+                      className="h-32 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm font-bold leading-relaxed outline-none transition focus:border-brand-purple focus:bg-white"
+                    />
+                    <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-dark px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.01] active:scale-95">
+                      <span className="material-icons text-base">send</span>
+                      Create post
+                    </button>
+                  </form>
+                </div>
+
+                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
+                  <SectionHeader eyebrow="Fast actions" title="Jump to work" />
+                  <div className="mt-5 grid gap-3">
+                    {actionItems.map(item => (
+                      <button
+                        key={item.title}
+                        onClick={item.onClick}
+                        className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-brand-purple/10"
+                      >
+                        <span className="material-icons flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-brand-purple shadow-sm">{item.icon}</span>
+                        <span>
+                          <span className="block text-sm font-black text-brand-dark">{item.title}</span>
+                          <span className="mt-1 block text-xs font-bold text-slate-500">{item.detail}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="grid gap-6 xl:grid-cols-2">
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
+                <SectionHeader eyebrow="Recent posts" title="Latest board updates" />
+                <div className="mt-5 space-y-3">
+                  {recentPosts.length > 0 ? recentPosts.map(post => (
+                    <div key={post.id} className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-sm font-black text-brand-dark">{post.title}</p>
+                      <p className="mt-1 text-xs font-bold text-slate-500">{post.date} / {post.author || 'PF Leader'}</p>
+                    </div>
+                  )) : (
+                    <EmptyState icon="forum" title="No posts yet" detail="Create the first board update from the quick post panel." />
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
+                <SectionHeader eyebrow="Recent gallery" title="Latest media" />
+                {recentGallery.length > 0 ? (
+                  <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6 xl:grid-cols-3">
+                    {recentGallery.map(item => (
+                      <div key={item.id} className="aspect-square overflow-hidden rounded-2xl bg-slate-100">
+                        <img src={item.url} alt={item.title || 'Gallery image'} className="h-full w-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-5">
+                    <EmptyState icon="image_not_supported" title="Gallery empty" detail="Upload ministry photos from the Gallery tab." />
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         )}
 
         {/* Board Posts Tab */}
         {activeTab === 'posts' && (
-          <div className="space-y-8">
-            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-              <div className="flex justify-between items-center mb-10">
-                <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight">Active Posts</h3>
-                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{posts.length} Total</span>
-              </div>
-              <div className="space-y-4">
-                {posts.map(post => (
-                  <div key={post.id} className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <div>
-                      <h4 className="font-black text-brand-dark uppercase text-sm">{post.title}</h4>
-                      <p className="text-xs text-slate-400 font-bold mt-1">{post.date} • {post.author}</p>
-                    </div>
-                    <button 
-                      onClick={() => handleDeletePost(post.id)}
-                      className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors shadow-sm"
-                    >
-                      <span className="material-icons text-sm">delete</span>
-                    </button>
+          <div className="space-y-6">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_18px_55px_rgba(15,23,42,0.06)] md:p-7">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                <SectionHeader
+                  eyebrow="Board posts"
+                  title="Public updates"
+                  detail={`${filteredPosts.length} shown / ${posts.length} total`}
+                />
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <div className="relative">
+                    <span className="material-icons pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base text-slate-400">search</span>
+                    <input
+                      type="search"
+                      value={postSearch}
+                      onChange={(e) => setPostSearch(e.target.value)}
+                      placeholder="Search posts"
+                      className={`w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm font-bold text-brand-dark transition sm:w-72 ${focusRingClass}`}
+                    />
                   </div>
-                ))}
+                  <button
+                    onClick={() => setActiveTab('dashboard')}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-dark px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:scale-[1.01] active:scale-95"
+                  >
+                    <span className="material-icons text-base">add</span>
+                    Quick post
+                  </button>
+                </div>
               </div>
+            </div>
+
+            <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
+              {filteredPosts.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {filteredPosts.map(post => (
+                    <article key={post.id} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="truncate text-sm font-black uppercase tracking-wide text-brand-dark">{post.title}</h4>
+                          {post.type && (
+                            <span className="rounded-full bg-brand-purple/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-brand-purple">
+                              {post.type}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-2 line-clamp-2 text-sm font-bold leading-relaxed text-slate-500">{post.content}</p>
+                        <p className="mt-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+                          {post.date || 'No date'} / {post.author || post.user || 'PF Leader'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeletePost(post.id)}
+                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-600 transition hover:bg-red-600 hover:text-white"
+                      >
+                        <span className="material-icons text-sm">delete</span>
+                        Delete
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6">
+                  <EmptyState icon="search_off" title="No matching posts" detail="Clear the search or create a new update from the dashboard." />
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* Gallery Admin Tab */}
         {activeTab === 'gallery' && (
-          <div className="space-y-8">
-            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight">Gallery Management</h3>
-                  <p className="text-slate-400 text-xs font-bold mt-1 uppercase tracking-widest">Upload your moments to the cloud</p>
-                </div>
+          <div className="space-y-6">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_18px_55px_rgba(15,23,42,0.06)] md:p-7">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                <SectionHeader
+                  eyebrow="Gallery admin"
+                  title="Media library"
+                  detail={`${gallery.length} images available for public pages and ministry moments.`}
+                />
                 {isUploading && (
-                  <div className="flex items-center gap-3 px-4 py-2 bg-brand-purple/10 rounded-xl">
-                    <div className="w-4 h-4 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
-                    <span className="text-brand-purple font-black text-[10px] uppercase tracking-widest">Uploading to Storage...</span>
+                  <div className="inline-flex items-center gap-3 rounded-2xl bg-brand-purple/10 px-4 py-3">
+                    <div className="h-4 w-4 rounded-full border-2 border-brand-purple border-t-transparent animate-spin" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-purple">Uploading...</span>
                   </div>
                 )}
               </div>
               
               <label className={`
-                relative flex flex-col items-center justify-center w-full h-64 border-4 border-dashed rounded-[2.5rem] cursor-pointer transition-all duration-500
-                ${isUploading ? 'border-slate-100 bg-slate-50 pointer-events-none' : 'border-slate-100 hover:border-brand-purple hover:bg-brand-purple/5 bg-slate-50/50'}
+                relative mt-6 flex min-h-56 w-full cursor-pointer flex-col items-center justify-center rounded-[2rem] border-2 border-dashed transition-all duration-300
+                ${isUploading ? 'pointer-events-none border-slate-200 bg-slate-50' : 'border-slate-200 bg-slate-50 hover:border-brand-purple hover:bg-brand-purple/5'}
               `}>
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <div className={`
-                    w-20 h-20 rounded-3xl bg-white shadow-xl flex items-center justify-center mb-6 transition-transform duration-500
-                    ${isUploading ? 'scale-90 opacity-50' : 'group-hover:scale-110 group-hover:rotate-3'}
-                  `}>
-                    <span className="material-icons text-4xl text-brand-purple">add_photo_alternate</span>
+                  <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm">
+                    <span className="material-icons text-3xl text-brand-purple">add_photo_alternate</span>
                   </div>
-                  <p className="text-sm font-black text-brand-dark uppercase tracking-[0.2em] mb-2">Drop images here or click</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Support: JPG, PNG, WEBP (Max 5MB)</p>
+                  <p className="mb-2 text-center text-sm font-black uppercase tracking-[0.2em] text-brand-dark">Drop images here or click</p>
+                  <p className="text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">JPG, PNG, WEBP, GIF / max 5MB</p>
                 </div>
                 <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" disabled={isUploading} />
                 
                 {isUploading && (
-                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] rounded-[2.5rem] flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center rounded-[2rem] bg-white/70 backdrop-blur-[2px]">
                     <div className="text-center">
-                      <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                      <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-purple border-t-transparent" />
                       <p className="text-xs font-black text-brand-purple uppercase tracking-widest">Processing...</p>
                     </div>
                   </div>
@@ -1057,27 +1571,28 @@ export default function AdminDashboard() {
               </label>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {gallery.map((item) => (
-                <div key={item.id} className="group relative aspect-[4/5] bg-slate-100 rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500">
-                  <img src={item.url} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-8">
-                    <p className="text-white font-black text-[10px] uppercase tracking-widest mb-4 truncate">{item.title || 'Untitled'}</p>
-                    <button 
+                <article key={item.id} className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
+                  <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                    <img src={item.url} alt={item.title || 'Gallery image'} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 p-4">
+                    <p className="min-w-0 truncate text-[10px] font-black uppercase tracking-widest text-slate-500">{item.title || 'Untitled'}</p>
+                    <button
                       onClick={() => handleDeleteImage(item.id, item.url)}
-                      className="w-full py-4 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-2xl flex items-center justify-center gap-2 hover:bg-red-500 hover:border-red-500 transition-all duration-300 font-black text-[10px] uppercase tracking-widest"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 transition hover:bg-red-600 hover:text-white"
+                      aria-label={`Remove ${item.title || 'gallery image'}`}
                     >
                       <span className="material-icons text-sm">delete</span>
-                      Remove Image
                     </button>
                   </div>
-                </div>
+                </article>
               ))}
               
               {gallery.length === 0 && !isUploading && (
-                <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-dashed border-slate-200">
-                  <span className="material-icons text-4xl text-slate-200 mb-4">image_not_supported</span>
-                  <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">No images in gallery yet</p>
+                <div className="col-span-full">
+                  <EmptyState icon="image_not_supported" title="No images yet" detail="Upload ministry photos to start the public gallery library." />
                 </div>
               )}
             </div>
@@ -1085,75 +1600,99 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'settings' && (
-          <div className="space-y-10">
-            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-              <h3 className="text-xl font-black text-brand-dark uppercase tracking-tight mb-8">Site Branding</h3>
-              <div className="space-y-8">
-                <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
-                  <div className="flex justify-between items-center mb-6">
+          <div className="space-y-6">
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_18px_55px_rgba(15,23,42,0.06)] md:p-7">
+              <SectionHeader
+                eyebrow="Settings"
+                title="Brand and admin identity"
+                detail="These values are saved with the rest of the site settings when you publish."
+              />
+
+              <div className="mt-7 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+                <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                  <div className="flex items-center justify-between gap-4">
                     <div>
-                      <h4 className="font-black text-brand-dark uppercase text-sm">Favicon (Tab Icon)</h4>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Recommended: 64x64 PNG or ICO</p>
+                      <h4 className="text-sm font-black uppercase tracking-wide text-brand-dark">Favicon</h4>
+                      <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">64x64 PNG/ICO recommended</p>
                     </div>
-                    <label className="px-6 py-3 bg-brand-purple text-white rounded-xl font-black text-[10px] uppercase tracking-widest cursor-pointer hover:scale-105 transition-transform">
-                      Upload Icon
-                      <input 
-                        type="file" className="hidden" accept="image/*"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          setIsUploading(true)
-                          try {
-                            const fileExt = file.name.split('.').pop()
-                            const { data, error } = await supabase.storage.from('gallery').upload(`branding/favicon-${Date.now()}.${fileExt}`, file)
-                            if (error) throw error
-                            const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
-                            setSiteSettings({...siteSettings, faviconUrl: publicUrl})
-                            alert('Icon uploaded! Please click "Save Branding Changes" to apply.')
-                          } catch (err: any) { alert(err.message) }
-                          finally { setIsUploading(false) }
-                        }}
-                      />
-                    </label>
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                      {siteSettings.faviconUrl ? (
+                        <img src={siteSettings.faviconUrl} className="h-full w-full object-contain" alt="Favicon preview" />
+                      ) : (
+                        <span className="material-icons text-2xl text-slate-300">image</span>
+                      )}
+                    </div>
                   </div>
-                  {siteSettings.faviconUrl && (
-                    <div className="w-16 h-16 bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
-                      <img src={siteSettings.faviconUrl} className="w-full h-full object-contain" alt="Favicon preview" />
-                    </div>
-                  )}
+
+                  <label className="mt-5 inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-brand-purple px-5 py-3 text-[10px] font-black uppercase tracking-widest text-white transition hover:scale-[1.01] active:scale-95">
+                    <span className="material-icons text-base">upload</span>
+                    Upload icon
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+
+                        const validationError = validateImageFile(file)
+                        if (validationError) {
+                          showNotice({ type: 'error', title: 'Icon upload blocked', detail: validationError })
+                          e.target.value = ''
+                          return
+                        }
+
+                        setIsUploading(true)
+                        try {
+                          const { data, error } = await supabase.storage.from('gallery').upload(buildStoragePath(file, 'branding'), file)
+                          if (error) throw error
+                          const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(data.path)
+                          setSiteSettings({...siteSettings, faviconUrl: publicUrl})
+                          showNotice({ type: 'success', title: 'Icon uploaded', detail: 'Publish settings to apply the favicon.' })
+                        } catch (err: any) {
+                          showNotice({ type: 'error', title: 'Icon upload failed', detail: err?.message || 'Could not upload favicon.' })
+                        } finally {
+                          setIsUploading(false)
+                          e.target.value = ''
+                        }
+                      }}
+                    />
+                  </label>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Admin Display Name</label>
-                    <input 
-                      type="text" 
-                      value={siteSettings.adminName}
-                      onChange={(e) => setSiteSettings({...siteSettings, adminName: e.target.value})}
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-brand-purple transition-all font-bold"
-                    />
-                  </div>
+                <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Admin display name</label>
+                  <input
+                    type="text"
+                    value={siteSettings.adminName}
+                    onChange={(e) => setSiteSettings({...siteSettings, adminName: e.target.value})}
+                    className={`mt-3 w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-brand-dark transition ${focusRingClass}`}
+                  />
+                  <p className="mt-3 text-xs font-bold leading-relaxed text-slate-500">
+                    Used as the author name for admin board posts and the greeting in this workspace.
+                  </p>
                 </div>
+              </div>
+
+              <div className="mt-7 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row">
+                <button
+                  onClick={handleSaveContent}
+                  disabled={isUploading}
+                  className="inline-flex flex-1 items-center justify-center gap-3 rounded-2xl bg-brand-purple px-6 py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-brand-purple/20 transition hover:scale-[1.01] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="material-icons text-base">cloud_upload</span>
+                  Publish settings
+                </button>
+                <button
+                  onClick={handleResetDefaults}
+                  className="inline-flex items-center justify-center rounded-2xl bg-slate-100 px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500 transition hover:bg-red-50 hover:text-red-500"
+                >
+                  Reset defaults
+                </button>
               </div>
             </div>
           </div>
         )}
-
-        <div className="flex gap-4 mt-12">
-          <button 
-            onClick={handleSaveContent}
-            className="flex-grow py-6 bg-brand-purple text-white rounded-[2.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-3"
-          >
-            <span className="material-icons text-base">cloud_upload</span>
-            SAVE CHANGES & PUBLISH TO SITE
-          </button>
-          <button 
-            onClick={handleResetDefaults}
-            className="px-10 py-6 bg-slate-100 text-slate-400 rounded-[2.5rem] font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
-          >
-            RESET
-          </button>
-        </div>
       </main>
     </div>
   )
