@@ -4,13 +4,13 @@ export const ADMIN_SESSION_COOKIE = 'pf_admin_session'
 export const ADMIN_SESSION_MAX_AGE_SECONDS = 60 * 60 * 12
 
 function getAdminPasscode() {
-  return process.env.SITE_ADMIN_PASSCODE || 'Pfadmin1!'
+  return process.env.SITE_ADMIN_PASSCODE || ''
 }
 
 function getSessionSecret() {
   return process.env.SITE_ADMIN_SESSION_SECRET
     || process.env.SUPABASE_SERVICE_ROLE_KEY
-    || getAdminPasscode()
+    || ''
 }
 
 function signSessionPayload(payload: string) {
@@ -24,7 +24,12 @@ function safeCompare(a: string, b: string) {
 }
 
 export function verifyAdminPasscode(passcode: string) {
-  return safeCompare(passcode.trim(), getAdminPasscode())
+  const adminPasscode = getAdminPasscode()
+  return Boolean(adminPasscode) && safeCompare(passcode.trim(), adminPasscode)
+}
+
+export function isAdminSessionConfigured() {
+  return Boolean(getAdminPasscode() && getSessionSecret())
 }
 
 export function createAdminSessionToken() {
@@ -33,6 +38,7 @@ export function createAdminSessionToken() {
 }
 
 export function verifyAdminSessionToken(token: string | undefined) {
+  if (!getSessionSecret()) return false
   if (!token) return false
 
   const [issuedAt, signature] = token.split('.')

@@ -3,6 +3,7 @@ import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE_SECONDS,
   createAdminSessionToken,
+  isAdminSessionConfigured,
   verifyAdminPasscode,
   verifyAdminSessionToken,
 } from '@/lib/adminSession'
@@ -15,6 +16,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isAdminSessionConfigured()) {
+    return Response.json(
+      { ok: false, message: 'Admin session is not configured.' },
+      { status: 503 }
+    )
+  }
+
   let body: unknown
   try {
     body = await request.json()

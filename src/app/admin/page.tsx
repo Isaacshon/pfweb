@@ -25,24 +25,24 @@ function MetricCard({
   tone?: 'purple' | 'dark' | 'yellow' | 'emerald'
 }) {
   const toneClass = {
-    purple: 'bg-brand-purple/10 text-brand-purple',
-    dark: 'bg-brand-dark text-white',
-    yellow: 'bg-brand-yellow text-brand-dark',
-    emerald: 'bg-emerald-100 text-emerald-700',
+    purple: 'bg-[#efe9ff] text-[#6f56c9]',
+    dark: 'bg-[#101828] text-white',
+    yellow: 'bg-[#fff4bf] text-[#8a6900]',
+    emerald: 'bg-[#dff8ea] text-[#138a4b]',
   }[tone]
 
   return (
-    <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+    <article className="rounded-[1.6rem] bg-white p-5 shadow-[0_20px_50px_rgba(81,92,122,0.10)] ring-1 ring-slate-200/70">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">{label}</p>
-          <p className="mt-3 font-mono text-3xl font-black leading-none text-brand-dark">{value}</p>
+          <p className="text-[11px] font-extrabold text-slate-500">{label}</p>
+          <p className="mt-3 font-mono text-3xl font-black leading-none text-[#111827]">{value}</p>
         </div>
         <span className={`material-icons flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${toneClass}`}>
           {icon}
         </span>
       </div>
-      <p className="mt-4 text-xs font-bold leading-relaxed text-slate-500">{detail}</p>
+      <p className="mt-4 text-xs font-semibold leading-relaxed text-slate-500">{detail}</p>
     </article>
   )
 }
@@ -69,10 +69,10 @@ function SectionHeader({
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-purple">{eyebrow}</p>
-        <h3 className="mt-2 text-2xl font-black tracking-tight text-brand-dark">{title}</h3>
+        <p className="text-[11px] font-extrabold text-[#7b61d1]">{eyebrow}</p>
+        <h3 className="mt-2 text-2xl font-black text-[#111827]">{title}</h3>
       </div>
-      {detail && <p className="max-w-md text-sm font-bold leading-relaxed text-slate-500">{detail}</p>}
+      {detail && <p className="max-w-md text-sm font-semibold leading-relaxed text-slate-500">{detail}</p>}
     </div>
   )
 }
@@ -571,6 +571,8 @@ export default function AdminDashboard() {
       onClick: () => setActiveTab('settings'),
     },
   ]
+  const readyPageCount = contentStatus.filter(page => page.status === 'Ready').length
+  const dashboardBars = [32, 48, 38, 62, healthScore, 58, 72, Math.max(44, Math.min(96, healthScore + 18))]
   const noticeClass = notice?.type === 'success'
     ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
     : notice?.type === 'error'
@@ -578,26 +580,26 @@ export default function AdminDashboard() {
       : 'border-brand-purple/20 bg-brand-purple/10 text-brand-dark'
 
   return (
-    <div className="min-h-screen bg-[#f6f7fb] font-sans text-brand-dark lg:grid lg:grid-cols-[280px_1fr]">
+    <div className="min-h-screen bg-[#e9eef7] font-sans text-[#111827] lg:grid lg:grid-cols-[236px_1fr] lg:p-5">
       <aside className={`
-        z-30 border-b border-white/10 bg-brand-dark text-white lg:sticky lg:top-0 lg:h-screen lg:border-b-0
+        z-30 bg-white text-[#111827] shadow-[0_26px_80px_rgba(81,92,122,0.14)] lg:sticky lg:top-5 lg:h-[calc(100vh-2.5rem)] lg:rounded-[2rem]
         transition-all duration-700
         ${isLoaded ? 'opacity-100' : 'opacity-0'}
       `}>
         <div className="flex items-center justify-between gap-4 px-5 py-5 lg:flex-col lg:items-stretch lg:p-7">
           <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-purple shadow-lg shadow-brand-purple/30">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#6f56c9] shadow-lg shadow-[#6f56c9]/30">
               <span className="material-icons text-2xl text-white">admin_panel_settings</span>
             </div>
             <div>
-              <h1 className="text-xl font-black uppercase leading-none tracking-tight">PF Admin</h1>
-              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.26em] text-white/45">Operations</p>
+              <h1 className="text-xl font-black uppercase leading-none">PF Admin</h1>
+              <p className="mt-1 text-[11px] font-extrabold text-slate-400">Operations</p>
             </div>
           </div>
 
           <button
             onClick={() => fetchInitialData()}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-white/15 lg:mt-6"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#f1f4f9] px-4 py-3 text-[11px] font-black text-[#111827] transition hover:bg-[#e7ebf4] lg:mt-6"
           >
             <span className={`material-icons text-sm ${isFetching ? 'animate-spin' : ''}`}>sync</span>
             Sync
@@ -610,8 +612,8 @@ export default function AdminDashboard() {
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`
-                flex min-w-max items-center gap-3 rounded-2xl px-5 py-4 text-[11px] font-black uppercase tracking-[0.16em] transition-all
-                ${activeTab === item.id ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/30' : 'text-white/55 hover:bg-white/10 hover:text-white'}
+                flex min-w-max items-center gap-3 rounded-2xl px-5 py-4 text-[11px] font-black transition-all
+                ${activeTab === item.id ? 'bg-[#6f56c9] text-white shadow-lg shadow-[#6f56c9]/30' : 'text-slate-500 hover:bg-[#f1f4f9] hover:text-[#111827]'}
               `}
             >
               <span className="material-icons text-xl">{item.icon}</span>
@@ -621,17 +623,20 @@ export default function AdminDashboard() {
         </nav>
 
         <div className="hidden px-7 pb-7 lg:block">
-          <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-brand-yellow">Live status</p>
+          <div className="rounded-[1.5rem] bg-[#f6f7fb] p-5 ring-1 ring-slate-200/70">
+            <p className="text-[11px] font-black text-[#8a6900]">Live status</p>
             <p className="mt-3 text-3xl font-black leading-none">{healthScore}%</p>
-            <p className="mt-2 text-xs font-bold leading-relaxed text-white/50">
+            <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-500">
               {lastSyncedAt ? `Synced ${lastSyncedAt}` : 'Waiting for first sync'}
             </p>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-full rounded-full bg-[#6f56c9]" style={{ width: `${healthScore}%` }} />
+            </div>
           </div>
 
           <button
             onClick={() => router.push('/')}
-            className="mt-5 flex w-full items-center justify-center gap-3 rounded-2xl bg-white/10 px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/55 transition hover:bg-white/15 hover:text-white"
+            className="mt-5 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#111827] px-5 py-4 text-[11px] font-black text-white transition hover:bg-[#252f44]"
           >
             <span className="material-icons text-base">open_in_new</span>
             View site
@@ -640,17 +645,17 @@ export default function AdminDashboard() {
       </aside>
 
       <main className={`
-        mx-auto min-w-0 w-full max-w-[1440px] px-5 py-6 transition-all duration-[800ms] delay-300 sm:px-7 lg:px-10 lg:py-9 xl:px-12
+        mx-auto min-w-0 w-full max-w-[1500px] px-5 py-6 transition-all duration-[800ms] delay-300 sm:px-7 lg:px-8 lg:py-0 xl:px-10
         ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
       `}>
-        <header className="mb-8 rounded-[2rem] border border-white bg-white/80 p-5 shadow-[0_18px_60px_rgba(15,23,42,0.07)] backdrop-blur md:p-7">
+        <header className="mb-7 rounded-[2rem] bg-white/90 p-5 shadow-[0_26px_80px_rgba(81,92,122,0.12)] backdrop-blur md:p-7">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-purple">Control Center</p>
-              <h2 className="mt-2 text-3xl font-black tracking-tight text-brand-dark md:text-5xl">
+              <p className="text-[11px] font-extrabold text-[#7b61d1]">Control center</p>
+              <h2 className="mt-2 text-3xl font-black text-[#111827] md:text-5xl">
                 {currentTab?.label}
               </h2>
-              <p className="mt-2 text-sm font-bold leading-relaxed text-slate-500">
+              <p className="mt-2 max-w-2xl text-sm font-semibold leading-relaxed text-slate-500">
                 Welcome back, {siteSettings.adminName}. Manage public content, media, posts, and branding from one workspace.
               </p>
             </div>
@@ -658,14 +663,14 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
               <Link
                 href="/conference/register"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-yellow px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-brand-dark transition hover:scale-[1.01] active:scale-95"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#fff7bf] px-4 py-3 text-[11px] font-black text-[#111827] transition hover:scale-[1.01] active:scale-95"
               >
                 <span className="material-icons text-base">how_to_reg</span>
                 Register
               </Link>
               <button
                 onClick={() => setActiveTab('content')}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-dark px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition hover:scale-[1.01] active:scale-95"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#111827] px-4 py-3 text-[11px] font-black text-white transition hover:scale-[1.01] active:scale-95"
               >
                 <span className="material-icons text-base">edit_note</span>
                 Edit site
@@ -1316,131 +1321,159 @@ export default function AdminDashboard() {
 
         {/* Dashboard Content */}
         {activeTab === 'dashboard' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard icon="article" label="Board posts" value={posts.length} detail="Public updates available on Events." tone="purple" />
-              <MetricCard icon="photo_library" label="Gallery" value={gallery.length} detail="Images stored in Supabase Storage." tone="dark" />
-              <MetricCard icon="groups" label="People" value={profiles.length || '-'} detail={`${leaderCount} leaders / ${worshipTeamCount} worship team`} tone="yellow" />
-              <MetricCard icon="fact_check" label="Today" value={todayAttendance.length || 0} detail="Attendance scans collected today." tone="emerald" />
-            </div>
-
-            <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)] md:p-7">
-                <SectionHeader
-                  eyebrow="Operational snapshot"
-                  title="What needs attention"
-                  detail={lastSyncedAt ? `Last synced at ${lastSyncedAt}` : 'Data sync is pending.'}
-                />
-
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-[1.5rem] bg-brand-dark p-5 text-white">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-brand-yellow">Publish health</p>
-                        <p className="mt-3 font-mono text-4xl font-black leading-none">{healthScore}%</p>
-                      </div>
-                      <span className="material-icons text-4xl text-white/30">monitoring</span>
-                    </div>
-                    <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
-                      <div className="h-full rounded-full bg-brand-yellow" style={{ width: `${healthScore}%` }} />
-                    </div>
-                  </div>
-
-                  <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">Next worship set</p>
-                    <p className="mt-3 text-lg font-black text-brand-dark">{nextWorshipSet?.title || 'No set scheduled'}</p>
-                    <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                      <div className="rounded-2xl bg-white p-3">
-                        <p className="font-mono text-xl font-black">{nextSetSongs.length}</p>
-                        <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">Songs</p>
-                      </div>
-                      <div className="rounded-2xl bg-white p-3">
-                        <p className="font-mono text-xl font-black">{nextSetTeam.length}</p>
-                        <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">Team</p>
-                      </div>
-                      <div className="rounded-2xl bg-white p-3">
-                        <p className="font-mono text-xl font-black">{missingSheets}</p>
-                        <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">Sheets</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid gap-3 md:grid-cols-2">
-                  {contentStatus.map(page => (
-                    <button
-                      key={page.id}
-                      onClick={() => {
-                        setActiveTab('content')
-                        setActivePage(page.id)
-                      }}
-                      className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-brand-purple hover:shadow-sm"
-                    >
-                      <span>
-                        <span className="block text-sm font-black text-brand-dark">{page.label}</span>
-                        <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{page.count} fields tracked</span>
-                      </span>
-                      <span className={`rounded-xl px-3 py-2 text-[9px] font-black uppercase tracking-widest ${page.status === 'Ready' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
-                        {page.status}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
+          <div className="space-y-6">
+            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_370px]">
               <div className="space-y-6">
-                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
-                  <SectionHeader eyebrow="Quick post" title="Publish an update" />
-                  <form onSubmit={handleAddPost} className="mt-5 space-y-4">
-                    <input
-                      type="text"
-                      value={newPost.title}
-                      onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                      placeholder="Post title"
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm font-bold outline-none transition focus:border-brand-purple focus:bg-white"
-                    />
-                    <textarea
-                      value={newPost.content}
-                      onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                      placeholder="Write the update"
-                      className="h-32 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm font-bold leading-relaxed outline-none transition focus:border-brand-purple focus:bg-white"
-                    />
-                    <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-dark px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:scale-[1.01] active:scale-95">
-                      <span className="material-icons text-base">send</span>
-                      Create post
-                    </button>
-                  </form>
+                <div className="rounded-[2.2rem] bg-white p-4 shadow-[0_28px_90px_rgba(81,92,122,0.14)] ring-1 ring-white/80">
+                  <div className="rounded-[1.8rem] bg-gradient-to-br from-[#6f56c9] via-[#8b69df] to-[#f374a6] p-6 text-white md:p-7">
+                    <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <p className="text-xs font-extrabold text-white/65">Overview</p>
+                        <h3 className="mt-2 text-3xl font-black">Publishing health</h3>
+                      </div>
+                      <span className="w-fit rounded-2xl bg-white/15 px-4 py-2 text-xs font-black text-white ring-1 ring-white/20">
+                        {lastSyncedAt ? `Synced ${lastSyncedAt}` : 'Sync pending'}
+                      </span>
+                    </div>
+
+                    <div className="mt-8 h-44 rounded-[1.5rem] bg-white/10 p-4 ring-1 ring-white/15">
+                      <div className="flex h-full items-end gap-3">
+                        {dashboardBars.map((height, index) => (
+                          <div key={`${height}-${index}`} className="flex flex-1 flex-col justify-end gap-2">
+                            <div
+                              className={`rounded-t-2xl ${index === 4 ? 'bg-[#fff7bf]' : 'bg-white/45'}`}
+                              style={{ height: `${height}%` }}
+                            />
+                            <span className="h-1 rounded-full bg-white/20" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-[1.35rem] bg-white/15 p-4 ring-1 ring-white/15">
+                        <p className="text-xs font-semibold text-white/65">Pages ready</p>
+                        <p className="mt-2 font-mono text-2xl font-black">{readyPageCount}/{contentStatus.length}</p>
+                      </div>
+                      <div className="rounded-[1.35rem] bg-white/15 p-4 ring-1 ring-white/15">
+                        <p className="text-xs font-semibold text-white/65">Posts</p>
+                        <p className="mt-2 font-mono text-2xl font-black">{posts.length}</p>
+                      </div>
+                      <div className="rounded-[1.35rem] bg-white/15 p-4 ring-1 ring-white/15">
+                        <p className="text-xs font-semibold text-white/65">Gallery</p>
+                        <p className="mt-2 font-mono text-2xl font-black">{gallery.length}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <MetricCard icon="article" label="Board posts" value={posts.length} detail="Public updates available on Events." tone="purple" />
+                    <MetricCard icon="photo_library" label="Gallery" value={gallery.length} detail="Images stored in Supabase Storage." tone="dark" />
+                    <MetricCard icon="groups" label="People" value={profiles.length || '-'} detail={`${leaderCount} leaders / ${worshipTeamCount} worship team`} tone="yellow" />
+                    <MetricCard icon="fact_check" label="Today" value={todayAttendance.length || 0} detail="Attendance scans collected today." tone="emerald" />
+                  </div>
                 </div>
 
-                <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
-                  <SectionHeader eyebrow="Fast actions" title="Jump to work" />
-                  <div className="mt-5 grid gap-3">
-                    {actionItems.map(item => (
+                <div className="rounded-[2rem] bg-white p-6 shadow-[0_24px_70px_rgba(81,92,122,0.11)] ring-1 ring-slate-200/70 md:p-7">
+                  <SectionHeader
+                    eyebrow="Page readiness"
+                    title="Content status"
+                    detail="Use this as the publish checklist before pushing visible copy changes."
+                  />
+                  <div className="mt-6 grid gap-3 md:grid-cols-2">
+                    {contentStatus.map(page => (
                       <button
-                        key={item.title}
-                        onClick={item.onClick}
-                        className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 text-left transition hover:bg-brand-purple/10"
+                        key={page.id}
+                        onClick={() => {
+                          setActiveTab('content')
+                          setActivePage(page.id)
+                        }}
+                        className="flex items-center justify-between gap-4 rounded-2xl bg-[#f6f7fb] px-4 py-3 text-left ring-1 ring-slate-200/70 transition hover:bg-white hover:ring-[#7b61d1]/40"
                       >
-                        <span className="material-icons flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-brand-purple shadow-sm">{item.icon}</span>
                         <span>
-                          <span className="block text-sm font-black text-brand-dark">{item.title}</span>
-                          <span className="mt-1 block text-xs font-bold text-slate-500">{item.detail}</span>
+                          <span className="block text-sm font-black text-[#111827]">{page.label}</span>
+                          <span className="mt-1 block text-[11px] font-semibold text-slate-400">{page.count} fields tracked</span>
+                        </span>
+                        <span className={`rounded-xl px-3 py-2 text-[10px] font-black ${page.status === 'Ready' ? 'bg-[#dff8ea] text-[#138a4b]' : 'bg-red-100 text-red-600'}`}>
+                          {page.status}
                         </span>
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
+
+              <aside className="space-y-6">
+                <div className="rounded-[2rem] bg-white p-6 shadow-[0_24px_70px_rgba(81,92,122,0.11)] ring-1 ring-slate-200/70">
+                  <SectionHeader eyebrow="Quick post" title="Publish update" />
+                  <form onSubmit={handleAddPost} className="mt-5 space-y-4">
+                    <input
+                      type="text"
+                      value={newPost.title}
+                      onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                      placeholder="Post title"
+                      className={`w-full rounded-2xl border border-slate-200 bg-[#f6f7fb] px-5 py-4 text-sm font-semibold text-[#111827] transition focus:bg-white ${focusRingClass}`}
+                    />
+                    <textarea
+                      value={newPost.content}
+                      onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                      placeholder="Write the update"
+                      className={`h-32 w-full resize-none rounded-2xl border border-slate-200 bg-[#f6f7fb] px-5 py-4 text-sm font-semibold leading-relaxed text-[#111827] transition focus:bg-white ${focusRingClass}`}
+                    />
+                    <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#111827] px-6 py-4 text-[11px] font-black text-white transition hover:translate-y-[-1px] active:scale-95">
+                      <span className="material-icons text-base">send</span>
+                      Create post
+                    </button>
+                  </form>
+                </div>
+
+                <div className="rounded-[2rem] bg-white p-6 shadow-[0_24px_70px_rgba(81,92,122,0.11)] ring-1 ring-slate-200/70">
+                  <SectionHeader eyebrow="Worship set" title={nextWorshipSet?.title || 'No set scheduled'} />
+                  <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+                    <div className="rounded-2xl bg-[#f6f7fb] p-4">
+                      <p className="font-mono text-2xl font-black">{nextSetSongs.length}</p>
+                      <p className="mt-1 text-[10px] font-bold text-slate-400">Songs</p>
+                    </div>
+                    <div className="rounded-2xl bg-[#f6f7fb] p-4">
+                      <p className="font-mono text-2xl font-black">{nextSetTeam.length}</p>
+                      <p className="mt-1 text-[10px] font-bold text-slate-400">Team</p>
+                    </div>
+                    <div className="rounded-2xl bg-[#f6f7fb] p-4">
+                      <p className="font-mono text-2xl font-black">{missingSheets}</p>
+                      <p className="mt-1 text-[10px] font-bold text-slate-400">Sheets</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[2rem] bg-white p-6 shadow-[0_24px_70px_rgba(81,92,122,0.11)] ring-1 ring-slate-200/70">
+                  <SectionHeader eyebrow="Fast actions" title="Jump to work" />
+                  <div className="mt-5 grid gap-3">
+                    {actionItems.map(item => (
+                      <button
+                        key={item.title}
+                        onClick={item.onClick}
+                        className="flex items-center gap-4 rounded-2xl bg-[#f6f7fb] p-4 text-left transition hover:bg-[#efe9ff]"
+                      >
+                        <span className="material-icons flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-[#6f56c9] shadow-sm">{item.icon}</span>
+                        <span>
+                          <span className="block text-sm font-black text-[#111827]">{item.title}</span>
+                          <span className="mt-1 block text-xs font-semibold text-slate-500">{item.detail}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </aside>
             </section>
 
             <section className="grid gap-6 xl:grid-cols-2">
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
+              <div className="rounded-[2rem] bg-white p-6 shadow-[0_24px_70px_rgba(81,92,122,0.11)] ring-1 ring-slate-200/70">
                 <SectionHeader eyebrow="Recent posts" title="Latest board updates" />
                 <div className="mt-5 space-y-3">
                   {recentPosts.length > 0 ? recentPosts.map(post => (
-                    <div key={post.id} className="rounded-2xl bg-slate-50 p-4">
+                    <div key={post.id} className="rounded-2xl bg-[#f6f7fb] p-4">
                       <p className="text-sm font-black text-brand-dark">{post.title}</p>
-                      <p className="mt-1 text-xs font-bold text-slate-500">{post.date} / {post.author || 'PF Leader'}</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-500">{post.date} / {post.author || 'PF Leader'}</p>
                     </div>
                   )) : (
                     <EmptyState icon="forum" title="No posts yet" detail="Create the first board update from the quick post panel." />
@@ -1448,7 +1481,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)]">
+              <div className="rounded-[2rem] bg-white p-6 shadow-[0_24px_70px_rgba(81,92,122,0.11)] ring-1 ring-slate-200/70">
                 <SectionHeader eyebrow="Recent gallery" title="Latest media" />
                 {recentGallery.length > 0 ? (
                   <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6 xl:grid-cols-3">
