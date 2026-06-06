@@ -184,20 +184,18 @@ export default function ConferencePage() {
         <div className="max-w-6xl mx-auto text-center">
           <span className="text-brand-purple font-black text-sm tracking-widest uppercase mb-4 block">{t('conference.voices')}</span>
           <h2 className="text-5xl font-black text-brand-dark uppercase tracking-tighter mb-16">{t('conference.attendeesTitle')}</h2>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <div className="bg-slate-50 rounded-3xl p-10 border border-slate-100">
-              <p className="text-lg text-slate-600 font-medium leading-relaxed mb-6">{t('conference.testimonial1')}</p>
-              <span className="text-brand-purple font-black text-sm">{t('conference.attendee')}</span>
-            </div>
-            <div className="bg-slate-50 rounded-3xl p-10 border border-slate-100">
-              <p className="text-lg text-slate-600 font-medium leading-relaxed mb-6">{t('conference.testimonial2')}</p>
-              <span className="text-brand-purple font-black text-sm">{t('conference.attendee')}</span>
-            </div>
-            <div className="bg-slate-50 rounded-3xl p-10 border border-slate-100">
-              <p className="text-base text-slate-600 font-medium leading-relaxed mb-6">
+              <p className="text-base text-slate-600 font-medium leading-relaxed mb-6 md:text-lg">
                 "He has not called us to become slaves to our problems. He called us a Judge of this generation. Jesus has already overcome everything for us and has given victory in our lives. And I want people to realize that through our conference conquest to conquer."
               </p>
               <span className="text-brand-purple font-black text-sm">Yehyun Han</span>
+            </div>
+            <div className="bg-slate-50 rounded-3xl p-10 border border-slate-100">
+              <p className="text-base text-slate-600 font-medium leading-relaxed mb-6 md:text-lg">
+                "I believe that at the conference we will truly be joyful because of what Jesus has done. And as we do that, this joy will overflow so much that people who don't know Jesus yet will become curious and, in the end, come to know this incredible joy for themselves. I believe as we gather and just praise God with joy, this joy will spread across the land of Toronto, conquer the city with Joy of knowing Jesus."
+              </p>
+              <span className="text-brand-purple font-black text-sm">Kwanglim Kim</span>
             </div>
           </div>
         </div>
