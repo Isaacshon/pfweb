@@ -30,6 +30,17 @@ export default function AboutPage() {
   const [aboutImage, setAboutImage] = useState('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80')
 
   useEffect(() => {
+    if (!isMenuOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isMenuOpen])
+
+  useEffect(() => {
     setIsLoaded(true)
   }, [])
 
@@ -226,10 +237,10 @@ export default function AboutPage() {
 
       {/* Mobile Menu Overlay */}
       <div className={`
-        fixed inset-0 bg-white z-[99999] flex flex-col transition-all duration-500 ease-in-out
-        ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}
+        fixed inset-0 z-[2147483647] flex h-[100dvh] flex-col overflow-hidden bg-white transition-opacity duration-200 ease-out lg:hidden
+        ${isMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}
       `}>
-        <div className="flex justify-between items-center p-8 border-b border-slate-100">
+        <div className="flex shrink-0 justify-between items-center p-6 border-b border-slate-100">
           <Link href="/" onClick={() => setIsMenuOpen(false)}>
             <img src="/logo.png" alt="PassionFruits" className="h-10 w-auto" />
           </Link>

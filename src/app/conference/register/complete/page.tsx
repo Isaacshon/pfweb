@@ -160,6 +160,17 @@ export default function ConferenceRegistrationCompletePage() {
   const { t } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
 
+  React.useEffect(() => {
+    if (!isMenuOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isMenuOpen])
+
   return (
     <div className="min-h-screen bg-white text-brand-dark selection:bg-brand-purple selection:text-white">
       <header className="sticky top-0 z-[100] grid grid-cols-[auto_1fr_auto] items-center border-b border-slate-100 bg-white px-6 py-6 shadow-sm md:px-16 md:bg-white/95 md:backdrop-blur-md">
@@ -210,8 +221,11 @@ export default function ConferenceRegistrationCompletePage() {
       </main>
 
       {/* Mobile Menu */}
-      <div className={`fixed inset-0 z-[99999] flex flex-col bg-white transition-all duration-500 ease-in-out ${isMenuOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-full opacity-0'}`}>
-        <div className="flex items-center justify-between border-b border-slate-100 p-8">
+      <div
+        aria-hidden={!isMenuOpen}
+        className={`fixed inset-0 z-[2147483647] flex h-[100dvh] flex-col overflow-hidden bg-white transition-opacity duration-200 ease-out lg:hidden ${isMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-6">
           <Link href="/" onClick={() => setIsMenuOpen(false)}>
             <img src="/logo.png" alt="PassionFruits" className="h-10 w-auto" />
           </Link>

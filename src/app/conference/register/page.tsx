@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage, type Language } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
@@ -469,6 +469,17 @@ export default function ConferenceRegistrationPage() {
   const [showGroupRegistrationFields, setShowGroupRegistrationFields] = useState(false)
   const validationCopy = validationMessages[language]
 
+  useEffect(() => {
+    if (!isMenuOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isMenuOpen])
+
   const clearFieldError = (name: string) => {
     if (!name) return
     setFieldErrors((current) => {
@@ -820,7 +831,7 @@ export default function ConferenceRegistrationPage() {
 
 
 
-              <div className="sticky bottom-4 z-30 rounded-[2rem] border-2 border-brand-purple/30 bg-white/95 p-5 shadow-2xl shadow-brand-purple/10 backdrop-blur md:static md:p-8">
+              <div className="rounded-[2rem] border-2 border-brand-purple/30 bg-white/95 p-5 shadow-2xl shadow-brand-purple/10 backdrop-blur md:p-8">
                 <p className="text-lg font-black text-brand-dark">We cannot wait to worship, grow, and encounter God together with you at PassionFruits Conference 2026.</p>
                 <p className="mt-3 text-sm font-bold text-slate-500">You will be redirected to Square to complete your payment securely.</p>
                 <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-brand-dark px-8 py-5 text-sm font-black uppercase tracking-[0.22em] text-white shadow-xl transition hover:scale-[1.01] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto">
@@ -838,8 +849,11 @@ export default function ConferenceRegistrationPage() {
         </section>
       </main>
 
-      <div className={`fixed inset-0 z-[99999] flex flex-col bg-white transition-all duration-500 ease-in-out ${isMenuOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-full opacity-0'}`}>
-        <div className="flex items-center justify-between border-b border-slate-100 p-8">
+      <div
+        aria-hidden={!isMenuOpen}
+        className={`fixed inset-0 z-[2147483647] flex h-[100dvh] flex-col overflow-hidden bg-white transition-opacity duration-200 ease-out lg:hidden ${isMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-6">
           <Link href="/" onClick={() => setIsMenuOpen(false)}>
             <img src="/logo.png" alt="PassionFruits" className="h-10 w-auto" />
           </Link>
