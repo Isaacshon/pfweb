@@ -182,7 +182,7 @@ export default function AdminDashboard() {
       ]
     },
     conference: {
-      heroDate: 'August 20-22, 2026',
+      heroDate: 'August 13-15, 2026',
       heroTitle: 'JUDGES',
       heroSubtitle: 'Conquest to Conquer',
       verse: '"But you are a chosen people, a royal priesthood, a holy nation..." — 1 Peter 2:9',
