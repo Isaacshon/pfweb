@@ -44,24 +44,33 @@ export default function ConferencePage() {
     {
       day: t('conference.day1'), date: t('conference.date1'),
       events: [
-        { time: t('conference.registration'), desc: t('conference.checkIn') },
-        { time: t('conference.recreation'), desc: t('conference.haveFun') },
-        { time: t('conference.worshipPrayer'), desc: t('conference.worshipPrayerDesc') },
+        { time: '5:00 PM', desc: 'Registration' },
+        { time: '6:00 PM', desc: 'Recreation' },
+        { time: '7:00 PM', desc: 'Worship' },
+        { time: '8:00 PM', desc: 'Alter Call' },
+        { time: '9:00 PM', desc: 'Overflow' },
+        { time: '10:00 PM', desc: 'Connection' },
+        { time: '11:00 PM', desc: 'Go Home' },
       ]
     },
     {
       day: t('conference.day2'), date: t('conference.date2'),
       events: [
-        { time: t('conference.morningWorship'), desc: t('conference.morningWorshipDesc') },
-        { time: t('conference.breakoutSession'), desc: t('conference.breakoutSessionDesc') },
-        { time: t('conference.worshipNight'), desc: t('conference.worshipNightDesc') },
+        { time: '9:30 AM', desc: 'Coffee Time' },
+        { time: '10:00 AM', desc: 'Morning Worship (Praise, Prayer, Message)' },
+        { time: '1:00 PM', desc: 'Seminar & Activities' },
+        { time: '7:00 PM', desc: 'Worship' },
+        { time: '9:00 PM', desc: 'Alter Call' },
+        { time: '10:00 PM', desc: 'Overflow' },
+        { time: '11:00 PM', desc: 'Reflection then Go Home' },
       ]
     },
     {
       day: t('conference.day3'), date: t('conference.date3'),
       events: [
-        { time: t('conference.churchConnection'), desc: t('conference.churchConnectionDesc') },
-        { time: t('conference.closingCeremony'), desc: t('conference.closingCeremonyDesc') },
+        { time: '1:00 PM', desc: 'Church Ministry Fair' },
+        { time: '6:00 PM', desc: 'Open Worship' },
+        { time: '9:00 PM', desc: 'Clean Up' },
       ]
     },
   ]
