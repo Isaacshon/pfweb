@@ -9,6 +9,7 @@ import { GallerySlider } from '@/components/GallerySlider'
 import { ScheduleTable } from '@/components/ScheduleTable'
 import { ConferencePopup } from '@/components/ConferencePopup'
 import { BrandHeading } from '@/components/BrandHeading'
+import { SafeEmailText } from '@/components/SafeEmailText'
 
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
@@ -321,7 +322,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-black text-xl text-brand-dark uppercase">{t('home.generalInquiries')}</h4>
-                    <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-1">{t('contactPage.email')}</p>
+                    <SafeEmailText address={t('contactPage.email')} className="block text-slate-500 font-bold uppercase text-xs tracking-widest mt-1" />
                   </div>
                 </Link>
               </div>

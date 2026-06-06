@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useLanguage, type Language } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
+import { SafeEmailText } from '@/components/SafeEmailText'
 import {
   ADULT_AGE_CONFIRMATION,
   GUARDIAN_CONSENT_AGE_CONFIRMATION,
@@ -674,7 +675,7 @@ export default function ConferenceRegistrationPage() {
                   <p className="mt-2 text-xs font-bold leading-relaxed text-brand-dark/70">
                     If you are registering as a church, please contact us through our email.
                     <br />
-                    Contact Info: passionfruitsministry@gmail.com
+                    Contact Info: <SafeEmailText address="passionfruitsministry@gmail.com" />
                   </p>
                 </div>
               </div>

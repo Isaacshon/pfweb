@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
+import { SafeEmailText } from '@/components/SafeEmailText'
 import { getSiteSettingValue, useLiveSiteSettings } from '@/lib/liveSiteSettings'
 
 export default function Contact() {
@@ -167,7 +168,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{emailTitle}</h4>
-                  <p className="text-lg md:text-xl font-black text-brand-dark">{emailDetail}</p>
+                  <SafeEmailText address={emailDetail} className="block text-lg md:text-xl font-black text-brand-dark" />
                 </div>
               </div>
 
