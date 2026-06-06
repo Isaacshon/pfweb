@@ -2,7 +2,7 @@ export const CONFERENCE_REGISTRATION_FEE_CAD = 100
 export const ETRANSFER_PAYMENT_METHOD = 'Interac e-Transfer'
 export const SQUARE_PAYMENT_METHOD = 'Square Checkout'
 export const ADULT_AGE_CONFIRMATION = 'Yes, I am older than 18'
-export const GUARDIAN_CONSENT_AGE_CONFIRMATION = 'I am 18 and will submit a parent/guardian consent form'
+export const GUARDIAN_CONSENT_AGE_CONFIRMATION = 'I am 18 or younger and will complete a parent/guardian consent form'
 
 export const conferenceRegistrationHeaders = [
   'Participant Name',

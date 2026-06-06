@@ -78,7 +78,7 @@ function CompletionContent() {
             <div className="mt-6 space-y-4">
               {[
                 ['calendar_today', 'August 13-15, 2026'],
-                ['groups', 'Young Adults Ages 18-25'],
+                ['groups', 'All ages welcome'],
                 ['auto_stories', '"But you are a chosen people, a royal priesthood..." - 1 Peter 2:9'],
               ].map(([icon, text]) => (
                 <div key={text} className="flex items-start gap-3 text-sm font-bold text-slate-600">

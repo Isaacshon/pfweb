@@ -652,7 +652,7 @@ export default function ConferenceRegistrationPage() {
               <p className="text-xs font-black uppercase tracking-[0.3em] text-brand-yellow">PassionFruits Conference 2026</p>
               <h2 className="mt-4 text-2xl font-black leading-tight md:text-3xl">Judges: Conquest to Conquer</h2>
               <p className="mt-5 text-sm font-bold leading-relaxed text-white/75">
-                A gathering for young adults ages 18-25 to encounter God, build meaningful community, and grow in purpose.
+                A gathering to encounter God, build meaningful community, and grow in purpose.
               </p>
             </div>
           </div>
@@ -802,7 +802,7 @@ export default function ConferenceRegistrationPage() {
                 <CheckboxField name="guidelinesConsent" error={fieldErrors.guidelinesConsent} required>
                   I agree to follow conference guidelines and respect fellow attendees and staff.
                 </CheckboxField>
-                <RadioGroup label="Are you older than 18?" name="ageConfirmation" options={[ADULT_AGE_CONFIRMATION, GUARDIAN_CONSENT_AGE_CONFIRMATION]} error={fieldErrors.ageConfirmation} required />
+                <RadioGroup label="Participant age status" name="ageConfirmation" options={[ADULT_AGE_CONFIRMATION, GUARDIAN_CONSENT_AGE_CONFIRMATION]} error={fieldErrors.ageConfirmation} required />
                 {showGuardianConsentForm && (
                   <div className="rounded-[1.5rem] border-2 border-brand-purple/20 bg-brand-purple/5 p-5 md:p-6">
                     <div className="mb-5 flex items-start gap-3">
@@ -810,7 +810,7 @@ export default function ConferenceRegistrationPage() {
                       <div>
                         <p className="text-sm font-black uppercase tracking-[0.2em] text-brand-purple">Parent/Guardian Consent Form</p>
                         <p className="mt-2 text-sm font-bold leading-relaxed text-slate-600">
-                          Since you are 18, please complete this section now with your parent/guardian information.
+                          If you are 18 or younger, please complete this section now with your parent/guardian information.
                         </p>
                       </div>
                     </div>
