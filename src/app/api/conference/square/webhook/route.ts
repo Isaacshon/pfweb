@@ -93,7 +93,7 @@ export async function POST(request: Request) {
   }
 
   // Send registration confirmation email on successful payment
-  if (paymentStatus === 'paid' && payment.buyer_email_address) {
+  if (paymentStatus === 'paid' && payment.buyer_email_address && result.paymentEmailShouldSend !== false) {
     // Extract registrationId (e.g., PF-XXXX) from the payment note
     const noteText = payment.note || ''
     const match = noteText.match(/PF-[A-Z0-9]+/i)
@@ -114,6 +114,7 @@ export async function POST(request: Request) {
       name: buyerName,
       registrationId,
       amountCad,
+      idempotencyKey: `square-paid-${payment.id}`,
     }).catch((err) => console.error('Failed to send payment confirmation email:', err))
   }
 

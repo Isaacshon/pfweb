@@ -4,12 +4,14 @@ export async function sendRegistrationEmail({
   registrationId,
   amountCad,
   paymentStatus = 'paid',
+  idempotencyKey,
 }: {
   email: string
   name: string
   registrationId: string
   amountCad: number
   paymentStatus?: string
+  idempotencyKey?: string
 }) {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
@@ -20,14 +22,19 @@ export async function sendRegistrationEmail({
   const logoUrl = 'https://raw.githubusercontent.com/Isaacshon/pfweb/main/public/IMG_6847_cropped.png'
   const isPaid = paymentStatus === 'paid'
   const subjectText = isPaid ? 'Registration & Payment Confirmed' : 'Registration Received (Payment Pending)'
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
+  }
+
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey
+  }
 
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers,
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'PassionFruits <no-reply@passionfruits.ca>',
         to: [email],

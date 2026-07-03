@@ -59,8 +59,9 @@ function markSquarePayment_(ss,update){
   if(!orderId)return{ok:false,code:'missing_square_order_id',message:'Square order ID is required to update payment status.'};
   const row=findRowByHeaderValue_(sheet,headers,'Square Order ID',orderId);
   if(!row)return{ok:false,code:'square_order_not_found',message:'Square order was not found in the registration sheet.'};
-  setCellValueByHeader_(sheet,headers,row,'Payment Status',update.paymentStatus||'square_payment_updated');setCellValueByHeader_(sheet,headers,row,'Square Payment ID',update.squarePaymentId||'');setCellValueByHeader_(sheet,headers,row,'Square Receipt URL',update.squareReceiptUrl||'');if(update.paidAt)setCellValueByHeader_(sheet,headers,row,'Paid At',update.paidAt);formatRegistrationSheet_(sheet,headers);
-  return{ok:true,squareOrderId:orderId,updatedRow:row};
+  const previousPaymentStatus=String(getCellValueByHeader_(sheet,headers,row,'Payment Status')||'').trim().toLowerCase(),previousSquarePaymentId=String(getCellValueByHeader_(sheet,headers,row,'Square Payment ID')||'').trim(),nextPaymentStatus=String(update.paymentStatus||'square_payment_updated').trim(),paymentEmailShouldSend=nextPaymentStatus==='paid'&&previousPaymentStatus!=='paid';
+  setCellValueByHeader_(sheet,headers,row,'Payment Status',nextPaymentStatus);setCellValueByHeader_(sheet,headers,row,'Square Payment ID',update.squarePaymentId||'');setCellValueByHeader_(sheet,headers,row,'Square Receipt URL',update.squareReceiptUrl||'');if(update.paidAt)setCellValueByHeader_(sheet,headers,row,'Paid At',update.paidAt);formatRegistrationSheet_(sheet,headers);
+  return{ok:true,squareOrderId:orderId,updatedRow:row,paymentEmailShouldSend:paymentEmailShouldSend,previousPaymentStatus:previousPaymentStatus,previousSquarePaymentId:previousSquarePaymentId};
 }
 function getSheetHeaders_(sheet){return sheet.getLastColumn()===0?[]:sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0];}
 function findRowByHeaderValue_(sheet,headers,header,value){
@@ -70,6 +71,7 @@ function findRowByHeaderValue_(sheet,headers,header,value){
   return 0;
 }
 function setCellValueByHeader_(sheet,headers,row,header,value){const col=headers.indexOf(header)+1;if(col)sheet.getRange(row,col).setValue(value===undefined?'':value);}
+function getCellValueByHeader_(sheet,headers,row,header){const col=headers.indexOf(header)+1;return col?sheet.getRange(row,col).getValue():'';}
 function alignRowToHeaders_(sourceHeaders,row,targetHeaders){const byHeader={};sourceHeaders.forEach(function(h,i){byHeader[h]=row[i];});return targetHeaders.map(function(h){return byHeader[h]===undefined?'':byHeader[h];});}
 function formatRegistrationSheet_(sheet,headers){const lastCol=Math.max(sheet.getLastColumn(),headers.length,1),lastRow=Math.max(sheet.getLastRow(),1);sheet.setFrozenRows(1);sheet.setFrozenColumns(Math.min(5,lastCol));sheet.getRange(1,1,1,lastCol).setFontWeight('bold').setBackground('#24283d').setFontColor('#ffffff').setWrap(true);if(lastRow>1)sheet.getRange(2,1,lastRow-1,lastCol).setWrap(true).setVerticalAlignment('middle');if(!sheet.getFilter())sheet.getRange(1,1,lastRow,lastCol).createFilter();const widths={'Participant Name':180,'Contact Summary':260,'Church / Group Summary':260,'Emergency Contact Summary':260,'Consent Summary':170,'Conference Interest':320,'Area To Overcome':320,'Square Checkout URL':260,'Square Receipt URL':260};headers.forEach(function(h,i){sheet.setColumnWidth(i+1,widths[h]||150);});}
 function getNumberCellValue_(row,headers,header){const i=headers.indexOf(header);return i===-1?0:normalizeNumber_(row[i],0);}

@@ -7,6 +7,9 @@ export type ConferenceSheetsResult = {
   discountCad?: number
   finalAmountCad?: number
   appendedRow?: number
+  paymentEmailShouldSend?: boolean
+  previousPaymentStatus?: string
+  previousSquarePaymentId?: string
 }
 
 export type ConferencePaymentLinkUpdate = {

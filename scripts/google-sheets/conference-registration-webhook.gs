@@ -243,7 +243,12 @@ function markSquarePayment_(spreadsheet, update) {
     };
   }
 
-  setCellValueByHeader_(sheet, headers, rowNumber, 'Payment Status', update.paymentStatus || 'square_payment_updated');
+  const previousPaymentStatus = String(getCellValueByHeader_(sheet, headers, rowNumber, 'Payment Status') || '').trim().toLowerCase();
+  const previousSquarePaymentId = String(getCellValueByHeader_(sheet, headers, rowNumber, 'Square Payment ID') || '').trim();
+  const nextPaymentStatus = String(update.paymentStatus || 'square_payment_updated').trim();
+  const paymentEmailShouldSend = nextPaymentStatus === 'paid' && previousPaymentStatus !== 'paid';
+
+  setCellValueByHeader_(sheet, headers, rowNumber, 'Payment Status', nextPaymentStatus);
   setCellValueByHeader_(sheet, headers, rowNumber, 'Square Payment ID', update.squarePaymentId || '');
   setCellValueByHeader_(sheet, headers, rowNumber, 'Square Receipt URL', update.squareReceiptUrl || '');
   if (update.paidAt) {
@@ -255,6 +260,9 @@ function markSquarePayment_(spreadsheet, update) {
     ok: true,
     squareOrderId,
     updatedRow: rowNumber,
+    paymentEmailShouldSend,
+    previousPaymentStatus,
+    previousSquarePaymentId,
   };
 }
 
@@ -281,6 +289,12 @@ function setCellValueByHeader_(sheet, headers, rowNumber, header, value) {
   const columnIndex = headers.indexOf(header) + 1;
   if (!columnIndex) return;
   sheet.getRange(rowNumber, columnIndex).setValue(value === undefined ? '' : value);
+}
+
+function getCellValueByHeader_(sheet, headers, rowNumber, header) {
+  const columnIndex = headers.indexOf(header) + 1;
+  if (!columnIndex) return '';
+  return sheet.getRange(rowNumber, columnIndex).getValue();
 }
 
 function alignRowToHeaders_(sourceHeaders, row, targetHeaders) {

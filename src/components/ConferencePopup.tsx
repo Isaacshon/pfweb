@@ -54,54 +54,33 @@ export const ConferencePopup = ({ trigger }: ConferencePopupProps) => {
       />
 
       {/* Modal Container */}
-      <div className={`relative w-full max-w-[400px] aspect-[3/4] bg-white rounded-[40px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 fade-in duration-500 transition-transform ${isClosing ? 'scale-95' : 'scale-100'} border-8 border-brand-dark`}>
-        
-        {/* Full-bleed Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="/images/IMG_6846.PNG" 
-            alt="Conference 2026"
-            className="w-full h-full object-cover"
+      <div className={`relative max-h-[calc(100dvh-5rem)] w-full max-w-[420px] overflow-hidden rounded-[2rem] border border-white/40 bg-white shadow-[0_30px_80px_-20px_rgba(0,0,0,0.55)] animate-in zoom-in-95 fade-in duration-500 transition-transform ${isClosing ? 'scale-95' : 'scale-100'}`}>
+        <div className="relative aspect-[3/4] overflow-hidden bg-brand-purple">
+          <img
+            src="/images/pf-conf-2026-banner.jpg"
+            alt="PassionFruits Conference 2026 poster"
+            className="h-full w-full object-cover"
           />
-          {/* Very Dark Overlay for High Visibility */}
-          <div className="absolute inset-0 bg-black/70" />
+
+          {/* Close Button */}
+          <button
+            onClick={handleClose}
+            aria-label="Close conference banner"
+            className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/90 text-brand-dark shadow-lg backdrop-blur transition-all hover:bg-white"
+          >
+            <span className="material-icons">close</span>
+          </button>
         </div>
 
-        {/* Close Button (High Contrast) */}
-        <button 
-          onClick={handleClose}
-          className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-brand-yellow text-brand-dark flex items-center justify-center hover:bg-white transition-all border-4 border-brand-dark shadow-lg"
-        >
-          <span className="material-icons">close</span>
-        </button>
-
-        {/* Content (High Contrast Center) */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-8">
-          <div className="mt-auto">
-            <span className="inline-block px-4 py-1 bg-brand-yellow text-brand-dark rounded-full text-xs font-black uppercase tracking-widest mb-6 border-2 border-brand-dark shadow-md">
-              {t('popup.specialEvent')}
-            </span>
-            <h3 className="text-3xl font-black text-white mb-4 leading-tight uppercase tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
-              {t('popup.titleLine1')}<br />{t('popup.titleLine2')}
-            </h3>
-            <p className="text-white text-sm mb-10 leading-relaxed max-w-[280px] mx-auto font-bold drop-shadow-md">
-              {t('popup.desc')}
-            </p>
-            <Link 
-              href="/conference/register"
-              onClick={handleClose}
-              className="block w-full py-4 bg-brand-yellow text-brand-dark rounded-2xl font-black text-sm uppercase shadow-[0_8px_0px_#1a1a1a] hover:translate-y-1 hover:shadow-[0_4px_0px_#1a1a1a] transition-all active:scale-95 mb-6"
-            >
-              {t('popup.registerNow')}
-            </Link>
-            <Link 
-              href="/conference"
-              onClick={handleClose}
-              className="text-white font-black text-xs uppercase hover:text-brand-yellow transition-colors underline underline-offset-4 tracking-widest"
-            >
-              {t('popup.viewDetails')}
-            </Link>
-          </div>
+        <div className="bg-white p-4 sm:p-5">
+          <Link
+            href="/conference/register"
+            onClick={handleClose}
+            className="flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-brand-dark px-6 py-4 text-center text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_10px_24px_rgba(18,28,42,0.18)] transition-all hover:-translate-y-0.5 hover:bg-brand-purple active:scale-95"
+          >
+            Join Now
+            <span className="material-icons text-lg" aria-hidden="true">arrow_forward</span>
+          </Link>
         </div>
       </div>
 
