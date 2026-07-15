@@ -1,5 +1,6 @@
 import {
   buildConferenceRegistrationSheetRow,
+  CONFERENCE_MAX_AGE,
   createConferenceRegistrationRecord,
   ETRANSFER_PAYMENT_METHOD,
   normalizeConferenceRegistrationPayload,
@@ -51,12 +52,24 @@ export async function POST(request: Request) {
   const validation = validateConferenceRegistration(payload)
 
   if (!validation.isValid) {
+    const hasInvalidAge = validation.invalidFields.includes('age')
+    const hasInvalidAgeConfirmation = validation.invalidFields.includes('ageConfirmation')
+
     return Response.json(
       {
         ok: false,
-        code: 'missing_required_fields',
-        message: 'Please complete all required fields.',
+        code: hasInvalidAge
+          ? 'invalid_age'
+          : hasInvalidAgeConfirmation
+            ? 'invalid_age_confirmation'
+            : 'missing_required_fields',
+        message: hasInvalidAge
+          ? `Conference registration is limited to participants aged ${CONFERENCE_MAX_AGE} and under.`
+          : hasInvalidAgeConfirmation
+            ? 'Please select the age status that matches the participant age.'
+          : 'Please complete all required fields.',
         missingFields: validation.missingFields,
+        invalidFields: validation.invalidFields,
       },
       { status: 400 }
     )

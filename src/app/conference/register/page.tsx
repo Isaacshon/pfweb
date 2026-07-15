@@ -8,7 +8,11 @@ import { BrandHeading } from '@/components/BrandHeading'
 import { SafeEmailText } from '@/components/SafeEmailText'
 import {
   ADULT_AGE_CONFIRMATION,
+  CONFERENCE_MAX_AGE,
+  CONFERENCE_MIN_AGE,
   GUARDIAN_CONSENT_AGE_CONFIRMATION,
+  isValidConferenceAge,
+  isValidConferenceAgeConfirmation,
   normalizeConferenceRegistrationPayload,
   requiresGuardianConsent,
   type ConferenceRegistrationPayload,
@@ -177,6 +181,7 @@ const validationMessages: Record<Language, {
   required: (field: string) => string
   email: string
   age: string
+  ageConfirmation: string
   guardianConsent: string
 }> = {
   en: {
@@ -184,7 +189,8 @@ const validationMessages: Record<Language, {
     summary: 'Please review the highlighted fields before submitting.',
     required: (field) => `Please complete ${field}.`,
     email: 'Please enter a valid email address.',
-    age: 'Please enter a valid age.',
+    age: `Please enter an age between ${CONFERENCE_MIN_AGE} and ${CONFERENCE_MAX_AGE}.`,
+    ageConfirmation: 'Please select the age status that matches the participant age.',
     guardianConsent: 'Please complete the parent/guardian consent form.',
   },
   ko: {
@@ -192,7 +198,8 @@ const validationMessages: Record<Language, {
     summary: '제출하기 전에 표시된 항목을 확인해 주세요.',
     required: (field) => `${field} 항목을 작성해 주세요.`,
     email: '올바른 이메일 주소를 입력해 주세요.',
-    age: '올바른 나이를 입력해 주세요.',
+    age: `${CONFERENCE_MIN_AGE}세부터 ${CONFERENCE_MAX_AGE}세까지의 나이를 입력해 주세요.`,
+    ageConfirmation: '참가자 나이에 맞는 나이 상태를 선택해 주세요.',
     guardianConsent: '부모/보호자 동의서를 작성하고 확인해 주세요.',
   },
   zh: {
@@ -200,7 +207,8 @@ const validationMessages: Record<Language, {
     summary: '提交前请确认标记的项目。',
     required: (field) => `请填写${field}。`,
     email: '请输入有效的电子邮箱。',
-    age: '请输入有效的年龄。',
+    age: `请输入${CONFERENCE_MIN_AGE}岁到${CONFERENCE_MAX_AGE}岁之间的年龄。`,
+    ageConfirmation: '请选择与参加者年龄相符的年龄状态。',
     guardianConsent: '请填写并确认家长/监护人同意书。',
   },
   es: {
@@ -208,7 +216,8 @@ const validationMessages: Record<Language, {
     summary: 'Revisa los campos marcados antes de enviar.',
     required: (field) => `Completa ${field}.`,
     email: 'Ingresa un correo electronico valido.',
-    age: 'Ingresa una edad valida.',
+    age: `Ingresa una edad entre ${CONFERENCE_MIN_AGE} y ${CONFERENCE_MAX_AGE}.`,
+    ageConfirmation: 'Selecciona el estado de edad que coincida con la edad del participante.',
     guardianConsent: 'Completa el formulario de consentimiento de padre/tutor.',
   },
 }
@@ -415,9 +424,17 @@ function buildRegistrationFieldErrors(payload: ConferenceRegistrationPayload, la
     errors.email = copy.email
   }
 
-  const ageNumber = Number(payload.age)
-  if (payload.age && !Number.isFinite(ageNumber)) {
+  if (payload.age && !isValidConferenceAge(payload.age)) {
     errors.age = copy.age
+  }
+
+  if (
+    payload.age
+    && payload.ageConfirmation
+    && isValidConferenceAge(payload.age)
+    && !isValidConferenceAgeConfirmation(payload)
+  ) {
+    errors.ageConfirmation = copy.ageConfirmation
   }
 
   if (payload.attendingWithGroup === 'Yes' && !payload.groupName) {
@@ -572,6 +589,18 @@ export default function ConferenceRegistrationPage() {
           setFieldErrors(serverErrors)
           requestAnimationFrame(() => focusFirstInvalidField(form, serverErrors))
         }
+        if (Array.isArray(result.invalidFields)) {
+          const serverErrors = result.invalidFields.reduce((errors: FieldErrors, field: string) => {
+            if (field === 'age') {
+              errors.age = validationCopy.age
+            } else if (field === 'ageConfirmation') {
+              errors.ageConfirmation = validationCopy.ageConfirmation
+            }
+            return errors
+          }, {} as FieldErrors)
+          setFieldErrors((current) => ({ ...current, ...serverErrors }))
+          requestAnimationFrame(() => focusFirstInvalidField(form, serverErrors))
+        }
         throw new Error(result.message || 'Registration could not be submitted.')
       }
 
@@ -664,7 +693,7 @@ export default function ConferenceRegistrationPage() {
               <div className="rounded-[2rem] border-2 border-slate-200 bg-white p-6 shadow-sm md:p-8">
                 <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-purple">Welcome</p>
                 <p className="mt-5 text-base font-bold leading-relaxed text-slate-600">
-                  We are excited to have you join PassionFruits Conference 2026. Please complete the form carefully.
+                  We are excited to have you join PassionFruits Conference 2026. Registration is open to participants aged {CONFERENCE_MAX_AGE} and under.
                 </p>
                 <div className="mt-6 rounded-2xl bg-brand-dark p-5 text-white">
                   <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-yellow">Registration Fee</p>
@@ -690,6 +719,7 @@ export default function ConferenceRegistrationPage() {
                 <div className="mt-5 space-y-4">
                   {[
                     ['badge', 'Use your correct name and contact information'],
+                    ['groups', `Confirm the participant is aged ${CONFERENCE_MAX_AGE} or under`],
                     ['contact_emergency', 'Have your emergency contact ready'],
                     ['payments', 'Pay securely after submitting'],
                   ].map(([icon, text]) => (
@@ -752,7 +782,7 @@ export default function ConferenceRegistrationPage() {
                   <TextField label="First Name" name="firstName" error={fieldErrors.firstName} required />
                   <TextField label="Last Name" name="lastName" error={fieldErrors.lastName} required />
                   <TextField label="Preferred Name" name="preferredName" />
-                  <TextField label="Age" name="age" type="number" error={fieldErrors.age} required />
+                  <TextField label={`Age (${CONFERENCE_MAX_AGE} or under)`} name="age" type="number" min={CONFERENCE_MIN_AGE} max={CONFERENCE_MAX_AGE} error={fieldErrors.age} required />
                 </div>
                 <RadioGroup label="Gender" name="gender" options={['Male', 'Female']} error={fieldErrors.gender} required />
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -802,7 +832,7 @@ export default function ConferenceRegistrationPage() {
                 <CheckboxField name="guidelinesConsent" error={fieldErrors.guidelinesConsent} required>
                   I agree to follow conference guidelines and respect fellow attendees and staff.
                 </CheckboxField>
-                <RadioGroup label="Participant age status" name="ageConfirmation" options={[ADULT_AGE_CONFIRMATION, GUARDIAN_CONSENT_AGE_CONFIRMATION]} error={fieldErrors.ageConfirmation} required />
+                <RadioGroup label="Participant age / guardian status" name="ageConfirmation" options={[ADULT_AGE_CONFIRMATION, GUARDIAN_CONSENT_AGE_CONFIRMATION]} error={fieldErrors.ageConfirmation} required />
                 {showGuardianConsentForm && (
                   <div className="rounded-[1.5rem] border-2 border-brand-purple/20 bg-brand-purple/5 p-5 md:p-6">
                     <div className="mb-5 flex items-start gap-3">
@@ -810,7 +840,7 @@ export default function ConferenceRegistrationPage() {
                       <div>
                         <p className="text-sm font-black uppercase tracking-[0.2em] text-brand-purple">Parent/Guardian Consent Form</p>
                         <p className="mt-2 text-sm font-bold leading-relaxed text-slate-600">
-                          If you are 18 or younger, please complete this section now with your parent/guardian information.
+                          Participants 18 or younger must complete this section now with parent/guardian information.
                         </p>
                       </div>
                     </div>

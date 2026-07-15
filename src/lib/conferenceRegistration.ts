@@ -1,7 +1,9 @@
 export const CONFERENCE_REGISTRATION_FEE_CAD = 100
+export const CONFERENCE_MIN_AGE = 1
+export const CONFERENCE_MAX_AGE = 29
 export const ETRANSFER_PAYMENT_METHOD = 'Interac e-Transfer'
 export const SQUARE_PAYMENT_METHOD = 'Square Checkout'
-export const ADULT_AGE_CONFIRMATION = 'Yes, I am older than 18'
+export const ADULT_AGE_CONFIRMATION = 'Yes, I am between 19 and 29'
 export const GUARDIAN_CONSENT_AGE_CONFIRMATION = 'I am 18 or younger and will complete a parent/guardian consent form'
 
 export const conferenceRegistrationHeaders = [
@@ -166,10 +168,22 @@ export function normalizeConferenceRegistrationPayload(input: unknown): Conferen
 
 export function validateConferenceRegistration(payload: ConferenceRegistrationPayload) {
   const missingFields = requiredFields.filter((field) => !payload[field])
+  const invalidFields: Array<keyof ConferenceRegistrationPayload> = []
 
   if (!payload.mediaConsent) missingFields.push('mediaConsent')
   if (!payload.guidelinesConsent) missingFields.push('guidelinesConsent')
   if (!payload.accuracyConfirm) missingFields.push('accuracyConfirm')
+  if (payload.age && !isValidConferenceAge(payload.age)) {
+    invalidFields.push('age')
+  }
+  if (
+    payload.age
+    && payload.ageConfirmation
+    && isValidConferenceAge(payload.age)
+    && !isValidConferenceAgeConfirmation(payload)
+  ) {
+    invalidFields.push('ageConfirmation')
+  }
   if (payload.attendingWithGroup === 'Yes' && !payload.groupName) {
     missingFields.push('groupName')
   }
@@ -186,9 +200,23 @@ export function validateConferenceRegistration(payload: ConferenceRegistrationPa
   }
 
   return {
-    isValid: missingFields.length === 0,
+    isValid: missingFields.length === 0 && invalidFields.length === 0,
     missingFields,
+    invalidFields,
   }
+}
+
+export function isValidConferenceAge(age: string) {
+  const ageNumber = Number(age)
+  return Number.isInteger(ageNumber) && ageNumber >= CONFERENCE_MIN_AGE && ageNumber <= CONFERENCE_MAX_AGE
+}
+
+export function isValidConferenceAgeConfirmation(payload: Pick<ConferenceRegistrationPayload, 'age' | 'ageConfirmation'>) {
+  if (!isValidConferenceAge(payload.age) || !payload.ageConfirmation) return true
+
+  const ageNumber = Number(payload.age)
+  if (ageNumber <= 18) return payload.ageConfirmation === GUARDIAN_CONSENT_AGE_CONFIRMATION
+  return payload.ageConfirmation === ADULT_AGE_CONFIRMATION
 }
 
 export function requiresGuardianConsent(payload: Pick<ConferenceRegistrationPayload, 'ageConfirmation'>) {

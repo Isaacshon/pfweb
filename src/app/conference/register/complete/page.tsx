@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
+import { CONFERENCE_MAX_AGE } from '@/lib/conferenceRegistration'
 import { QRCodeSVG } from 'qrcode.react'
 
 const APP_INSTALL_URL = 'https://www.passionfruits.ca/app/download?install=1'
@@ -78,7 +79,7 @@ function CompletionContent() {
             <div className="mt-6 space-y-4">
               {[
                 ['calendar_today', 'August 13-15, 2026'],
-                ['groups', 'All ages welcome'],
+                ['groups', `Ages ${CONFERENCE_MAX_AGE} and under`],
                 ['auto_stories', '"But you are a chosen people, a royal priesthood..." - 1 Peter 2:9'],
               ].map(([icon, text]) => (
                 <div key={text} className="flex items-start gap-3 text-sm font-bold text-slate-600">

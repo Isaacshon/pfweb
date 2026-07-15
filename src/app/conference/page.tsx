@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { BrandHeading } from '@/components/BrandHeading'
+import { CONFERENCE_MAX_AGE } from '@/lib/conferenceRegistration'
 import { getSiteSettingValue, useLiveSiteSettings } from '@/lib/liveSiteSettings'
 
 const lightFocus = 'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-purple/25 focus-visible:ring-offset-2'
@@ -84,11 +85,12 @@ export default function ConferencePage() {
   const passRows = [
     ['Date', heroDate],
     ['Location', 'Toronto, Ontario'],
-    ['Audience', 'All ages welcome'],
+    ['Audience', `Ages ${CONFERENCE_MAX_AGE} and under`],
   ]
 
   const registrationDetails = [
     ['Fee', '100 CAD'],
+    ['Eligibility', `Ages ${CONFERENCE_MAX_AGE} and under`],
     ['Included', 'Conference T-shirt, snacks'],
     ['Not included', 'Meals, travel, accommodation'],
     ['Group registration', 'Email passionfruitsministry@gmail.com before submitting individual forms.'],
@@ -268,7 +270,7 @@ export default function ConferencePage() {
                   <p className="mt-1 text-xs font-black uppercase tracking-[0.22em] text-white/55">CAD fee</p>
                 </div>
                 <span className="rounded-full bg-brand-yellow px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-brand-dark">
-                  All ages
+                  {CONFERENCE_MAX_AGE} & under
                 </span>
               </div>
             </div>
@@ -431,7 +433,7 @@ export default function ConferencePage() {
               Register for PassionFruits Conference 2026
             </h2>
             <p className="mt-6 max-w-xl text-base font-semibold leading-8 text-brand-dark/72">
-              Fee: 100 CAD. Includes a conference T-shirt and snacks. Meals are not included.
+              Fee: 100 CAD. Registration is limited to ages {CONFERENCE_MAX_AGE} and under. Includes a conference T-shirt and snacks. Meals are not included.
             </p>
           </div>
           <Link href="/conference/register" className={`inline-flex min-h-12 w-full max-w-xs items-center justify-center gap-3 rounded-full bg-brand-dark px-8 py-5 text-center text-base font-black uppercase tracking-[0.08em] text-white shadow-[0_12px_0_rgba(18,28,42,0.14)] transition-transform duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:tracking-[0.16em] md:w-auto md:max-w-none md:px-12 ${lightFocus}`}>
