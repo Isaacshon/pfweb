@@ -695,10 +695,7 @@ export default function ConferenceRegistrationPage() {
                 <p className="mt-5 text-base font-bold leading-relaxed text-slate-600">
                   We are excited to have you join PassionFruits Conference 2026. Registration is open to participants aged {CONFERENCE_MAX_AGE} and under.
                 </p>
-                <div className="mt-6 rounded-2xl bg-brand-dark p-5 text-white">
-                  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-yellow">Registration Fee</p>
-                  <p className="mt-3 text-4xl font-black leading-none">100 CAD</p>
-                </div>
+
                 <ul className="mt-4 space-y-1.5 text-xs font-bold leading-relaxed text-slate-500">
                   <li>Conference T-shirt provided</li>
                   <li>Snacks provided</li>

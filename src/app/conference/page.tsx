@@ -89,7 +89,7 @@ export default function ConferencePage() {
   ]
 
   const registrationDetails = [
-    ['Fee', '100 CAD'],
+
     ['Eligibility', `Ages ${CONFERENCE_MAX_AGE} and under`],
     ['Included', 'Conference T-shirt, snacks'],
     ['Not included', 'Meals, travel, accommodation'],
@@ -116,7 +116,7 @@ export default function ConferencePage() {
         { time: '5:00 PM', desc: 'Registration' },
         { time: '6:00 PM', desc: 'Recreation' },
         { time: '7:00 PM', desc: 'Worship' },
-        { time: '8:00 PM', desc: 'Altar Call' },
+        { time: '8:00 PM', desc: 'Worship' },
         { time: '9:00 PM', desc: 'Overflow' },
         { time: '10:00 PM', desc: 'Connection' },
         { time: '11:00 PM', desc: 'Dismissal' },
@@ -130,7 +130,7 @@ export default function ConferencePage() {
         { time: '10:00 AM', desc: 'Morning Worship (Praise, Prayer, Message)' },
         { time: '1:00 PM', desc: 'Seminar & Activities' },
         { time: '7:00 PM', desc: 'Worship' },
-        { time: '9:00 PM', desc: 'Altar Call' },
+        { time: '9:00 PM', desc: 'Worship' },
         { time: '10:00 PM', desc: 'Overflow' },
         { time: '11:00 PM', desc: 'Reflection & Dismissal' },
       ],
@@ -151,7 +151,6 @@ export default function ConferencePage() {
       <div className="w-full max-w-full overflow-hidden rounded-[2rem] border border-[#e4ddcf] bg-white shadow-[0_24px_80px_rgba(18,28,42,0.08)]">
         <div className="bg-brand-dark p-6 text-white">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-brand-yellow">Registration details</p>
-          <p className="mt-5 font-mono text-5xl font-black leading-none text-white">100 CAD</p>
           <p className="mt-3 text-sm font-semibold leading-6 text-white/70">Includes conference T-shirt and snacks. Meals are not included.</p>
         </div>
 
@@ -433,7 +432,7 @@ export default function ConferencePage() {
               Register for PassionFruits Conference 2026
             </h2>
             <p className="mt-6 max-w-xl text-base font-semibold leading-8 text-brand-dark/72">
-              Fee: 100 CAD. Registration is limited to ages {CONFERENCE_MAX_AGE} and under. Includes a conference T-shirt and snacks. Meals are not included.
+              Registration is limited to ages {CONFERENCE_MAX_AGE} and under. Includes a conference T-shirt and snacks. Meals are not included.
             </p>
           </div>
           <Link href="/conference/register" className={`inline-flex min-h-12 w-full max-w-xs items-center justify-center gap-3 rounded-full bg-brand-dark px-8 py-5 text-center text-base font-black uppercase tracking-[0.08em] text-white shadow-[0_12px_0_rgba(18,28,42,0.14)] transition-transform duration-300 hover:-translate-y-0.5 active:scale-[0.98] sm:tracking-[0.16em] md:w-auto md:max-w-none md:px-12 ${lightFocus}`}>

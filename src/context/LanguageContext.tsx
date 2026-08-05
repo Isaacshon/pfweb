@@ -226,7 +226,7 @@ const translations: TranslationTable = {
       testimonial2: '"At PassionFruits, creativity and passion are not restrained but released as authentic expressions of worship and faith."',
       attendee: 'Conference Attendee',
       readyTitle: 'Ready to Join?',
-      readyDesc: 'Secure your spot at the PassionFruits Conference 2026. Registration fee is 100 CAD.',
+      readyDesc: 'Secure your spot at the PassionFruits Conference 2026.',
       registerNow: 'Register Now'
     },
     events: {
@@ -467,7 +467,7 @@ const translations: TranslationTable = {
       testimonial2: '"PassionFruits 안에서 창의성과 열정은 억눌리지 않고 예배와 믿음의 진정한 표현으로 흘러나옵니다."',
       attendee: '컨퍼런스 참가자',
       readyTitle: '함께할 준비가 되셨나요?',
-      readyDesc: 'PassionFruits Conference 2026 자리를 예약하세요. 등록비는 100 CAD입니다.',
+      readyDesc: 'PassionFruits Conference 2026 자리를 예약하세요.',
       registerNow: '지금 등록하기'
     },
     events: {
@@ -708,7 +708,7 @@ const translations: TranslationTable = {
       testimonial2: '"在 PassionFruits，创造力与热情被释放为敬拜和信心的真实表达。"',
       attendee: '大会参加者',
       readyTitle: '准备好\u200B加入了吗?',
-      readyDesc: '预留 PassionFruits Conference 2026 的席位。报名费为 100 CAD。',
+      readyDesc: '预留 PassionFruits Conference 2026 的席位。',
       registerNow: '立即报名'
     },
     events: {
@@ -949,7 +949,7 @@ const translations: TranslationTable = {
       testimonial2: '"En PassionFruits, la creatividad y la pasión se liberan como expresiones auténticas de adoración y fe."',
       attendee: 'Asistente de la conferencia',
       readyTitle: '¿Listo para unirte?',
-      readyDesc: 'Reserva tu lugar en PassionFruits Conference 2026. La inscripción cuesta 100 CAD.',
+      readyDesc: 'Reserva tu lugar en PassionFruits Conference 2026.',
       registerNow: 'Registrarse ahora'
     },
     events: {
