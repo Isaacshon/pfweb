@@ -1,576 +1,34 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { useLanguage, type Language } from '@/context/LanguageContext'
-import { LanguageSelector } from '@/components/LanguageSelector'
-import { BrandHeading } from '@/components/BrandHeading'
-import { SafeEmailText } from '@/components/SafeEmailText'
 import {
   ADULT_AGE_CONFIRMATION,
   CONFERENCE_MAX_AGE,
   CONFERENCE_MIN_AGE,
   GUARDIAN_CONSENT_AGE_CONFIRMATION,
-  isValidConferenceAge,
-  isValidConferenceAgeConfirmation,
   normalizeConferenceRegistrationPayload,
-  requiresGuardianConsent,
-  type ConferenceRegistrationPayload,
 } from '@/lib/conferenceRegistration'
-import { QRCodeSVG } from 'qrcode.react'
 
-const APP_INSTALL_URL = 'https://www.passionfruits.ca/app/download?install=1'
-
-
-
-type RegistrationField = keyof ConferenceRegistrationPayload
-type FieldErrors = Partial<Record<RegistrationField, string>>
-
-const requiredRegistrationFields: RegistrationField[] = [
-  'firstName',
-  'lastName',
-  'age',
-  'gender',
-  'phone',
-  'email',
-  'churchName',
-  'attendingWithGroup',
-  'emergencyFirstName',
-  'emergencyLastName',
-  'emergencyRelation',
-  'emergencyPhone',
-  'interest',
-  'overcome',
-  'attendedBefore',
-  'ageConfirmation',
-  'mediaConsent',
-  'guidelinesConsent',
-  'accuracyConfirm',
-]
-
-const validationLabels: Record<Language, Record<RegistrationField, string>> = {
-  en: {
-    firstName: 'first name',
-    lastName: 'last name',
-    preferredName: 'preferred name',
-    age: 'age',
-    gender: 'gender',
-    phone: 'phone number',
-    email: 'email',
-    churchName: 'church name',
-    pastorName: 'pastor / leader name',
-    attendingWithGroup: 'group attendance',
-    groupName: 'group / church name',
-    emergencyFirstName: 'emergency contact first name',
-    emergencyLastName: 'emergency contact last name',
-    emergencyRelation: 'emergency contact relation',
-    emergencyPhone: 'emergency contact phone number',
-    interest: 'conference interest',
-    overcome: 'area to overcome',
-    attendedBefore: 'previous attendance',
-    mediaConsent: 'media consent',
-    guidelinesConsent: 'conference guidelines consent',
-    ageConfirmation: 'age confirmation',
-    guardianName: 'parent/guardian full name',
-    guardianRelation: 'parent/guardian relation',
-    guardianPhone: 'parent/guardian phone number',
-    guardianEmail: 'parent/guardian email',
-    guardianSignature: 'parent/guardian signature',
-    guardianConsent: 'parent/guardian consent confirmation',
-    accuracyConfirm: 'information accuracy confirmation',
-    groupRegistrationCode: 'group registration code',
-  },
-  ko: {
-    firstName: '이름',
-    lastName: '성',
-    preferredName: '선호 이름',
-    age: '나이',
-    gender: '성별',
-    phone: '전화번호',
-    email: '이메일',
-    churchName: '교회 이름',
-    pastorName: '담임/리더 이름',
-    attendingWithGroup: '그룹 참석 여부',
-    groupName: '그룹/교회 이름',
-    emergencyFirstName: '비상 연락처 이름',
-    emergencyLastName: '비상 연락처 성',
-    emergencyRelation: '비상 연락처 관계',
-    emergencyPhone: '비상 연락처 전화번호',
-    interest: '컨퍼런스 관심 이유',
-    overcome: '극복하고 싶은 영역',
-    attendedBefore: '이전 참석 여부',
-    mediaConsent: '미디어 사용 동의',
-    guidelinesConsent: '컨퍼런스 가이드라인 동의',
-    ageConfirmation: '나이 확인',
-    guardianName: '부모/보호자 이름',
-    guardianRelation: '부모/보호자 관계',
-    guardianPhone: '부모/보호자 전화번호',
-    guardianEmail: '부모/보호자 이메일',
-    guardianSignature: '부모/보호자 서명',
-    guardianConsent: '부모/보호자 동의 확인',
-    accuracyConfirm: '정보 정확성 확인',
-    groupRegistrationCode: '그룹 등록 코드',
-  },
-  zh: {
-    firstName: '名',
-    lastName: '姓',
-    preferredName: '常用名',
-    age: '年龄',
-    gender: '性别',
-    phone: '电话号码',
-    email: '电子邮箱',
-    churchName: '教会名称',
-    pastorName: '牧师/带领者姓名',
-    attendingWithGroup: '是否随团参加',
-    groupName: '团体/教会名称',
-    emergencyFirstName: '紧急联系人名字',
-    emergencyLastName: '紧急联系人姓氏',
-    emergencyRelation: '紧急联系人关系',
-    emergencyPhone: '紧急联系人电话',
-    interest: '参加原因',
-    overcome: '想要突破的领域',
-    attendedBefore: '是否曾参加',
-    mediaConsent: '媒体使用同意',
-    guidelinesConsent: '大会守则同意',
-    ageConfirmation: '年龄确认',
-    guardianName: '家长/监护人姓名',
-    guardianRelation: '家长/监护人关系',
-    guardianPhone: '家长/监护人电话',
-    guardianEmail: '家长/监护人邮箱',
-    guardianSignature: '家长/监护人签名',
-    guardianConsent: '家长/监护人同意确认',
-    accuracyConfirm: '信息准确确认',
-    groupRegistrationCode: '团体注册码',
-  },
-  es: {
-    firstName: 'nombre',
-    lastName: 'apellido',
-    preferredName: 'nombre preferido',
-    age: 'edad',
-    gender: 'genero',
-    phone: 'telefono',
-    email: 'correo electronico',
-    churchName: 'nombre de la iglesia',
-    pastorName: 'pastor / lider',
-    attendingWithGroup: 'asistencia con grupo',
-    groupName: 'grupo / iglesia',
-    emergencyFirstName: 'nombre del contacto de emergencia',
-    emergencyLastName: 'apellido del contacto de emergencia',
-    emergencyRelation: 'relacion del contacto de emergencia',
-    emergencyPhone: 'telefono del contacto de emergencia',
-    interest: 'interes en la conferencia',
-    overcome: 'area que quieres superar',
-    attendedBefore: 'asistencia previa',
-    mediaConsent: 'consentimiento de medios',
-    guidelinesConsent: 'consentimiento de reglas',
-    ageConfirmation: 'confirmacion de edad',
-    guardianName: 'nombre completo del padre/tutor',
-    guardianRelation: 'relacion del padre/tutor',
-    guardianPhone: 'telefono del padre/tutor',
-    guardianEmail: 'correo del padre/tutor',
-    guardianSignature: 'firma del padre/tutor',
-    guardianConsent: 'confirmacion de padre/tutor',
-    accuracyConfirm: 'confirmacion de informacion correcta',
-    groupRegistrationCode: 'codigo de registro grupal',
-  },
-}
-
-const validationMessages: Record<Language, {
-  title: string
-  summary: string
-  required: (field: string) => string
-  email: string
-  age: string
-  ageConfirmation: string
-  guardianConsent: string
-}> = {
-  en: {
-    title: 'Check Required Fields',
-    summary: 'Please review the highlighted fields before submitting.',
-    required: (field) => `Please complete ${field}.`,
-    email: 'Please enter a valid email address.',
-    age: `Please enter an age between ${CONFERENCE_MIN_AGE} and ${CONFERENCE_MAX_AGE}.`,
-    ageConfirmation: 'Please select the age status that matches the participant age.',
-    guardianConsent: 'Please complete the parent/guardian consent form.',
-  },
-  ko: {
-    title: '필수 항목 확인',
-    summary: '제출하기 전에 표시된 항목을 확인해 주세요.',
-    required: (field) => `${field} 항목을 작성해 주세요.`,
-    email: '올바른 이메일 주소를 입력해 주세요.',
-    age: `${CONFERENCE_MIN_AGE}세부터 ${CONFERENCE_MAX_AGE}세까지의 나이를 입력해 주세요.`,
-    ageConfirmation: '참가자 나이에 맞는 나이 상태를 선택해 주세요.',
-    guardianConsent: '부모/보호자 동의서를 작성하고 확인해 주세요.',
-  },
-  zh: {
-    title: '请确认必填项目',
-    summary: '提交前请确认标记的项目。',
-    required: (field) => `请填写${field}。`,
-    email: '请输入有效的电子邮箱。',
-    age: `请输入${CONFERENCE_MIN_AGE}岁到${CONFERENCE_MAX_AGE}岁之间的年龄。`,
-    ageConfirmation: '请选择与参加者年龄相符的年龄状态。',
-    guardianConsent: '请填写并确认家长/监护人同意书。',
-  },
-  es: {
-    title: 'Revisa los campos requeridos',
-    summary: 'Revisa los campos marcados antes de enviar.',
-    required: (field) => `Completa ${field}.`,
-    email: 'Ingresa un correo electronico valido.',
-    age: `Ingresa una edad entre ${CONFERENCE_MIN_AGE} y ${CONFERENCE_MAX_AGE}.`,
-    ageConfirmation: 'Selecciona el estado de edad que coincida con la edad del participante.',
-    guardianConsent: 'Completa el formulario de consentimiento de padre/tutor.',
-  },
-}
-
-const inputClass = 'w-full rounded-2xl border-2 border-slate-200 bg-slate-50/70 px-5 py-4 text-base font-bold text-brand-dark outline-none transition placeholder:text-slate-300 focus:border-brand-purple focus:bg-white focus:ring-4 focus:ring-brand-purple/10'
-const textareaClass = `${inputClass} min-h-32 resize-y leading-relaxed`
-const labelClass = 'text-[11px] font-black uppercase tracking-[0.2em] text-slate-700'
-
-function TextField({
-  label,
-  name,
-  type = 'text',
-  required = false,
-  placeholder,
-  min,
-  max,
-  error,
-}: {
-  label: string
-  name: RegistrationField
-  type?: string
-  required?: boolean
-  placeholder?: string
-  min?: number
-  max?: number
-  error?: string
-}) {
-  const errorId = `${name}-error`
-
-  return (
-    <div className="space-y-2">
-      <label htmlFor={name} className={labelClass}>{label}{required ? ' *' : ''}</label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        required={required}
-        placeholder={placeholder}
-        min={min}
-        max={max}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? errorId : undefined}
-        className={`${inputClass} ${error ? 'border-red-400 bg-red-50/50 focus:border-red-500 focus:ring-red-100' : ''}`}
-      />
-      {error && (
-        <p id={errorId} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-black leading-relaxed text-red-600">
-          {error}
-        </p>
-      )}
-    </div>
-  )
-}
-
-function TextAreaField({
-  label,
-  name,
-  required = false,
-  placeholder,
-  error,
-}: {
-  label: string
-  name: RegistrationField
-  required?: boolean
-  placeholder?: string
-  error?: string
-}) {
-  const errorId = `${name}-error`
-
-  return (
-    <div className="space-y-2">
-      <label htmlFor={name} className={labelClass}>{label}{required ? ' *' : ''}</label>
-      <textarea
-        id={name}
-        name={name}
-        required={required}
-        placeholder={placeholder}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? errorId : undefined}
-        className={`${textareaClass} ${error ? 'border-red-400 bg-red-50/50 focus:border-red-500 focus:ring-red-100' : ''}`}
-      />
-      {error && (
-        <p id={errorId} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-black leading-relaxed text-red-600">
-          {error}
-        </p>
-      )}
-    </div>
-  )
-}
-
-function RadioGroup({
-  label,
-  name,
-  options,
-  required = false,
-  error,
-  columns = 2,
-}: {
-  label: string
-  name: RegistrationField
-  options: string[]
-  required?: boolean
-  error?: string
-  columns?: 1 | 2
-}) {
-  const errorId = `${name}-error`
-  const gridClass = columns === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'
-
-  return (
-    <fieldset className="space-y-3" aria-describedby={error ? errorId : undefined}>
-      <legend className={labelClass}>{label}{required ? ' *' : ''}</legend>
-      <div className={`grid gap-3 ${gridClass}`}>
-        {options.map((option) => (
-          <label key={option} className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border-2 bg-slate-50/70 px-4 py-3 text-sm font-black text-brand-dark transition hover:border-brand-purple hover:bg-white ${error ? 'border-red-300' : 'border-slate-200'}`}>
-            <input
-              type="radio"
-              name={name}
-              value={option}
-              required={required}
-              className="h-4 w-4 accent-brand-purple"
-            />
-            <span>{option}</span>
-          </label>
-        ))}
-      </div>
-      {error && (
-        <p id={errorId} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-black leading-relaxed text-red-600">
-          {error}
-        </p>
-      )}
-    </fieldset>
-  )
-}
-
-function CheckboxField({
-  name,
-  children,
-  required = false,
-  error,
-}: {
-  name: RegistrationField
-  children: React.ReactNode
-  required?: boolean
-  error?: string
-}) {
-  const errorId = `${name}-error`
-
-  return (
-    <div className="space-y-2">
-      <label className={`flex cursor-pointer gap-4 rounded-2xl border-2 bg-slate-50/70 p-5 text-sm font-bold leading-relaxed text-slate-700 transition hover:border-brand-purple hover:bg-white ${error ? 'border-red-300 bg-red-50/40' : 'border-slate-200'}`}>
-        <input
-          type="checkbox"
-          name={name}
-          value="Agreed"
-          required={required}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? errorId : undefined}
-          className="mt-1 h-5 w-5 shrink-0 accent-brand-purple"
-        />
-        <span>{children}</span>
-      </label>
-      {error && (
-        <p id={errorId} className="rounded-xl bg-red-50 px-3 py-2 text-xs font-black leading-relaxed text-red-600">
-          {error}
-        </p>
-      )}
-    </div>
-  )
-}
-
-function FormSection({
-  number,
-  title,
-  children,
-}: {
-  number: string
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] md:p-8">
-      <div className="mb-7 flex items-center gap-4 border-b border-slate-100 pb-5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-purple text-xs font-black text-white shadow-lg shadow-brand-purple/20">
-          {number}
-        </span>
-        <h2 className="text-xl font-black uppercase tracking-tight text-brand-dark md:text-2xl">{title}</h2>
-      </div>
-      <div className="space-y-6">{children}</div>
-    </section>
-  )
-}
-
-function buildRegistrationFieldErrors(payload: ConferenceRegistrationPayload, language: Language): FieldErrors {
-  const copy = validationMessages[language]
-  const labels = validationLabels[language]
-  const errors: FieldErrors = {}
-
-  requiredRegistrationFields.forEach((field) => {
-    if (!payload[field]) {
-      errors[field] = copy.required(labels[field])
-    }
-  })
-
-  if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
-    errors.email = copy.email
-  }
-
-  if (payload.age && !isValidConferenceAge(payload.age)) {
-    errors.age = copy.age
-  }
-
-  if (
-    payload.age
-    && payload.ageConfirmation
-    && isValidConferenceAge(payload.age)
-    && !isValidConferenceAgeConfirmation(payload)
-  ) {
-    errors.ageConfirmation = copy.ageConfirmation
-  }
-
-  if (payload.attendingWithGroup === 'Yes' && !payload.groupName) {
-    errors.groupName = copy.required(labels.groupName)
-  }
-
-  if (requiresGuardianConsent(payload)) {
-    if (!payload.guardianName) errors.guardianName = copy.required(labels.guardianName)
-    if (!payload.guardianRelation) errors.guardianRelation = copy.required(labels.guardianRelation)
-    if (!payload.guardianPhone) errors.guardianPhone = copy.required(labels.guardianPhone)
-    if (!payload.guardianEmail) errors.guardianEmail = copy.required(labels.guardianEmail)
-    if (!payload.guardianSignature) errors.guardianSignature = copy.required(labels.guardianSignature)
-  }
-
-  if (requiresGuardianConsent(payload) && !payload.guardianConsent) {
-    errors.guardianConsent = copy.guardianConsent
-  }
-
-  return errors
-}
-
-function focusFirstInvalidField(form: HTMLFormElement, errors: FieldErrors) {
-  const firstInvalidName = Object.keys(errors)[0]
-  if (!firstInvalidName) return
-
-  const field = form.elements.namedItem(firstInvalidName)
-  let target: Element | null = null
-
-  if (field instanceof Element) {
-    target = field
-  } else if (field && 'length' in field && field.length > 0) {
-    target = field.item(0)
-  }
-
-  if (target instanceof HTMLElement) {
-    target.focus()
-    target.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }
-}
+const inputClass = 'w-full rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 text-base font-semibold text-brand-dark outline-none transition focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/10'
+const labelClass = 'mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-600'
 
 export default function ConferenceRegistrationPage() {
-  const { t, language } = useLanguage()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('')
-  const [statusType, setStatusType] = useState<'idle' | 'success' | 'error'>('idle')
-
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
-  const [showGuardianConsentForm, setShowGuardianConsentForm] = useState(false)
-  const [showGroupRegistrationFields, setShowGroupRegistrationFields] = useState(false)
-  const validationCopy = validationMessages[language]
-
-  useEffect(() => {
-    if (!isMenuOpen) return
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-    }
-  }, [isMenuOpen])
-
-  const clearFieldError = (name: string) => {
-    if (!name) return
-    setFieldErrors((current) => {
-      if (!(name in current)) return current
-      const next = { ...current }
-      delete next[name as RegistrationField]
-      return next
-    })
-  }
-
-  const handleFormChange = (event: React.FormEvent<HTMLFormElement>) => {
-    const target = event.target
-    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
-      if (target instanceof HTMLInputElement && target.name === 'ageConfirmation') {
-        const needsGuardianConsent = target.value === GUARDIAN_CONSENT_AGE_CONFIRMATION
-        setShowGuardianConsentForm(needsGuardianConsent)
-
-        if (!needsGuardianConsent) {
-          setFieldErrors((current) => {
-            const next = { ...current }
-            delete next.guardianName
-            delete next.guardianRelation
-            delete next.guardianPhone
-            delete next.guardianEmail
-            delete next.guardianSignature
-            delete next.guardianConsent
-            return next
-          })
-        }
-      }
-
-      if (target instanceof HTMLInputElement && target.name === 'attendingWithGroup') {
-        const isAttendingWithGroup = target.value === 'Yes'
-        setShowGroupRegistrationFields(isAttendingWithGroup)
-
-        if (!isAttendingWithGroup) {
-          setFieldErrors((current) => {
-            const next = { ...current }
-            delete next.groupName
-            delete next.groupRegistrationCode
-            return next
-          })
-        }
-      }
-
-      clearFieldError(target.name)
-    }
-  }
+  const [status, setStatus] = useState('')
+  const [isError, setIsError] = useState(false)
+  const [attendingWithGroup, setAttendingWithGroup] = useState('')
+  const [ageConfirmation, setAgeConfirmation] = useState('')
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
-    const form = event.currentTarget
-    const formData = new FormData(form)
-    const payload = normalizeConferenceRegistrationPayload(Object.fromEntries(formData))
-    setShowGuardianConsentForm(requiresGuardianConsent(payload))
-    setShowGroupRegistrationFields(payload.attendingWithGroup === 'Yes')
-
-    const nextErrors = buildRegistrationFieldErrors(payload, language)
-    if (Object.keys(nextErrors).length > 0) {
-      setFieldErrors(nextErrors)
-      setStatusType('error')
-      setStatusMessage(validationCopy.summary)
-      requestAnimationFrame(() => focusFirstInvalidField(form, nextErrors))
-      return
-    }
-
-    setFieldErrors({})
     setIsSubmitting(true)
-    setStatusMessage('')
-    setStatusType('idle')
+    setStatus('')
+    setIsError(false)
 
     try {
+      const form = event.currentTarget
+      const payload = normalizeConferenceRegistrationPayload(Object.fromEntries(new FormData(form)))
       const response = await fetch('/api/conference/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -579,347 +37,123 @@ export default function ConferenceRegistrationPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        if (Array.isArray(result.missingFields)) {
-          const serverErrors = result.missingFields.reduce((errors: FieldErrors, field: string) => {
-            if (field in validationLabels[language]) {
-              errors[field as RegistrationField] = validationCopy.required(validationLabels[language][field as RegistrationField])
-            }
-            return errors
-          }, {} as FieldErrors)
-          setFieldErrors(serverErrors)
-          requestAnimationFrame(() => focusFirstInvalidField(form, serverErrors))
-        }
-        if (Array.isArray(result.invalidFields)) {
-          const serverErrors = result.invalidFields.reduce((errors: FieldErrors, field: string) => {
-            if (field === 'age') {
-              errors.age = validationCopy.age
-            } else if (field === 'ageConfirmation') {
-              errors.ageConfirmation = validationCopy.ageConfirmation
-            }
-            return errors
-          }, {} as FieldErrors)
-          setFieldErrors((current) => ({ ...current, ...serverErrors }))
-          requestAnimationFrame(() => focusFirstInvalidField(form, serverErrors))
-        }
         throw new Error(result.message || 'Registration could not be submitted.')
       }
 
-      // Redirect directly to Square checkout or completion page
-      const checkoutUrl = result.paymentInstructions?.checkoutUrl
-      if (checkoutUrl) {
-        setStatusType('success')
-        setStatusMessage('Redirecting to payment...')
-        window.location.href = checkoutUrl
-        return
-      }
-
-      // No checkout URL (waived or unavailable) — go to completion page
-      window.location.href = `/conference/register/complete?registrationId=${encodeURIComponent(result.registrationId)}&status=${result.paymentStatus || 'pending'}`
+      form.reset()
+      setAttendingWithGroup('')
+      setAgeConfirmation('')
+      setStatus(`Registration submitted successfully. ID: ${result.registrationId}`)
     } catch (error) {
+      setIsError(true)
+      setStatus(error instanceof Error ? error.message : 'Registration could not be submitted.')
+    } finally {
       setIsSubmitting(false)
-      setStatusType('error')
-      setStatusMessage(error instanceof Error ? error.message : 'Registration could not be submitted.')
     }
   }
 
   return (
-    <div className="min-h-screen bg-white text-brand-dark selection:bg-brand-purple selection:text-white">
-      <header className="sticky top-0 z-[100] grid grid-cols-[auto_1fr_auto] items-center border-b border-slate-100 bg-white px-6 py-6 shadow-sm md:px-16 md:bg-white/95 md:backdrop-blur-md">
-        <div className="flex items-center gap-6">
-          <Link href="/">
-            <img src="/logo.png" alt="PassionFruits" className="h-14 w-auto drop-shadow-md md:-mt-6 md:-mb-4 md:h-28" />
+    <main className="min-h-screen bg-[#fbfaf3] px-4 py-8 text-brand-dark sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <Link href="/" className="inline-flex items-center">
+            <img src="/logo.png" alt="PassionFruits" className="h-12 w-auto" />
           </Link>
-          <div className="hidden md:block">
-            <LanguageSelector />
-          </div>
+          <Link href="/conference" className="text-xs font-black uppercase tracking-[0.16em] text-brand-purple hover:opacity-70">
+            Conference
+          </Link>
         </div>
 
-        <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 justify-center gap-12 whitespace-nowrap text-[11px] font-black uppercase tracking-[0.25em] text-slate-600 lg:flex">
-          <Link href="/" className="transition-all hover:text-brand-purple">{t('nav.home')}</Link>
-          <Link href="/conference" className="border-b-2 border-brand-purple pb-1 text-brand-purple">{t('nav.conference')}</Link>
-          <Link href="/events" className="transition-all hover:text-brand-purple">{t('nav.events')}</Link>
-          <Link href="/about" className="transition-all hover:text-brand-purple">{t('nav.about')}</Link>
-          <Link href="/contact" className="transition-all hover:text-brand-purple">{t('nav.contact')}</Link>
-        </nav>
+        <header className="mb-8">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-purple">PassionFruits Conference 2026</p>
+          <h1 className="mt-3 text-4xl font-black uppercase tracking-tight sm:text-5xl">Registration Form</h1>
+          <p className="mt-4 text-sm font-semibold leading-7 text-slate-600">
+            Please complete the form below. Registration is open to participants aged {CONFERENCE_MAX_AGE} and under.
+          </p>
+        </header>
 
-        <div className="col-start-3 flex items-center justify-self-end gap-4">
-          <Link href="/contact" className="hidden rounded-full bg-brand-purple px-10 py-3 text-xs font-black uppercase tracking-widest text-white shadow-md transition-all hover:scale-105 sm:block">
-            {t('nav.join')}
-          </Link>
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="z-[110] flex h-12 w-12 flex-col items-center justify-center gap-1.5 lg:hidden"
-            aria-label="Open menu"
-          >
-            <span className={`h-0.5 w-6 bg-brand-dark transition-all ${isMenuOpen ? 'translate-y-2 rotate-45' : ''}`} />
-            <span className={`h-0.5 w-6 bg-brand-dark transition-all ${isMenuOpen ? 'opacity-0' : ''}`} />
-            <span className={`h-0.5 w-6 bg-brand-dark transition-all ${isMenuOpen ? '-translate-y-2 -rotate-45' : ''}`} />
-          </button>
-        </div>
-      </header>
-
-      <main>
-        <section className="relative overflow-hidden bg-brand-dark px-5 py-16 text-white md:px-6 md:py-24">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,251,189,0.22),transparent_35%),linear-gradient(135deg,rgba(154,120,180,0.35),transparent_55%)]" />
-          <div className="relative mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
-            <div>
-              <Link href="/conference" className="mb-8 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.28em] text-brand-yellow transition hover:text-white">
-                <span className="material-icons text-sm">arrow_back</span>
-                Back to Conference
-              </Link>
-              <p className="mb-4 text-[10px] font-black uppercase tracking-[0.45em] text-brand-yellow md:text-xs">
-                August 13-15, 2026
-              </p>
-              <BrandHeading
-                tag="h1"
-                text="Conference Registration"
-                className="max-w-4xl text-4xl font-black uppercase leading-[0.95] tracking-tighter text-white sm:text-5xl md:text-7xl"
-              />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <h2 className="mb-6 text-xl font-black">Personal Information</h2>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label><span className={labelClass}>First Name *</span><input name="firstName" required className={inputClass} /></label>
+              <label><span className={labelClass}>Last Name *</span><input name="lastName" required className={inputClass} /></label>
+              <label><span className={labelClass}>Preferred Name</span><input name="preferredName" className={inputClass} /></label>
+              <label><span className={labelClass}>Age *</span><input name="age" type="number" min={CONFERENCE_MIN_AGE} max={CONFERENCE_MAX_AGE} required className={inputClass} /></label>
+              <label><span className={labelClass}>Phone Number *</span><input name="phone" type="tel" required className={inputClass} /></label>
+              <label><span className={labelClass}>Email *</span><input name="email" type="email" required className={inputClass} /></label>
             </div>
+            <fieldset className="mt-5">
+              <legend className={labelClass}>Gender *</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {['Male', 'Female'].map((value) => <label key={value} className="rounded-2xl border-2 border-slate-200 p-4 font-bold"><input type="radio" name="gender" value={value} required className="mr-3 accent-brand-purple" />{value}</label>)}
+              </div>
+            </fieldset>
+          </section>
 
-            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-6 backdrop-blur-sm md:p-8">
-              <p className="text-xs font-black uppercase tracking-[0.3em] text-brand-yellow">PassionFruits Conference 2026</p>
-              <h2 className="mt-4 text-2xl font-black leading-tight md:text-3xl">Judges: Conquest to Conquer</h2>
-              <p className="mt-5 text-sm font-bold leading-relaxed text-white/75">
-                A gathering to encounter God, build meaningful community, and grow in purpose.
-              </p>
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <h2 className="mb-6 text-xl font-black">Church / Community</h2>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label><span className={labelClass}>Church Name *</span><input name="churchName" required className={inputClass} /></label>
+              <label><span className={labelClass}>Pastor / Leader Name</span><input name="pastorName" className={inputClass} /></label>
             </div>
+            <fieldset className="mt-5">
+              <legend className={labelClass}>Are you attending with a group? *</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {['Yes', 'No'].map((value) => <label key={value} className="rounded-2xl border-2 border-slate-200 p-4 font-bold"><input type="radio" name="attendingWithGroup" value={value} required onChange={() => setAttendingWithGroup(value)} className="mr-3 accent-brand-purple" />{value}</label>)}
+              </div>
+            </fieldset>
+            {attendingWithGroup === 'Yes' && <div className="mt-5 grid gap-5"><label><span className={labelClass}>Group / Church Name *</span><input name="groupName" required className={inputClass} /></label><label><span className={labelClass}>Group Registration Code</span><input name="groupRegistrationCode" className={inputClass} /></label></div>}
+          </section>
+
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <h2 className="mb-6 text-xl font-black">Emergency Contact</h2>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label><span className={labelClass}>First Name *</span><input name="emergencyFirstName" required className={inputClass} /></label>
+              <label><span className={labelClass}>Last Name *</span><input name="emergencyLastName" required className={inputClass} /></label>
+              <label><span className={labelClass}>Relation *</span><input name="emergencyRelation" required className={inputClass} /></label>
+              <label><span className={labelClass}>Phone Number *</span><input name="emergencyPhone" type="tel" required className={inputClass} /></label>
+            </div>
+          </section>
+
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <h2 className="mb-6 text-xl font-black">Conference Questions</h2>
+            <div className="space-y-5">
+              <label><span className={labelClass}>What made you interested in this conference? *</span><textarea name="interest" required className={`${inputClass} min-h-28 resize-y`} /></label>
+              <label><span className={labelClass}>What area do you want to overcome? *</span><textarea name="overcome" required className={`${inputClass} min-h-28 resize-y`} /></label>
+            </div>
+            <fieldset className="mt-5">
+              <legend className={labelClass}>Have you attended PassionFruits Conference before? *</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {['Yes', 'No'].map((value) => <label key={value} className="rounded-2xl border-2 border-slate-200 p-4 font-bold"><input type="radio" name="attendedBefore" value={value} required className="mr-3 accent-brand-purple" />{value}</label>)}
+              </div>
+            </fieldset>
+          </section>
+
+          <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <h2 className="mb-6 text-xl font-black">Consent</h2>
+            <div className="space-y-4">
+              <label className="block rounded-2xl border-2 border-slate-200 p-4 text-sm font-semibold leading-6"><input type="checkbox" name="mediaConsent" value="Agreed" required className="mr-3 accent-brand-purple" />I understand that photographs and videos taken during the conference may be used for social media and promotional purposes.</label>
+              <label className="block rounded-2xl border-2 border-slate-200 p-4 text-sm font-semibold leading-6"><input type="checkbox" name="guidelinesConsent" value="Agreed" required className="mr-3 accent-brand-purple" />I agree to follow conference guidelines and respect fellow attendees and staff.</label>
+            </div>
+            <fieldset className="mt-5">
+              <legend className={labelClass}>Participant age / guardian status *</legend>
+              <div className="space-y-3">
+                {[ADULT_AGE_CONFIRMATION, GUARDIAN_CONSENT_AGE_CONFIRMATION].map((value) => <label key={value} className="block rounded-2xl border-2 border-slate-200 p-4 text-sm font-bold"><input type="radio" name="ageConfirmation" value={value} required onChange={() => setAgeConfirmation(value)} className="mr-3 accent-brand-purple" />{value}</label>)}
+              </div>
+            </fieldset>
+            {ageConfirmation === GUARDIAN_CONSENT_AGE_CONFIRMATION && <div className="mt-5 grid gap-5 sm:grid-cols-2"><label><span className={labelClass}>Parent / Guardian Full Name *</span><input name="guardianName" required className={inputClass} /></label><label><span className={labelClass}>Relation *</span><input name="guardianRelation" required className={inputClass} /></label><label><span className={labelClass}>Parent / Guardian Phone *</span><input name="guardianPhone" type="tel" required className={inputClass} /></label><label><span className={labelClass}>Parent / Guardian Email *</span><input name="guardianEmail" type="email" required className={inputClass} /></label><label className="sm:col-span-2"><span className={labelClass}>Parent / Guardian Signature *</span><input name="guardianSignature" required className={inputClass} /></label><label className="sm:col-span-2 block rounded-2xl border-2 border-slate-200 p-4 text-sm font-semibold leading-6"><input type="checkbox" name="guardianConsent" value="Agreed" required className="mr-3 accent-brand-purple" />I confirm that my parent/guardian has reviewed this registration and gives consent for me to attend.</label></div>}
+            <label className="mt-5 block rounded-2xl border-2 border-slate-200 p-4 text-sm font-semibold leading-6"><input type="checkbox" name="accuracyConfirm" value="Agreed" required className="mr-3 accent-brand-purple" />I confirm that all information provided is accurate.</label>
+          </section>
+
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <button type="submit" disabled={isSubmitting} className="inline-flex w-full items-center justify-center rounded-full bg-brand-dark px-8 py-5 text-sm font-black uppercase tracking-[0.18em] text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
+              {isSubmitting ? 'Submitting...' : 'Submit Registration'}
+            </button>
+            {status && <p className={`mt-4 rounded-2xl px-4 py-3 text-sm font-bold ${isError ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>{status}</p>}
           </div>
-        </section>
-
-        <section className="px-5 py-12 md:px-6 md:py-20">
-          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
-            <aside className="space-y-6 lg:sticky lg:top-32">
-              <div className="rounded-[2rem] border-2 border-slate-200 bg-white p-6 shadow-sm md:p-8">
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-purple">Welcome</p>
-                <p className="mt-5 text-base font-bold leading-relaxed text-slate-600">
-                  We are excited to have you join PassionFruits Conference 2026. Registration is open to participants aged {CONFERENCE_MAX_AGE} and under.
-                </p>
-
-                <ul className="mt-4 space-y-1.5 text-xs font-bold leading-relaxed text-slate-500">
-                  <li>Conference T-shirt provided</li>
-                  <li>Snacks provided</li>
-                  <li>Meals are not provided</li>
-                </ul>
-                <div className="mt-6 rounded-2xl bg-brand-yellow/60 p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-dark">Church Group Registration</p>
-                  <p className="mt-2 text-xs font-bold leading-relaxed text-brand-dark/70">
-                    If you are registering as a church, please contact us through our email.
-                    <br />
-                    Contact Info: <SafeEmailText address="passionfruitsministry@gmail.com" />
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-[2rem] border-2 border-brand-purple/20 bg-brand-purple/5 p-6 md:p-8">
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-purple">Before You Submit</p>
-                <div className="mt-5 space-y-4">
-                  {[
-                    ['badge', 'Use your correct name and contact information'],
-                    ['groups', `Confirm the participant is aged ${CONFERENCE_MAX_AGE} or under`],
-                    ['contact_emergency', 'Have your emergency contact ready'],
-                    ['payments', 'Pay securely after submitting'],
-                  ].map(([icon, text]) => (
-                    <div key={text} className="flex items-center gap-3 text-sm font-black text-brand-dark">
-                      <span className="material-icons flex h-9 w-9 items-center justify-center rounded-xl bg-white text-lg text-brand-purple shadow-sm">{icon}</span>
-                      <span>{text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-[2rem] border-2 border-slate-200 bg-slate-50 p-6 md:p-8">
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-brand-purple">Stay Connected</p>
-                <div className="mt-5 space-y-3 text-sm font-black text-brand-dark">
-                  <a href="https://www.instagram.com/passionfruits_ministry/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 transition hover:text-brand-purple">
-                    <span className="material-icons text-lg">camera_alt</span>
-                    @passionfruits_ministry
-                  </a>
-                  <a href="https://www.passionfruits.ca" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 transition hover:text-brand-purple">
-                    <span className="material-icons text-lg">language</span>
-                    www.passionfruits.ca
-                  </a>
-                </div>
-                <div className="mt-6 border-t border-slate-200 pt-6">
-                  <p className="text-xs font-black uppercase tracking-[0.24em] text-brand-purple">Install the App</p>
-                  <div className="mt-4 flex items-center gap-4">
-                    <div className="rounded-2xl bg-white p-3 shadow-sm">
-                      <QRCodeSVG value={APP_INSTALL_URL} size={112} level="H" includeMargin={false} />
-                    </div>
-                    <p className="text-xs font-bold leading-relaxed text-slate-500">
-                      Scan to open the PassionFruits app install page on iOS or Android.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </aside>
-
-            <form noValidate onSubmit={handleSubmit} onChange={handleFormChange} className="space-y-8">
-              {Object.keys(fieldErrors).length > 0 && (
-                <div role="alert" className="rounded-[2rem] border-2 border-red-200 bg-red-50 p-5 text-red-700 shadow-sm md:p-6">
-                  <div className="flex items-start gap-3">
-                    <span className="material-icons mt-0.5 text-xl">error</span>
-                    <div>
-                      <p className="text-sm font-black uppercase tracking-[0.18em]">{validationCopy.title}</p>
-                      <p className="mt-2 text-sm font-bold leading-relaxed">{validationCopy.summary}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="rounded-[2rem] border-2 border-slate-200 bg-white p-6 shadow-sm md:p-8">
-                <p className="text-xs font-black uppercase tracking-[0.28em] text-brand-purple">Theme Verse</p>
-                <blockquote className="mt-4 text-base font-bold leading-relaxed text-slate-600 md:text-lg">
-                  "But you are a chosen people, a royal priesthood, a holy nation, God's special possession, that you may declare the praises of him who called you out of darkness into his wonderful light." - 1 Peter 2:9
-                </blockquote>
-              </div>
-
-              <FormSection number="1" title="Personal Information">
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <TextField label="First Name" name="firstName" error={fieldErrors.firstName} required />
-                  <TextField label="Last Name" name="lastName" error={fieldErrors.lastName} required />
-                  <TextField label="Preferred Name" name="preferredName" />
-                  <TextField label={`Age (${CONFERENCE_MAX_AGE} or under)`} name="age" type="number" min={CONFERENCE_MIN_AGE} max={CONFERENCE_MAX_AGE} error={fieldErrors.age} required />
-                </div>
-                <RadioGroup label="Gender" name="gender" options={['Male', 'Female']} error={fieldErrors.gender} required />
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <TextField label="Phone Number" name="phone" type="tel" error={fieldErrors.phone} required />
-                  <TextField label="Email" name="email" type="email" error={fieldErrors.email} required />
-                </div>
-              </FormSection>
-
-              <FormSection number="2" title="Church / Community Information">
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <TextField label="Church Name" name="churchName" error={fieldErrors.churchName} required />
-                  <TextField label="Pastor / Leader Name" name="pastorName" placeholder="Optional" />
-                </div>
-                <RadioGroup label="Are you attending with a group?" name="attendingWithGroup" options={['Yes', 'No']} error={fieldErrors.attendingWithGroup} required />
-                {showGroupRegistrationFields && (
-                  <div className="rounded-[1.5rem] border-2 border-brand-purple/10 bg-brand-purple/5 p-5">
-                    <div className="grid grid-cols-1 gap-5">
-                      <TextField label="Group / Church Name" name="groupName" error={fieldErrors.groupName} required />
-                      <TextField label="Group Registration Code" name="groupRegistrationCode" placeholder="Optional" />
-                    </div>
-                    <p className="mt-3 text-xs font-bold leading-relaxed text-slate-500">
-                      If you have group registration code, please enter your code.
-                    </p>
-                  </div>
-                )}
-              </FormSection>
-
-              <FormSection number="3" title="Emergency Contact Info.">
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <TextField label="First Name" name="emergencyFirstName" error={fieldErrors.emergencyFirstName} required />
-                  <TextField label="Last Name" name="emergencyLastName" error={fieldErrors.emergencyLastName} required />
-                  <TextField label="Relation" name="emergencyRelation" error={fieldErrors.emergencyRelation} required />
-                  <TextField label="Phone Number" name="emergencyPhone" type="tel" error={fieldErrors.emergencyPhone} required />
-                </div>
-              </FormSection>
-
-              <FormSection number="4" title="Spiritual & Community Questions">
-                <TextAreaField label="Q1. What made you interested in this conference?" name="interest" error={fieldErrors.interest} required />
-                <TextAreaField label="Q2. What are the area that you want to overcome with?" name="overcome" error={fieldErrors.overcome} required />
-                <RadioGroup label="Have you attended PassionFruits Conference before?" name="attendedBefore" options={['Yes', 'No']} error={fieldErrors.attendedBefore} required />
-              </FormSection>
-
-              <FormSection number="5" title="Media & Consent">
-                <CheckboxField name="mediaConsent" error={fieldErrors.mediaConsent} required>
-                  I understand that all photographs and videos taken during the conference may be used for social media and other promotional purposes without prior notices.
-                </CheckboxField>
-                <CheckboxField name="guidelinesConsent" error={fieldErrors.guidelinesConsent} required>
-                  I agree to follow conference guidelines and respect fellow attendees and staff.
-                </CheckboxField>
-                <RadioGroup label="Participant age / guardian status" name="ageConfirmation" options={[ADULT_AGE_CONFIRMATION, GUARDIAN_CONSENT_AGE_CONFIRMATION]} error={fieldErrors.ageConfirmation} required />
-                {showGuardianConsentForm && (
-                  <div className="rounded-[1.5rem] border-2 border-brand-purple/20 bg-brand-purple/5 p-5 md:p-6">
-                    <div className="mb-5 flex items-start gap-3">
-                      <span className="material-icons flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-purple text-lg text-white">family_restroom</span>
-                      <div>
-                        <p className="text-sm font-black uppercase tracking-[0.2em] text-brand-purple">Parent/Guardian Consent Form</p>
-                        <p className="mt-2 text-sm font-bold leading-relaxed text-slate-600">
-                          Participants 18 or younger must complete this section now with parent/guardian information.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                      <TextField label="Parent/Guardian Full Name" name="guardianName" error={fieldErrors.guardianName} required />
-                      <TextField label="Relation" name="guardianRelation" error={fieldErrors.guardianRelation} required />
-                      <TextField label="Parent/Guardian Phone" name="guardianPhone" type="tel" error={fieldErrors.guardianPhone} required />
-                      <TextField label="Parent/Guardian Email" name="guardianEmail" type="email" error={fieldErrors.guardianEmail} required />
-                      <div className="md:col-span-2">
-                        <TextField label="Parent/Guardian Signature" name="guardianSignature" placeholder="Type full name as signature" error={fieldErrors.guardianSignature} required />
-                      </div>
-                    </div>
-                    <div className="mt-5">
-                      <CheckboxField name="guardianConsent" error={fieldErrors.guardianConsent} required>
-                        I confirm that my parent/guardian has reviewed this registration and gives consent for me to attend PassionFruits Conference 2026.
-                      </CheckboxField>
-                    </div>
-                  </div>
-                )}
-                <CheckboxField name="accuracyConfirm" error={fieldErrors.accuracyConfirm} required>
-                  I confirm that all information provided is accurate.
-                </CheckboxField>
-              </FormSection>
-
-
-
-              <div className="rounded-[2rem] border-2 border-brand-purple/30 bg-white/95 p-5 shadow-2xl shadow-brand-purple/10 backdrop-blur md:p-8">
-                <p className="text-lg font-black text-brand-dark">We cannot wait to worship, grow, and encounter God together with you at PassionFruits Conference 2026.</p>
-                <p className="mt-3 text-sm font-bold text-slate-500">You will be redirected to Square to complete your payment securely.</p>
-                <button type="submit" disabled={isSubmitting} className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-full bg-brand-dark px-8 py-5 text-sm font-black uppercase tracking-[0.22em] text-white shadow-xl transition hover:scale-[1.01] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto">
-                  {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
-                  <span className="material-icons text-lg">{isSubmitting ? 'sync' : 'payment'}</span>
-                </button>
-                {statusMessage && (
-                  <p className={`mt-5 rounded-2xl px-4 py-3 text-sm font-black ${statusType === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
-                    {statusMessage}
-                  </p>
-                )}
-              </div>
-            </form>
-          </div>
-        </section>
-      </main>
-
-      <div
-        aria-hidden={!isMenuOpen}
-        className={`fixed inset-0 z-[2147483647] flex h-[100dvh] flex-col overflow-hidden bg-white transition-opacity duration-200 ease-out lg:hidden ${isMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
-      >
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-6">
-          <Link href="/" onClick={() => setIsMenuOpen(false)}>
-            <img src="/logo.png" alt="PassionFruits" className="h-10 w-auto" />
-          </Link>
-          <button
-            onClick={() => setIsMenuOpen(false)}
-            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 shadow-sm"
-            aria-label="Close menu"
-          >
-            <span className="material-icons text-3xl text-brand-dark">close</span>
-          </button>
-        </div>
-
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto p-12">
-          <div className="mb-8 scale-110">
-            <LanguageSelector />
-          </div>
-          <Link href="/" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
-            {t('nav.home')}
-          </Link>
-          <Link href="/conference" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-purple">
-            {t('nav.conference')}
-          </Link>
-          <Link href="/events" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
-            {t('nav.events')}
-          </Link>
-          <Link href="/about" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
-            {t('nav.about')}
-          </Link>
-          <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="text-4xl font-black uppercase tracking-tighter text-brand-dark hover:text-brand-purple">
-            {t('nav.contact')}
-          </Link>
-        </div>
+        </form>
       </div>
-    </div>
+    </main>
   )
 }
